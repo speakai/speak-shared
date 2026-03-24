@@ -1,31 +1,31 @@
 export enum MediaType {
-  Audio = 'audio',
-  Video = 'video',
-  Text = 'text',
-  Media = 'media',
-  Csv = 'csv',
+  AUDIO = 'audio',
+  VIDEO = 'video',
+  TEXT = 'text',
+  MEDIA = 'media',
+  CSV = 'csv',
 }
 
 export enum MediaState {
-  NotUploaded = 'notUploaded',
-  Uploaded = 'uploaded',
-  Queued = 'queued',
-  PendingPayment = 'pendingPayment',
-  Preparing = 'preparing',
-  PreparingTranscription = 'preparingTranscription',
-  Processing = 'processing',
-  Translation = 'translation',
-  PreparingAnalysis = 'preparingAnalysis',
-  Processed = 'processed',
-  Dubbing = 'dubbing',
-  Failed = 'failed',
-  Complete = 'complete',
-  LiveTranscript = 'liveTranscript',
+  NOT_UPLOADED = 'notUploaded',
+  UPLOADED = 'uploaded',
+  QUEUED = 'queued',
+  PENDING_PAYMENT = 'pendingPayment',
+  PREPARING = 'preparing',
+  PREPARING_TRANSCRIPTION = 'preparingTranscription',
+  PROCESSING = 'processing',
+  TRANSLATION = 'translation',
+  PREPARING_ANALYSIS = 'preparingAnalysis',
+  PROCESSED = 'processed',
+  DUBBING = 'dubbing',
+  FAILED = 'failed',
+  COMPLETE = 'complete',
+  LIVE_TRANSCRIPT = 'liveTranscript',
 }
 
 export enum MediaPrivacyMode {
-  Public = 'public',
-  Private = 'private',
+  PUBLIC = 'public',
+  PRIVATE = 'private',
 }
 
 export enum MediaInsightType {
@@ -53,15 +53,15 @@ export enum MediaInsightType {
 }
 
 export enum MediaInsightStatus {
-  Pending = 'pending',
-  Processing = 'processing',
-  Completed = 'completed',
-  Failed = 'failed',
-  Killed = 'killed',
+  PENDING = 'pending',
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  KILLED = 'killed',
 }
 
 export enum MediaProcessType {
-  Transcription = 'transcription',
-  Dubbing = 'dubbing',
-  Translation = 'translation',
+  TRANSCRIPTION = 'transcription',
+  DUBBING = 'dubbing',
+  TRANSLATION = 'translation',
 }

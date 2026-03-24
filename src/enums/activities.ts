@@ -1,8 +1,8 @@
 export enum ActivityType {
-  MediaAnalysis = 'mediaAnalysis',
-  MediaTranscription = 'mediaTranscription',
-  TextNoteAnalyzed = 'textNoteAnalyzed',
-  RecordingReceived = 'recordingReceived',
-  RecorderCreated = 'recorderCreated',
-  MeetingAssistant = 'meetingAssistant',
+  MEDIA_ANALYSIS = 'mediaAnalysis',
+  MEDIA_TRANSCRIPTION = 'mediaTranscription',
+  TEXT_NOTE_ANALYZED = 'textNoteAnalyzed',
+  RECORDING_RECEIVED = 'recordingReceived',
+  RECORDER_CREATED = 'recorderCreated',
+  MEETING_ASSISTANT = 'meetingAssistant',
 }

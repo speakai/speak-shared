@@ -1,8 +1,8 @@
 export enum TranscriptionEngine {
-  Azure = 'azure',
-  Assembly = 'assembly',
-  Deepgram = 'deepgram',
-  Aws = 'aws',
+  AZURE = 'azure',
+  ASSEMBLY = 'assembly',
+  DEEPGRAM = 'deepgram',
+  AWS = 'aws',
 }
 
 export enum TranscriptionJobState {

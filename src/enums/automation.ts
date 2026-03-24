@@ -1,32 +1,32 @@
 export enum AutomationTrigger {
-  Folders = 'folders',
-  Tags = 'tags',
-  Keywords = 'keywords',
+  FOLDERS = 'folders',
+  TAGS = 'tags',
+  KEYWORDS = 'keywords',
 }
 
 export enum AutomationAction {
-  MagicPrompt = 'magic-prompt',
-  Translation = 'translation',
+  MAGIC_PROMPT = 'magic-prompt',
+  TRANSLATION = 'translation',
 }
 
 export enum AutomationRunType {
-  Instant = 'instant',
-  Schedule = 'schedule',
+  INSTANT = 'instant',
+  SCHEDULE = 'schedule',
 }
 
 export enum AutomationScheduleTimePeriod {
-  Today = 'today',
-  Yesterday = 'yesterday',
-  Last7Days = 'last7days',
-  Last14Days = 'last14days',
-  ThisWeek = 'thisWeek',
+  TODAY = 'today',
+  YESTERDAY = 'yesterday',
+  LAST_7_DAYS = 'last7days',
+  LAST_14_DAYS = 'last14days',
+  THIS_WEEK = 'thisWeek',
 }
 
 export enum AssistantType {
-  Researcher = 'researcher',
-  Marketer = 'marketer',
-  Sales = 'sales',
-  General = 'general',
-  Recruiter = 'recruiter',
-  Custom = 'custom',
+  RESEARCHER = 'researcher',
+  MARKETER = 'marketer',
+  SALES = 'sales',
+  GENERAL = 'general',
+  RECRUITER = 'recruiter',
+  CUSTOM = 'custom',
 }

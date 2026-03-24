@@ -1,26 +1,26 @@
 export enum FieldType {
-  Text = 'text',
-  Url = 'url',
-  Boolean = 'boolean',
-  Date = 'date',
-  Datetime = 'datetime',
-  Number = 'number',
-  Currency = 'currency',
+  TEXT = 'text',
+  URL = 'url',
+  BOOLEAN = 'boolean',
+  DATE = 'date',
+  DATETIME = 'datetime',
+  NUMBER = 'number',
+  CURRENCY = 'currency',
 }
 
 export enum AllowedValuesMode {
-  Single = 'single',
-  Multiple = 'multiple',
+  SINGLE = 'single',
+  MULTIPLE = 'multiple',
 }
 
 export enum DefaultViewColumn {
-  Name = 'name',
-  Duration = 'duration',
-  Tags = 'tags',
-  Sentiment = 'sentiment',
-  Datetime = 'datetime',
-  Size = 'size',
-  MediaType = 'mediaType',
-  CreatedAt = 'createdAt',
-  UpdatedAt = 'updatedAt',
+  NAME = 'name',
+  DURATION = 'duration',
+  TAGS = 'tags',
+  SENTIMENT = 'sentiment',
+  DATETIME = 'datetime',
+  SIZE = 'size',
+  MEDIA_TYPE = 'mediaType',
+  CREATED_AT = 'createdAt',
+  UPDATED_AT = 'updatedAt',
 }

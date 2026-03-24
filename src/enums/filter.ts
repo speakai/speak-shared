@@ -1,26 +1,26 @@
 export enum FilterFieldName {
-  Category = 'category',
-  FolderId = 'folderId',
-  MediaId = 'mediaId',
-  MediaType = 'mediaType',
-  SentimentNegative = 'sentimentNegative',
-  SentimentPositive = 'sentimentPositive',
-  Speaker = 'speaker',
-  Tags = 'tags',
-  RecorderId = 'recorderId',
-  Fields = 'fields',
+  CATEGORY = 'category',
+  FOLDER_ID = 'folderId',
+  MEDIA_ID = 'mediaId',
+  MEDIA_TYPE = 'mediaType',
+  SENTIMENT_NEGATIVE = 'sentimentNegative',
+  SENTIMENT_POSITIVE = 'sentimentPositive',
+  SPEAKER = 'speaker',
+  TAGS = 'tags',
+  RECORDER_ID = 'recorderId',
+  FIELDS = 'fields',
 }
 
 export enum FilterOperator {
-  Include = 'include',
-  NotInclude = 'notInclude',
-  Contain = 'contain',
-  NotContain = 'notContain',
-  GreaterThan = 'greaterThan',
-  LessThan = 'lessThan',
+  INCLUDE = 'include',
+  NOT_INCLUDE = 'notInclude',
+  CONTAIN = 'contain',
+  NOT_CONTAIN = 'notContain',
+  GREATER_THAN = 'greaterThan',
+  LESS_THAN = 'lessThan',
 }
 
 export enum FilterCondition {
-  And = 'and',
-  Or = 'or',
+  AND = 'and',
+  OR = 'or',
 }

@@ -1,13 +1,13 @@
 export enum SSOType {
-  Google = 'google',
-  Microsoft = 'microsoft',
-  Apple = 'apple',
+  GOOGLE = 'google',
+  MICROSOFT = 'microsoft',
+  APPLE = 'apple',
 }
 
 export enum DevicePlatform {
-  Ios = 'ios',
-  Android = 'android',
-  Web = 'web',
-  Electron = 'electron',
-  Api = 'api',
+  IOS = 'ios',
+  ANDROID = 'android',
+  WEB = 'web',
+  ELECTRON = 'electron',
+  API = 'api',
 }

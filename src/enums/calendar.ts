@@ -1,17 +1,17 @@
 export enum CalendarType {
-  Google = 'google',
-  Outlook = 'outlook',
+  GOOGLE = 'google',
+  OUTLOOK = 'outlook',
 }
 
 export enum EventStatus {
-  Confirmed = 'confirmed',
-  Cancelled = 'cancelled',
+  CONFIRMED = 'confirmed',
+  CANCELLED = 'cancelled',
 }
 
 export enum AutoJoinStatus {
-  None = 'none',
-  InviteAssistant = 'inviteAssistant',
-  AllMeetings = 'allMeetings',
-  Host = 'host',
-  SpeakTeamMembersNotHost = 'speakTeamMembersNotHost',
+  NONE = 'none',
+  INVITE_ASSISTANT = 'inviteAssistant',
+  ALL_MEETINGS = 'allMeetings',
+  HOST = 'host',
+  SPEAK_TEAM_MEMBERS_NOT_HOST = 'speakTeamMembersNotHost',
 }

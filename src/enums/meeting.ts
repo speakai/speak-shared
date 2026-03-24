@@ -1,69 +1,69 @@
 export enum MeetingPlatform {
-  GoogleMeet = 'googleMeet',
-  Zoom = 'zoom',
-  MicrosoftTeams = 'microsoftTeams',
-  Webex = 'webex',
+  GOOGLE_MEET = 'googleMeet',
+  ZOOM = 'zoom',
+  MICROSOFT_TEAMS = 'microsoftTeams',
+  WEBEX = 'webex',
 }
 
 export enum MeetingStatus {
-  WillJoin = 'willJoin',
-  Scheduled = 'scheduled',
-  Ready = 'ready',
-  JoiningCall = 'joiningCall',
-  InWaitingRoom = 'inWaitingRoom',
-  InCallNotRecording = 'inCallNotRecording',
-  RecordingPermissionDenied = 'recordingPermissionDenied',
-  InCallRecording = 'inCallRecording',
-  CallEnded = 'callEnded',
-  Done = 'done',
-  Fatal = 'fatal',
-  AnalysisDone = 'analysisDone',
-  Paused = 'paused',
-  Resumed = 'resumed',
-  Cancelled = 'cancelled',
-  NotInvited = 'notInvited',
+  WILL_JOIN = 'willJoin',
+  SCHEDULED = 'scheduled',
+  READY = 'ready',
+  JOINING_CALL = 'joiningCall',
+  IN_WAITING_ROOM = 'inWaitingRoom',
+  IN_CALL_NOT_RECORDING = 'inCallNotRecording',
+  RECORDING_PERMISSION_DENIED = 'recordingPermissionDenied',
+  IN_CALL_RECORDING = 'inCallRecording',
+  CALL_ENDED = 'callEnded',
+  DONE = 'done',
+  FATAL = 'fatal',
+  ANALYSIS_DONE = 'analysisDone',
+  PAUSED = 'paused',
+  RESUMED = 'resumed',
+  CANCELLED = 'cancelled',
+  NOT_INVITED = 'notInvited',
 }
 
 export enum MeetingRecordingMode {
-  SpeakerView = 'speakerView',
-  GalleryView = 'galleryView',
-  GalleryViewV2 = 'galleryViewV2',
-  AudioOnly = 'audioOnly',
+  SPEAKER_VIEW = 'speakerView',
+  GALLERY_VIEW = 'galleryView',
+  GALLERY_VIEW_V2 = 'galleryViewV2',
+  AUDIO_ONLY = 'audioOnly',
 }
 
 export enum ScreenShareRecordingMode {
-  Hide = 'hide',
-  Beside = 'beside',
-  Overlap = 'overlap',
+  HIDE = 'hide',
+  BESIDE = 'beside',
+  OVERLAP = 'overlap',
 }
 
 export enum MeetingSummarySettings {
-  Self = 'self',
-  AllAttendees = 'allAttendees',
-  None = 'none',
+  SELF = 'self',
+  ALL_ATTENDEES = 'allAttendees',
+  NONE = 'none',
 }
 
 export enum MediaPlayerSettings {
-  AllAttendees = 'allAttendees',
-  TeamMembers = 'teamMembers',
-  FolderTeamMembers = 'folderTeamMembers',
-  Self = 'self',
-  None = 'none',
+  ALL_ATTENDEES = 'allAttendees',
+  TEAM_MEMBERS = 'teamMembers',
+  FOLDER_TEAM_MEMBERS = 'folderTeamMembers',
+  SELF = 'self',
+  NONE = 'none',
 }
 
 export enum MeetingFilterEventCondition {
-  Contains = 'contains',
-  Equals = 'equals',
+  CONTAINS = 'contains',
+  EQUALS = 'equals',
 }
 
 export enum MeetingAttendeeType {
-  Host = 'host',
-  Assistant = 'assistant',
-  Self = 'self',
-  Guest = 'guest',
+  HOST = 'host',
+  ASSISTANT = 'assistant',
+  SELF = 'self',
+  GUEST = 'guest',
 }
 
 export enum MeetingAssistantEventSource {
-  Instant = 'instant',
-  Assistant = 'assistant',
+  INSTANT = 'instant',
+  ASSISTANT = 'assistant',
 }

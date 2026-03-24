@@ -1,10 +1,10 @@
 export enum EmbedType {
-  MediaPlayer = 'mediaPlayer',
-  Repository = 'repository',
+  MEDIA_PLAYER = 'mediaPlayer',
+  REPOSITORY = 'repository',
 }
 
 export enum ImageSelectionType {
-  Logo = 'logo',
-  BackgroundImg = 'backgroundImg',
-  MeetingAssistant = 'meetingAssistant',
+  LOGO = 'logo',
+  BACKGROUND_IMG = 'backgroundImg',
+  MEETING_ASSISTANT = 'meetingAssistant',
 }

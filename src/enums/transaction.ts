@@ -1,27 +1,27 @@
 export enum TransactionSource {
-  Stripe = 'stripe',
-  Paddle = 'paddle',
-  RevenuecatIos = 'ios',
-  RevenuecatAndroid = 'android',
-  RevenuecatStripe = 'revenuecat_stripe',
-  Balance = 'balance',
-  Manual = 'manual',
+  STRIPE = 'stripe',
+  PADDLE = 'paddle',
+  REVENUECAT_IOS = 'ios',
+  REVENUECAT_ANDROID = 'android',
+  REVENUECAT_STRIPE = 'revenuecat_stripe',
+  BALANCE = 'balance',
+  MANUAL = 'manual',
 }
 
 export enum TransactionType {
-  Subscription = 'subscription',
-  OneTime = 'one_time',
-  Usage = 'usage',
-  Refund = 'refund',
-  BalanceAdd = 'balance_add',
-  AutoReload = 'auto_reload',
+  SUBSCRIPTION = 'subscription',
+  ONE_TIME = 'one_time',
+  USAGE = 'usage',
+  REFUND = 'refund',
+  BALANCE_ADD = 'balance_add',
+  AUTO_RELOAD = 'auto_reload',
 }
 
 export enum TransactionStatus {
-  Pending = 'pending',
-  Processing = 'processing',
-  Succeeded = 'succeeded',
-  Failed = 'failed',
-  Refunded = 'refunded',
-  Cancelled = 'cancelled',
+  PENDING = 'pending',
+  PROCESSING = 'processing',
+  SUCCEEDED = 'succeeded',
+  FAILED = 'failed',
+  REFUNDED = 'refunded',
+  CANCELLED = 'cancelled',
 }

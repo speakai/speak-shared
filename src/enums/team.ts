@@ -1,6 +1,6 @@
 export enum TeamInviteStatus {
-  Active = 'active',
-  Expired = 'expired',
-  Revoked = 'revoked',
-  Exhausted = 'exhausted',
+  ACTIVE = 'active',
+  EXPIRED = 'expired',
+  REVOKED = 'revoked',
+  EXHAUSTED = 'exhausted',
 }

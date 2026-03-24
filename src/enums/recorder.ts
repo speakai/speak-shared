@@ -10,13 +10,13 @@ export enum RecorderAnswerType {
 }
 
 export enum RecorderUploadType {
-  Record = 'record',
-  File = 'file',
-  Youtube = 'youtube',
-  LiveRecord = 'live-record',
+  RECORD = 'record',
+  FILE = 'file',
+  YOUTUBE = 'youtube',
+  LIVE_RECORD = 'live-record',
 }
 
 export enum RecordingFeedbackRating {
-  Positive = 'positive',
-  Negative = 'negative',
+  POSITIVE = 'positive',
+  NEGATIVE = 'negative',
 }

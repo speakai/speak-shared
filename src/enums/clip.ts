@@ -1,12 +1,12 @@
 export enum ClipState {
-  Queued = 'queued',
-  Processing = 'processing',
-  Completed = 'completed',
-  Failed = 'failed',
+  QUEUED = 'queued',
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
 }
 
 export enum ClipGenerationSource {
-  Manual = 'manual',
-  Chat = 'chat',
-  Ai = 'ai',
+  MANUAL = 'manual',
+  CHAT = 'chat',
+  AI = 'ai',
 }

@@ -1,12 +1,12 @@
 export enum ServiceType {
-  Recorder = 'recorder',
-  Player = 'player',
-  Library = 'library',
+  RECORDER = 'recorder',
+  PLAYER = 'player',
+  LIBRARY = 'library',
 }
 
 export enum VerificationStatus {
-  Pending = 'pending',
-  Verified = 'verified',
-  Failed = 'failed',
-  Active = 'active',
+  PENDING = 'pending',
+  VERIFIED = 'verified',
+  FAILED = 'failed',
+  ACTIVE = 'active',
 }
