@@ -14,3 +14,4 @@ export * from './prompt';
 export * from './user';
 export * from './subscription';
 export * from './calendar';
+export * from './service-types';
