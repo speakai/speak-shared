@@ -2,6 +2,7 @@ export enum SSOType {
   GOOGLE = 'google',
   MICROSOFT = 'microsoft',
   APPLE = 'apple',
+  FACEBOOK = 'facebook',
 }
 
 export enum DevicePlatform {

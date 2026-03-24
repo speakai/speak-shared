@@ -20,6 +20,11 @@ export enum NotificationType {
   ZAPIER = 'zapier',
   MEETING_ASSISTANT = 'meeting assistant',
   GOOGLE_CALENDAR = 'google calendar',
+  OUTLOOK_CALENDAR = 'outlook calendar',
+  AUTO_RELOAD = 'auto reload',
+  FOLDER = 'folder',
+  FIELDS = 'fields',
+  ASSISTANT_TEMPLATE = 'assistant template',
 }
 
 export enum NotificationAction {

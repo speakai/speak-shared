@@ -9,9 +9,9 @@ export enum SubscriptionStatus {
 
 export enum SubscriptionDuration {
   Monthly = 'monthly',
-  TwoMonths = '2months',
-  ThreeMonths = '3months',
-  SixMonths = '6months',
-  NineMonths = '9months',
+  '2Months' = '2months',
+  '3Months' = '3months',
+  '6Months' = '6months',
+  '9Months' = '9months',
   Yearly = 'yearly',
 }

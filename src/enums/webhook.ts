@@ -1,22 +1,27 @@
 export enum WebhookEvent {
-  EMBED_RECORDER_CREATED = 'embed_recorder.created',
-  EMBED_RECORDER_DELETED = 'embed_recorder.deleted',
-  EMBED_RECORDER_RECORDING_RECEIVED = 'embed_recorder.recording_received',
-  MEDIA_ANALYZED = 'media.analyzed',
-  MEDIA_CREATED = 'media.created',
-  MEDIA_DELETED = 'media.deleted',
-  MEDIA_FAILED = 'media.failed',
-  MEDIA_REANALYZED = 'media.reanalyzed',
-  MEDIA_UPDATED = 'media.updated',
-  TEXT_ANALYZED = 'text.analyzed',
-  TEXT_CREATED = 'text.created',
-  TEXT_DELETED = 'text.deleted',
-  TEXT_FAILED = 'text.failed',
-  TEXT_REANALYZED = 'text.reanalyzed',
-  MEETING_ASSISTANT_STATUS = 'meeting_assistant.status',
-  CHAT_STATUS = 'chat.status',
-  CSV_UPLOADED = 'csv.uploaded',
-  CSV_FAILED = 'csv.failed',
+  'embed_recorder.created' = 'embed_recorder.created',
+  'embed_recorder.deleted' = 'embed_recorder.deleted',
+  'embed_recorder.recording_received' = 'embed_recorder.recording_received',
+
+  'media.analyzed' = 'media.analyzed',
+  'media.created' = 'media.created',
+  'media.deleted' = 'media.deleted',
+  'media.failed' = 'media.failed',
+  'media.reanalyzed' = 'media.reanalyzed',
+  'media.updated' = 'media.updated',
+
+  'text.analyzed' = 'text.analyzed',
+  'text.created' = 'text.created',
+  'text.deleted' = 'text.deleted',
+  'text.failed' = 'text.failed',
+  'text.reanalyzed' = 'text.reanalyzed',
+
+  'meeting_assistant.status' = 'meeting_assistant.status',
+
+  'chat.status' = 'chat.status',
+
+  'csv.uploaded' = 'csv.uploaded',
+  'csv.failed' = 'csv.failed',
 }
 
 export enum WebhookEventSource {
