@@ -1,0 +1,17 @@
+export enum ExportFormatType {
+  Csv = 'csv',
+  CsvInsights = 'csv-insights',
+  CsvTranscript = 'csv-transcript',
+  CsvTranscriptWithSentiment = 'csv-transcript-sentiment',
+  CsvTextWithSentiment = 'csv-text-sentiment',
+  Docx = 'docx',
+  Html = 'html',
+  Json = 'json',
+  Pdf = 'pdf',
+  SourceFile = 'sourceFile',
+  Srt = 'srt',
+  Ttml = 'ttml',
+  Txt = 'txt',
+  Vtt = 'vtt',
+  Mp4 = 'mp4',
+}

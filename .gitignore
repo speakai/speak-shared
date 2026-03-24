@@ -1,3 +1,6 @@
+# Auth tokens
+.npmrc
+
 # Logs
 logs
 *.log

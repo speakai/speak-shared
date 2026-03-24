@@ -1,0 +1,45 @@
+{
+  "name": "@speakai/shared",
+  "version": "1.0.0",
+  "description": "Shared types, enums and interfaces for Speak AI platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./enums": {
+      "types": "./dist/enums/index.d.ts",
+      "import": "./dist/enums/index.js",
+      "require": "./dist/enums/index.js"
+    },
+    "./interfaces": {
+      "types": "./dist/interfaces/index.d.ts",
+      "import": "./dist/interfaces/index.js",
+      "require": "./dist/interfaces/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist",
+    "prepublish": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/speakai/speak-shared.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "@speakai:registry": "https://npm.pkg.github.com"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
