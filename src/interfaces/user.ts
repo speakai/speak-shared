@@ -70,3 +70,23 @@ export interface IUserPermission {
     globalSettings: boolean;
   };
 }
+
+export interface IUserProfileUpdate {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  jobTitle?: string;
+}
+
+export interface IChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ISupportTicket {
+  subject: string;
+  message: string;
+  category?: string;
+}

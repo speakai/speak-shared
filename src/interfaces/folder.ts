@@ -43,3 +43,17 @@ export interface IFolderView {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface IFolderListResponse {
+  totalCount: number;
+  pages: number;
+  folders: IFolderListItem[];
+}
+
+export interface IFolderListItem {
+  _id: string;
+  folderId: string;
+  name: string;
+  showOrder: number;
+  createdAt: string;
+}
