@@ -32,8 +32,8 @@
     "url": "https://github.com/speakai/speak-shared.git"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "@speakai:registry": "https://npm.pkg.github.com"
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   },
   "files": [
     "dist",
