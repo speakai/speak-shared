@@ -1,4 +1,4 @@
-import { UserRole, UserPermissionType } from '../enums/index';
+import { UserRole, UserPermissionType } from '../enums/index.js';
 
 export interface IUser {
   _id: string;

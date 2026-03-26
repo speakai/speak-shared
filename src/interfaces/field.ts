@@ -1,4 +1,4 @@
-import { FieldType, AllowedValuesMode } from '../enums/index';
+import { FieldType, AllowedValuesMode } from '../enums/index.js';
 
 export interface IField {
   _id: string;

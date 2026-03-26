@@ -1,4 +1,4 @@
-import { SubscriptionStatus, SubscriptionDuration } from '../enums/index';
+import { SubscriptionStatus, SubscriptionDuration } from '../enums/index.js';
 
 export interface ISubscription {
   _id: string;

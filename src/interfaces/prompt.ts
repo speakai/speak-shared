@@ -1,4 +1,4 @@
-import { AssistantType, PromptState, MessageRole } from '../enums/index';
+import { AssistantType, PromptState, MessageRole } from '../enums/index.js';
 
 export interface IPromptRequest {
   mediaIds: string[];

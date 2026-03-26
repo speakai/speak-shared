@@ -1,4 +1,4 @@
-import { WebhookEvent, WebhookEventSource, MediaState, PromptState } from '../enums/index';
+import { WebhookEvent, WebhookEventSource, MediaState, PromptState } from '../enums/index.js';
 
 export interface IWebhook {
   _id: string;

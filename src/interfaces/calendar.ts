@@ -1,4 +1,4 @@
-import { CalendarType, MeetingPlatform, MeetingAttendeeType } from '../enums/index';
+import { CalendarType, MeetingPlatform, MeetingAttendeeType } from '../enums/index.js';
 
 export interface ICalendarEvent {
   _id: string;

@@ -1,4 +1,4 @@
-import { MeetingPlatform, MeetingStatus, MeetingAttendeeType } from '../enums/index';
+import { MeetingPlatform, MeetingStatus, MeetingAttendeeType } from '../enums/index.js';
 
 export interface IMeetingAttendee {
   email: string;

@@ -1,4 +1,4 @@
-import { MediaType, EmbedType } from '../enums/index';
+import { MediaType, EmbedType } from '../enums/index.js';
 
 export interface IEmbedSettings {
   backgroundImg: string;

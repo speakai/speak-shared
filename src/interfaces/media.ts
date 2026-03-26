@@ -1,4 +1,4 @@
-import { MediaType, MediaState } from '../enums/index';
+import { MediaType, MediaState } from '../enums/index.js';
 
 export interface ISentiment {
   document: {

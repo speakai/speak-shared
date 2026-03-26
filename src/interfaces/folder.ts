@@ -1,4 +1,4 @@
-import { FieldType } from '../enums/index';
+import { FieldType } from '../enums/index.js';
 
 export interface IFolder {
   _id: string;

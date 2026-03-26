@@ -1,4 +1,4 @@
-import { RecorderAnswerType } from '../enums/index';
+import { RecorderAnswerType } from '../enums/index.js';
 
 export interface IRecorderQuestion {
   id: string;

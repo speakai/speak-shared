@@ -5,7 +5,7 @@ import {
   AutomationScheduleTimePeriod,
   AssistantType,
   AllowedValuesMode,
-} from '../enums/index';
+} from '../enums/index.js';
 
 export interface IAutomationAction {
   type: AutomationAction;

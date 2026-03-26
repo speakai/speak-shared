@@ -1,5 +1,5 @@
-import { MediaState } from '../enums/index';
-import { ISentiment } from './media';
+import { MediaState } from '../enums/index.js';
+import { ISentiment } from './media.js';
 
 export interface ITextNote {
   _id: string;
