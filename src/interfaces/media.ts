@@ -1,4 +1,15 @@
 import { MediaType, MediaState } from '../enums/index.js';
+import { ITranscriptInstance } from './transcript.js';
+
+/** Insight item — used for all insight categories (keywords, people, brands, etc.) */
+export interface IInsightItem {
+  id: number | string;
+  name: string;
+  isCustom?: boolean;
+  isDeleted?: boolean;
+  instances?: ITranscriptInstance[];
+}
+
 
 export interface ISentiment {
   document: {

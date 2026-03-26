@@ -46,6 +46,26 @@ export interface IPromptReference {
   }[];
 }
 
+/** Prompt history item as returned by embed/library insight APIs */
+export interface IPromptHistoryItem {
+  _id: string;
+  title: string;
+  answer: string;
+  state: string;
+  references: IPromptReference[];
+  createdAt: string;
+}
+
+/** Lightweight chat message for UI state */
+export interface IChatMessage {
+  role: MessageRole;
+  content: string;
+  timestamp?: string;
+  references?: IPromptReference[];
+  promptId?: string;
+  state?: string;
+}
+
 export interface IPromptMessage {
   messageId: string;
   role: MessageRole;
