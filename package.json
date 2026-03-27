@@ -26,6 +26,7 @@
     "build": "tsc",
     "watch": "tsc --watch",
     "clean": "rm -rf dist",
+    "test": "vitest run",
     "prepublish": "npm run build"
   },
   "repository": {
@@ -41,6 +42,7 @@
     "README.md"
   ],
   "devDependencies": {
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "vitest": "^4.1.2"
   }
 }

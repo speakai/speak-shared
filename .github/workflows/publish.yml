@@ -35,6 +35,9 @@ jobs:
       - name: Verify ESM import
         run: node -e "import('./dist/index.js').then(() => console.log('ESM OK')).catch(e => { console.error(e); process.exit(1) })"
 
+      - name: Run tests
+        run: npm test
+
   release:
     needs: test
     runs-on: ubuntu-latest
