@@ -1,6 +1,6 @@
 {
   "name": "@speakai/shared",
-  "version": "1.1.1",
+  "version": "1.6.1",
   "description": "Shared types, enums and interfaces for Speak AI platform",
   "type": "module",
   "main": "dist/index.js",
@@ -42,6 +42,7 @@
     "README.md"
   ],
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.2",
     "typescript": "^5.4.0",
     "vitest": "^4.1.2"
   }
