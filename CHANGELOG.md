@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.6.2 (2026-03-27)
+
+- Fix Github Workflow (Internal)
+
 ## v1.1.1 (2026-03-27)
 
 - Fix minor workflow
