@@ -15,3 +15,4 @@ export * from './user.js';
 export * from './subscription.js';
 export * from './calendar.js';
 export * from './category.js';
+export * from './clip.js';

@@ -1,3 +1,6 @@
+/** Whether transcript data is pre-recorded or streaming live */
+export type TranscriptMode = 'static' | 'live';
+
 export enum TranscriptionEngine {
   AZURE = 'azure',
   ASSEMBLY = 'assembly',
