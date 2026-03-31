@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.7.0 (2026-03-31)
+
+- Added new clip interfaces and transcript utilities
+
 ## v1.6.2 (2026-03-27)
 
 - Fix Github Workflow (Internal)
