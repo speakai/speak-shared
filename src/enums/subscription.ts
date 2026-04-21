@@ -15,3 +15,9 @@ export enum SubscriptionDuration {
   '9Months' = '9months',
   Yearly = 'yearly',
 }
+
+export enum TrialTier {
+  T0 = 'T0',
+  T1 = 'T1',
+  T2 = 'T2',
+}
