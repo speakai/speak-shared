@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.9.0 (2026-04-21)
+
+- Added TrialTier enum for Phase A in trial-personalization
+
 ## v1.7.0 (2026-03-31)
 
 - Added new clip interfaces and transcript utilities
