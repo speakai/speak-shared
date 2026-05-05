@@ -4,6 +4,11 @@ export enum UserRole {
   MEMBER = 'member',
 }
 
+export enum UserType {
+  Individual = 'I',
+  Company = 'C',
+}
+
 export enum UserPermissionType {
   FOLDER = 'folder',
   RECORDER = 'recorder',
