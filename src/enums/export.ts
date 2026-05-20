@@ -7,6 +7,7 @@ export enum ExportFormatType {
   DOCX = 'docx',
   HTML = 'html',
   JSON = 'json',
+  MD = 'md',
   PDF = 'pdf',
   SOURCEFILE = 'sourceFile',
   SRT = 'srt',
