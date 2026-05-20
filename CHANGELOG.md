@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.9.2 (2026-05-20)
+
+- Updated test and export files for improved functionality
+
 ## v1.9.0 (2026-04-21)
 
 - Added TrialTier enum for Phase A in trial-personalization
