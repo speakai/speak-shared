@@ -89,6 +89,7 @@ jobs:
       - name: Analyze changes with AI
         if: steps.commits.outputs.has_changes == 'true'
         id: ai
+        continue-on-error: true
         uses: actions/ai-inference@v2
         with:
           model: openai/gpt-4o-mini
@@ -101,9 +102,10 @@ jobs:
             - "fix:", bug fixes, typo fixes → patch
             - "feat:", new types, new enums, new interfaces → minor
             - "BREAKING CHANGE", removed types, renamed exports → major
-            - "chore:", "docs:", "ci:", "refactor:" with no user-facing change → none
+            - "chore:", "docs:", "ci:", "refactor:" or any change you are unsure about → patch
             - Multiple changes: pick the highest bump level across all commits.
             - When unsure between patch and minor, choose patch.
+            - Never respond with "none". Every release must bump at least a patch.
 
             You MUST respond in EXACTLY this format — two lines, no markdown, no extra text:
             bump: patch
@@ -128,16 +130,15 @@ jobs:
           echo "Detected bump: $BUMP"
           echo "Changelog: $CHANGELOG"
 
-          if [ "$BUMP" = "none" ] || [ -z "$BUMP" ]; then
-            echo "should_release=false" >> "$GITHUB_OUTPUT"
-            echo "No user-facing changes — skipping release."
-            exit 0
-          fi
-
+          # Never skip a release. If the AI returned none/empty/invalid — e.g. a
+          # non-conventional commit message, or the AI step failed — fall back to
+          # a patch bump so every push to main is published to npm.
           if [[ "$BUMP" != "patch" && "$BUMP" != "minor" && "$BUMP" != "major" ]]; then
-            echo "should_release=false" >> "$GITHUB_OUTPUT"
-            echo "Invalid bump type: $BUMP — skipping release."
-            exit 0
+            echo "Bump '$BUMP' is not usable — defaulting to patch."
+            BUMP=patch
+          fi
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="Maintenance release"
           fi
 
           echo "should_release=true" >> "$GITHUB_OUTPUT"
