@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.11.1 (2026-06-09)
+
+- ci: also publish @speakai/shared to GitHub Packages (mirror npmjs)
+
 ## v1.11.0 (2026-06-09)
 
 - Added new models to the enum and deprecated certain models per provider
