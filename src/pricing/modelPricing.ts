@@ -44,6 +44,8 @@ export const MODEL_PRICING: Record<string, ModelPricing> = {
   [LLMModels.GPT_5_4_MINI_2026_03_17]: { inputPerMillion: 0.75, outputPerMillion: 4.5, cachedInputPerMillion: 0.075, provider: LLMProvider.OPENAI },
   [LLMModels.GPT_5_5]: { inputPerMillion: 5, outputPerMillion: 30, cachedInputPerMillion: 0.5, longContextThresholdTokens: 272000, inputPerMillionLong: 10, outputPerMillionLong: 45, cachedInputPerMillionLong: 1, provider: LLMProvider.OPENAI },
   [LLMModels.GPT_5_5_THINKING]: { inputPerMillion: 5, outputPerMillion: 30, cachedInputPerMillion: 0.5, longContextThresholdTokens: 272000, inputPerMillionLong: 10, outputPerMillionLong: 45, cachedInputPerMillionLong: 1, provider: LLMProvider.OPENAI }, // gpt-5.5 reasoning mode (same rate)
+  [LLMModels.GPT_5_2]: { inputPerMillion: 1.75, outputPerMillion: 14, cachedInputPerMillion: 0.175, provider: LLMProvider.OPENAI },
+  [LLMModels.GPT_5_4_NANO]: { inputPerMillion: 0.2, outputPerMillion: 1.25, cachedInputPerMillion: 0.02, provider: LLMProvider.OPENAI },
 
   // Anthropic
   [LLMModels.CLAUDE_2]: { inputPerMillion: 8, outputPerMillion: 24, provider: LLMProvider.ANTHROPIC }, // [S]
@@ -52,6 +54,7 @@ export const MODEL_PRICING: Record<string, ModelPricing> = {
   [LLMModels.CLAUDE_3_7_SONNET_LATEST]: { inputPerMillion: 3, outputPerMillion: 15, cachedInputPerMillion: 0.3, provider: LLMProvider.ANTHROPIC },
   [LLMModels.CLAUDE_SONNET_4_6]: { inputPerMillion: 3, outputPerMillion: 15, cachedInputPerMillion: 0.3, provider: LLMProvider.ANTHROPIC },
   [LLMModels.CLAUDE_OPUS_4_8]: { inputPerMillion: 5, outputPerMillion: 25, cachedInputPerMillion: 0.5, provider: LLMProvider.ANTHROPIC },
+  [LLMModels.CLAUDE_HAIKU_4_5]: { inputPerMillion: 1, outputPerMillion: 5, cachedInputPerMillion: 0.1, provider: LLMProvider.ANTHROPIC },
 
   // Google Gemini
   [LLMModels.GEMINI_1_5_PRO]: { inputPerMillion: 1.25, outputPerMillion: 5, provider: LLMProvider.GOOGLE }, // [S]
