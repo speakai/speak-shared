@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.10.0 (2026-06-09)
+
+- Added canonical LLMModels enum and MODEL_PRICING as a single source of truth
+
 ## v1.9.2 (2026-05-20)
 
 - Updated test and export files for improved functionality
