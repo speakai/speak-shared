@@ -3,6 +3,7 @@ export * from './media.js';
 export * from './transcript.js';
 export * from './text.js';
 export * from './folder.js';
+export * from './integration.js';
 export * from './recorder.js';
 export * from './embed.js';
 export * from './automation.js';
