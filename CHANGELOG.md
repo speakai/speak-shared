@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.12.0 (2026-06-10)
+
+- Added API-key contract types to integrations
+
 ## v1.11.1 (2026-06-09)
 
 - ci: also publish @speakai/shared to GitHub Packages (mirror npmjs)
