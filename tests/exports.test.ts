@@ -307,7 +307,39 @@ describe("Enum values — automation", () => {
     expect(AutomationTrigger.FOLDERS).toBe("folders");
     expect(AutomationTrigger.TAGS).toBe("tags");
     expect(AutomationTrigger.KEYWORDS).toBe("keywords");
-    expect(Object.values(AutomationTrigger)).toHaveLength(3);
+    expect(AutomationTrigger.COMPOSIO).toBe("composio");
+    expect(Object.values(AutomationTrigger)).toHaveLength(4);
+  });
+
+  it("StepType has expected values", async () => {
+    const { StepType } = await import("../src/enums/automation.js");
+
+    expect(StepType.MAGIC_PROMPT).toBe("magic-prompt");
+    expect(StepType.TRANSLATION).toBe("translation");
+    expect(StepType.COMPOSIO_ACTION).toBe("composio-action");
+    expect(StepType.FILTER).toBe("filter");
+    expect(Object.values(StepType)).toHaveLength(4);
+  });
+
+  it("AutomationRunStatus has expected values", async () => {
+    const { AutomationRunStatus } = await import("../src/enums/automation.js");
+
+    expect(AutomationRunStatus.PENDING).toBe("pending");
+    expect(AutomationRunStatus.RUNNING).toBe("running");
+    expect(AutomationRunStatus.COMPLETED).toBe("completed");
+    expect(AutomationRunStatus.FAILED).toBe("failed");
+    expect(AutomationRunStatus.KILLED).toBe("killed");
+    expect(Object.values(AutomationRunStatus)).toHaveLength(5);
+  });
+
+  it("AutomationIOType has expected values", async () => {
+    const { AutomationIOType } = await import("../src/enums/automation.js");
+
+    expect(AutomationIOType.FILE).toBe("file");
+    expect(AutomationIOType.MEDIA).toBe("media");
+    expect(AutomationIOType.INSIGHT).toBe("insight");
+    expect(AutomationIOType.NOTIFY).toBe("notify");
+    expect(Object.values(AutomationIOType)).toHaveLength(4);
   });
 
   it("AutomationAction has expected values", async () => {

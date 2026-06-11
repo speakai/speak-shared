@@ -2,6 +2,29 @@ export enum AutomationTrigger {
   FOLDERS = 'folders',
   TAGS = 'tags',
   KEYWORDS = 'keywords',
+  COMPOSIO = 'composio',
+}
+
+export enum StepType {
+  MAGIC_PROMPT = 'magic-prompt',
+  TRANSLATION = 'translation',
+  COMPOSIO_ACTION = 'composio-action',
+  FILTER = 'filter',
+}
+
+export enum AutomationRunStatus {
+  PENDING = 'pending',
+  RUNNING = 'running',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  KILLED = 'killed',
+}
+
+export enum AutomationIOType {
+  FILE = 'file',
+  MEDIA = 'media',
+  INSIGHT = 'insight',
+  NOTIFY = 'notify',
 }
 
 export enum AutomationAction {
