@@ -15,6 +15,7 @@ export interface IAutomationMagicPromptConfig {
   assistantTemplateId: string;
   prompt: string;
   fieldId?: string;
+  fieldIds?: string[];
   isIndividualFolder?: boolean;
   allowedValues?: string[];
   allowedValuesMode?: AllowedValuesMode;
