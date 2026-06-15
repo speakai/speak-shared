@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.14.0 (2026-06-15)
+
+- Added new automation graph enums and interfaces
+
 ## v1.13.0 (2026-06-15)
 
 - Added automation graph engine types: `AutomationStepType`, `AutomationRunStatus`, `AutomationIOType` enums and `COMPOSIO` trigger value
