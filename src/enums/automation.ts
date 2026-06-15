@@ -16,6 +16,10 @@ export enum AutomationAction {
  * single-action rows are projected to a one-step graph at read/execution time.
  */
 export enum AutomationStepType {
+  // The trigger node — always the first step in a graph; describes what fires the
+  // automation. Non-executable: the runner skips it (the indexed matching key
+  // stays top-level on the automation).
+  TRIGGER = 'trigger',
   MAGIC_PROMPT = 'magic-prompt',
   TRANSLATION = 'translation',
   COMPOSIO_ACTION = 'composio-action',

@@ -317,11 +317,12 @@ describe("Enum values — automation", () => {
   it("AutomationStepType has expected values", async () => {
     const { AutomationStepType } = await import("../src/enums/automation.js");
 
+    expect(AutomationStepType.TRIGGER).toBe("trigger");
     expect(AutomationStepType.MAGIC_PROMPT).toBe("magic-prompt");
     expect(AutomationStepType.TRANSLATION).toBe("translation");
     expect(AutomationStepType.COMPOSIO_ACTION).toBe("composio-action");
     expect(AutomationStepType.FILTER).toBe("filter");
-    expect(Object.values(AutomationStepType)).toHaveLength(4);
+    expect(Object.values(AutomationStepType)).toHaveLength(5);
   });
 
   it("AutomationRunStatus has expected values", async () => {

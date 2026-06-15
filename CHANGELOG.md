@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.15.0 (2026-06-15)
+
+- Added `AutomationStepType.TRIGGER` (the trigger node — first, non-executable step in a graph)
+- Added `IAutomationTriggerConfig` and `trigger?` on `IAutomationStep`
+
 ## v1.14.0 (2026-06-15)
 
 - Added new automation graph enums and interfaces

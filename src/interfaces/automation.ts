@@ -52,10 +52,26 @@ export interface IAutomationFilterRule {
   value?: string | number;
 }
 
+/**
+ * Config of the trigger node (the first step in a graph). All fields are optional:
+ * the indexed matching key (`type`, `folderIds`) is stored top-level on the
+ * automation, so a stored trigger node typically carries only the descriptor
+ * fields (triggerSlug/provider/app/values).
+ */
+export interface IAutomationTriggerConfig {
+  type?: AutomationTrigger;
+  folderIds?: string[];
+  values?: string[];
+  provider?: 'speak' | 'composio';
+  app?: string;
+  triggerSlug?: string;
+}
+
 /** A node in a graph automation (schemaVersion >= 2). */
 export interface IAutomationStep {
   stepId: string;
   stepType: AutomationStepType;
+  trigger?: IAutomationTriggerConfig;
   magicPrompt?: IAutomationMagicPromptConfig;
   translation?: IAutomationTranslationConfig;
   composio?: IAutomationComposioConfig;
