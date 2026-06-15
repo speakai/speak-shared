@@ -53,6 +53,9 @@ describe("Package exports — main entry", () => {
 
     // Automation
     expect(pkg.AutomationTrigger).toBeDefined();
+    expect(pkg.AutomationStepType).toBeDefined();
+    expect(pkg.AutomationRunStatus).toBeDefined();
+    expect(pkg.AutomationIOType).toBeDefined();
     expect(pkg.AssistantType).toBeDefined();
 
     // Subscription
@@ -307,7 +310,39 @@ describe("Enum values — automation", () => {
     expect(AutomationTrigger.FOLDERS).toBe("folders");
     expect(AutomationTrigger.TAGS).toBe("tags");
     expect(AutomationTrigger.KEYWORDS).toBe("keywords");
-    expect(Object.values(AutomationTrigger)).toHaveLength(3);
+    expect(AutomationTrigger.COMPOSIO).toBe("composio");
+    expect(Object.values(AutomationTrigger)).toHaveLength(4);
+  });
+
+  it("AutomationStepType has expected values", async () => {
+    const { AutomationStepType } = await import("../src/enums/automation.js");
+
+    expect(AutomationStepType.MAGIC_PROMPT).toBe("magic-prompt");
+    expect(AutomationStepType.TRANSLATION).toBe("translation");
+    expect(AutomationStepType.COMPOSIO_ACTION).toBe("composio-action");
+    expect(AutomationStepType.FILTER).toBe("filter");
+    expect(Object.values(AutomationStepType)).toHaveLength(4);
+  });
+
+  it("AutomationRunStatus has expected values", async () => {
+    const { AutomationRunStatus } = await import("../src/enums/automation.js");
+
+    expect(AutomationRunStatus.PENDING).toBe("pending");
+    expect(AutomationRunStatus.RUNNING).toBe("running");
+    expect(AutomationRunStatus.COMPLETED).toBe("completed");
+    expect(AutomationRunStatus.FAILED).toBe("failed");
+    expect(AutomationRunStatus.KILLED).toBe("killed");
+    expect(Object.values(AutomationRunStatus)).toHaveLength(5);
+  });
+
+  it("AutomationIOType has expected values", async () => {
+    const { AutomationIOType } = await import("../src/enums/automation.js");
+
+    expect(AutomationIOType.FILE).toBe("file");
+    expect(AutomationIOType.MEDIA).toBe("media");
+    expect(AutomationIOType.INSIGHT).toBe("insight");
+    expect(AutomationIOType.NOTIFY).toBe("notify");
+    expect(Object.values(AutomationIOType)).toHaveLength(4);
   });
 
   it("AutomationAction has expected values", async () => {

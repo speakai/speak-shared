@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.13.0 (2026-06-15)
+
+- Added automation graph engine types: `AutomationStepType`, `AutomationRunStatus`, `AutomationIOType` enums and `COMPOSIO` trigger value
+- Added `IAutomationStep`, `IAutomationRun`, `IAutomationRunStep`, `IAutomationMagicPromptConfig`, `IAutomationTranslationConfig`, `IAutomationFilterRule`, `IAutomationComposioConfig` interfaces
+- Extended `IAutomation` with `schemaVersion`, `steps[]`, and trigger `provider`/`app`/`triggerSlug`; added `fieldIds` to the magic-prompt config
+
 ## v1.12.0 (2026-06-10)
 
 - Added API-key contract types to integrations
