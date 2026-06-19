@@ -17,3 +17,4 @@ export * from './subscription.js';
 export * from './calendar.js';
 export * from './category.js';
 export * from './clip.js';
+export * from './dashboard.js';
