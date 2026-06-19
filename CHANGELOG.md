@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.15.0 (2026-06-19)
+
+- Added Dashboard wire contract interfaces for shared dashboards feature
+
 ## v1.14.0 (2026-06-15)
 
 - Added new automation graph enums and interfaces
