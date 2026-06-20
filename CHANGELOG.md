@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.16.0 (2026-06-20)
+
+- Added new EmbedType.DASHBOARD and new widget-data types for dashboards
+
 ## v1.15.0 (2026-06-19)
 
 - Added Dashboard wire contract interfaces for shared dashboards feature
