@@ -1,4 +1,5 @@
 import { MediaType, EmbedType } from '../enums/index.js';
+import { LeadCapture } from './dashboard.js';
 
 export interface IEmbedSettings {
   backgroundImg: string;
@@ -33,6 +34,10 @@ export interface IEmbed {
   isDeleted: boolean;
   privacyMode?: string;
   meta: IEmbedSettings;
+  /** Set when `embedType === EmbedType.DASHBOARD` — the shared dashboard this embed renders. */
+  dashboardId?: string;
+  /** Owner-settable lead-capture config for the shared surface. Defaults OFF. */
+  leadCapture?: LeadCapture;
   createdAt: Date;
   updatedAt: Date;
 }
