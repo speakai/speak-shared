@@ -306,6 +306,25 @@ export interface PublicStatCardsData {
   avgSentiment: number | null;
 }
 
+/** One row on the public `media-list` widget. The created date is pre-formatted. */
+export interface PublicMediaListRow {
+  id: string;
+  name: string;
+  type: string;
+  /** Pre-formatted created date (e.g. "Jun 18, 2026"). */
+  created: string;
+}
+
+/**
+ * `media-list` widget data — the most recent media inside the dashboard's shared
+ * folderScope. Rows are confined to COMPLETE/PROCESSED media in folderScope and
+ * carry no identity beyond the media id used to open the public insight view.
+ */
+export interface PublicMediaListData {
+  rows: PublicMediaListRow[];
+  total: number;
+}
+
 /* ===================================================================
  * Lead capture (shared embed/dashboard sharing contract)
  * =================================================================== */
