@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.16.1 (2026-06-22)
+
+- Updated dashboard.ts file
+
 ## v1.16.0 (2026-06-20)
 
 - Added new EmbedType.DASHBOARD and new widget-data types for dashboards
