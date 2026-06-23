@@ -1,9 +1,16 @@
 # Changelog
 
-## v1.15.0 (2026-06-15)
+## v1.16.1 (2026-06-22)
 
-- Added `AutomationStepType.TRIGGER` (the trigger node — first, non-executable step in a graph)
-- Added `IAutomationTriggerConfig` and `trigger?` on `IAutomationStep`
+- Updated dashboard.ts file
+
+## v1.16.0 (2026-06-20)
+
+- Added new EmbedType.DASHBOARD and new widget-data types for dashboards
+
+## v1.15.0 (2026-06-19)
+
+- Added Dashboard wire contract interfaces for shared dashboards feature
 
 ## v1.14.0 (2026-06-15)
 

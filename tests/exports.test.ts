@@ -502,7 +502,8 @@ describe("Enum values — embed", () => {
 
     expect(EmbedType.MEDIA_PLAYER).toBe("mediaPlayer");
     expect(EmbedType.REPOSITORY).toBe("repository");
-    expect(Object.values(EmbedType)).toHaveLength(2);
+    expect(EmbedType.DASHBOARD).toBe("dashboard");
+    expect(Object.values(EmbedType)).toHaveLength(3);
   });
 
   it("ImageSelectionType has expected values", async () => {
