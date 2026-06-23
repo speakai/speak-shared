@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.17.0 (2026-06-23)
+
+- Added AutomationStepType.TRIGGER and trigger step config
+
 ## v1.16.1 (2026-06-22)
 
 - Updated dashboard.ts file
