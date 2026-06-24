@@ -311,7 +311,8 @@ describe("Enum values — automation", () => {
     expect(AutomationTrigger.TAGS).toBe("tags");
     expect(AutomationTrigger.KEYWORDS).toBe("keywords");
     expect(AutomationTrigger.COMPOSIO).toBe("composio");
-    expect(Object.values(AutomationTrigger)).toHaveLength(4);
+    expect(AutomationTrigger.WEBHOOK).toBe("webhook");
+    expect(Object.values(AutomationTrigger)).toHaveLength(5);
   });
 
   it("AutomationStepType has expected values", async () => {
@@ -322,7 +323,8 @@ describe("Enum values — automation", () => {
     expect(AutomationStepType.TRANSLATION).toBe("translation");
     expect(AutomationStepType.COMPOSIO_ACTION).toBe("composio-action");
     expect(AutomationStepType.FILTER).toBe("filter");
-    expect(Object.values(AutomationStepType)).toHaveLength(5);
+    expect(AutomationStepType.SPEAK_UPLOAD).toBe("speak-upload");
+    expect(Object.values(AutomationStepType)).toHaveLength(6);
   });
 
   it("AutomationRunStatus has expected values", async () => {
@@ -343,7 +345,8 @@ describe("Enum values — automation", () => {
     expect(AutomationIOType.MEDIA).toBe("media");
     expect(AutomationIOType.INSIGHT).toBe("insight");
     expect(AutomationIOType.NOTIFY).toBe("notify");
-    expect(Object.values(AutomationIOType)).toHaveLength(4);
+    expect(AutomationIOType.DATA).toBe("data");
+    expect(Object.values(AutomationIOType)).toHaveLength(5);
   });
 
   it("AutomationAction has expected values", async () => {
