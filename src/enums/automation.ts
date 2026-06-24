@@ -4,6 +4,7 @@ export enum AutomationTrigger {
   KEYWORDS = 'keywords',
   // Reserved for the Composio integration slice; native execution ignores it for now.
   COMPOSIO = 'composio',
+  WEBHOOK = 'webhook',
 }
 
 export enum AutomationAction {
@@ -24,6 +25,7 @@ export enum AutomationStepType {
   TRANSLATION = 'translation',
   COMPOSIO_ACTION = 'composio-action',
   FILTER = 'filter',
+  SPEAK_UPLOAD = 'speak-upload',
 }
 
 /** Lifecycle status of an automation run and of each step within it. */
@@ -45,6 +47,7 @@ export enum AutomationIOType {
   MEDIA = 'media',
   INSIGHT = 'insight',
   NOTIFY = 'notify',
+  DATA = 'data',
 }
 
 export enum AutomationRunType {
