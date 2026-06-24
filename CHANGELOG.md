@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.18.0 (2026-06-24)
+
+- Added WEBHOOK trigger, SPEAK_UPLOAD step, and DATA io type to automation.
+
 ## v1.17.0 (2026-06-23)
 
 - Added AutomationStepType.TRIGGER and trigger step config
