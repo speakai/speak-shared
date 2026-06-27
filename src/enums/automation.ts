@@ -18,6 +18,12 @@ export enum AutomationStepType {
   COMPOSIO_ACTION = "composio-action",
   FILTER = "filter",
   SPEAK_UPLOAD = "speak-upload",
+  // Native notification step (in-app / email / Slack). Non-terminal once the DAG runner ships.
+  NOTIFY = "notify",
+  // Outbound HTTP call to an external URL (token-templated body/headers).
+  OUTBOUND_WEBHOOK = "outbound-webhook",
+  // Branch step: evaluates rules and routes execution down the matching ('true'/'false') edge.
+  CONDITION = "condition",
 }
 
 export enum AutomationRunStatus {

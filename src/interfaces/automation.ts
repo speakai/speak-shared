@@ -67,6 +67,30 @@ export interface IAutomationTriggerConfig {
   triggerSlug?: string;
 }
 
+/** Configuration of a notify step (in-app / email / Slack). `message` is token-templated. */
+export interface IAutomationNotifyConfig {
+  channel: 'in_app' | 'email' | 'slack';
+  target?: string;
+  message: string;
+}
+
+/**
+ * Configuration of an outbound-webhook step. `url`, `headers`, and `bodyTemplate` may carry
+ * `{{trigger.payload.*}}` / `{{step.<stepId>.*}}` tokens resolved at runtime.
+ */
+export interface IAutomationOutboundWebhookConfig {
+  url: string;
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  headers?: Record<string, string>;
+  bodyTemplate?: string | Record<string, unknown>;
+}
+
+/** Configuration of a condition step: evaluates rules and routes down the matching branch. */
+export interface IAutomationConditionConfig {
+  logic: 'AND' | 'OR';
+  rules: IAutomationFilterRule[];
+}
+
 /** A node in a graph automation (schemaVersion >= 2). */
 export interface IAutomationStep {
   stepId: string;
@@ -75,11 +99,17 @@ export interface IAutomationStep {
   magicPrompt?: IAutomationMagicPromptConfig;
   translation?: IAutomationTranslationConfig;
   composio?: IAutomationComposioConfig;
+  notify?: IAutomationNotifyConfig;
+  outboundWebhook?: IAutomationOutboundWebhookConfig;
+  condition?: IAutomationConditionConfig;
   filter?: {
     logic: 'AND' | 'OR';
     rules: IAutomationFilterRule[];
   };
+  /** Parent step ids (graph edges). A step runs once all dependsOn parents complete. */
   dependsOn?: string[];
+  /** For a step reached from a CONDITION parent: which branch of that parent leads here. */
+  branch?: 'true' | 'false';
 }
 
 export interface IAutomation {

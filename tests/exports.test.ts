@@ -324,7 +324,10 @@ describe("Enum values — automation", () => {
     expect(AutomationStepType.COMPOSIO_ACTION).toBe("composio-action");
     expect(AutomationStepType.FILTER).toBe("filter");
     expect(AutomationStepType.SPEAK_UPLOAD).toBe("speak-upload");
-    expect(Object.values(AutomationStepType)).toHaveLength(6);
+    expect(AutomationStepType.NOTIFY).toBe("notify");
+    expect(AutomationStepType.OUTBOUND_WEBHOOK).toBe("outbound-webhook");
+    expect(AutomationStepType.CONDITION).toBe("condition");
+    expect(Object.values(AutomationStepType)).toHaveLength(9);
   });
 
   it("AutomationRunStatus has expected values", async () => {
