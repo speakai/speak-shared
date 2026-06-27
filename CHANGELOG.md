@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.20.0 (2026-06-27)
+
+- Added new NOTIFY, OUTBOUND_WEBHOOK, CONDITION step types to automation
+
 ## v1.18.0 (2026-06-24)
 
 - Added WEBHOOK trigger, SPEAK_UPLOAD step, and DATA io type to automation.
