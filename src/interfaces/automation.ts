@@ -131,6 +131,9 @@ export interface IAutomation {
     app?: string;
     triggerSlug?: string;
   };
+  // Additional "Or" triggers: the automation enrolls when ANY of `trigger` or these
+  // match an event (fired once per event). Absent/empty = single-trigger (today's shape).
+  triggers?: IAutomationTriggerConfig[];
   action: IAutomationAction;
   // Graph steps (schemaVersion >= 2). Legacy rows leave this empty and keep using action.
   steps?: IAutomationStep[];
