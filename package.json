@@ -1,6 +1,6 @@
 {
   "name": "@speakai/shared",
-  "version": "1.21.0",
+  "version": "1.22.0",
   "description": "Shared types, enums and interfaces for Speak AI platform",
   "type": "module",
   "main": "dist/index.js",

@@ -53,6 +53,17 @@ export interface IAutomationFilterRule {
 }
 
 /**
+ * Per-field value constraint for `field_updated` triggers. When present in
+ * `IAutomationTriggerConfig.fieldValueMatches`, the automation fires only when
+ * the named field changes to one of the listed values. A field absent from the
+ * list matches any value — backward compatible.
+ */
+export interface IFieldValueMatch {
+  fieldId: string;
+  values: string[];
+}
+
+/**
  * Config of the trigger node (the first step in a graph). All fields are optional:
  * the indexed matching key (`type`, `folderIds`) is stored top-level on the
  * automation, so a stored trigger node typically carries only the descriptor
@@ -65,6 +76,13 @@ export interface IAutomationTriggerConfig {
   provider?: 'speak' | 'composio';
   app?: string;
   triggerSlug?: string;
+  /**
+   * Optional per-field value constraints for `field_updated` triggers.
+   * Absent / empty = any value fires for all watched fields (backward compatible).
+   * Each entry names a watched field id; the automation fires only when that
+   * field changes to one of the listed values.
+   */
+  fieldValueMatches?: IFieldValueMatch[];
 }
 
 /** Configuration of a notify step (in-app / email / Slack). `message` is token-templated. */
