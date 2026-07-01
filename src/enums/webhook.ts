@@ -27,4 +27,7 @@ export enum WebhookEvent {
 export enum WebhookEventSource {
   SPEAK = 'speak',
   ZAPIER = 'zapier',
+  N8N = 'n8n',
+  PIPEDREAM = 'pipedream',
+  MAKE = 'make',
 }
