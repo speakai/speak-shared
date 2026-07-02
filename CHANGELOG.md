@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.21.0 (2026-07-01)
+
+- Added new webhook types
+
 ## v1.20.0 (2026-06-27)
 
 - Added new NOTIFY, OUTBOUND_WEBHOOK, CONDITION step types to automation

@@ -401,7 +401,10 @@ describe("Enum values — webhook", () => {
 
     expect(WebhookEventSource.SPEAK).toBe("speak");
     expect(WebhookEventSource.ZAPIER).toBe("zapier");
-    expect(Object.values(WebhookEventSource)).toHaveLength(2);
+    expect(WebhookEventSource.N8N).toBe("n8n");
+    expect(WebhookEventSource.PIPEDREAM).toBe("pipedream");
+    expect(WebhookEventSource.MAKE).toBe("make");
+    expect(Object.values(WebhookEventSource)).toHaveLength(5);
   });
 });
 
