@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.23.0 (2026-07-02)
+
+- Added IFieldValueMatch interface and IAutomation.triggers[] for multi-trigger functionality
+
 ## v1.21.0 (2026-07-01)
 
 - Added new webhook types
