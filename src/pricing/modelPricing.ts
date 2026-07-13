@@ -75,6 +75,9 @@ export const MODEL_PRICING: Record<string, ModelPricing> = {
   [LLMModels.GEMINI_3_1_FLASH_LITE]: { inputPerMillion: 0.25, outputPerMillion: 1.5, provider: LLMProvider.GOOGLE },
   [LLMModels.GEMINI_3_1_PRO_PREVIEW]: { inputPerMillion: 2, outputPerMillion: 12, longContextThresholdTokens: 200000, inputPerMillionLong: 4, outputPerMillionLong: 18, provider: LLMProvider.GOOGLE },
   [LLMModels.GEMINI_3_5_FLASH]: { inputPerMillion: 1.5, outputPerMillion: 9, cachedInputPerMillion: 0.15, provider: LLMProvider.GOOGLE },
+
+  [LLMModels.GROK_4_5]: { inputPerMillion: 2.2, outputPerMillion: 6.6, cachedInputPerMillion: 0.22, provider: LLMProvider.OPENROUTER },
+  [LLMModels.GLM_4_6]: { inputPerMillion: 0.473, outputPerMillion: 1.925, cachedInputPerMillion: 0.0473, provider: LLMProvider.OPENROUTER },
 };
 
 /** Look up pricing for a model id (enum value or raw string). Undefined if unknown. */

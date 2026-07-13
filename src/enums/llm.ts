@@ -9,6 +9,7 @@ export enum LLMProvider {
   OPENAI = 'openai',
   GOOGLE = 'google',
   ANTHROPIC = 'anthropic',
+  OPENROUTER = 'openrouter',
 }
 
 export enum LLMModels {
@@ -64,4 +65,7 @@ export enum LLMModels {
   GEMINI_3_1_FLASH_LITE = 'gemini-3.1-flash-lite',
   GEMINI_3_1_PRO_PREVIEW = 'gemini-3.1-pro-preview',
   GEMINI_3_5_FLASH = 'gemini-3.5-flash',
+
+  GROK_4_5 = 'x-ai/grok-4.5',
+  GLM_4_6 = 'z-ai/glm-4.6',
 }
