@@ -67,5 +67,5 @@ export enum LLMModels {
   GEMINI_3_5_FLASH = 'gemini-3.5-flash',
 
   GROK_4_5 = 'x-ai/grok-4.5',
-  GLM_4_6 = 'z-ai/glm-4.6',
+  GLM_5_2 = 'z-ai/glm-5.2',
 }
