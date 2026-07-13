@@ -76,6 +76,66 @@ describe("Package exports — main entry", () => {
   });
 });
 
+describe("Package exports — dashboard spec v2", () => {
+  it("exports the zod-free dashboard helpers from the main entry", async () => {
+    const pkg = await import("../src/index.js");
+
+    expect(pkg.resolveSectionGroups).toBeTypeOf("function");
+    expect(pkg.rectsOverlap).toBeTypeOf("function");
+    expect(pkg.exceedsJsonDepth).toBeTypeOf("function");
+    expect(pkg.SECTION_OVERVIEW_ID).toBe("overview");
+    expect(pkg.DASHBOARD_GRID_COLS).toBe(12);
+    expect(pkg.MAX_FILTER_DEPTH).toBe(5);
+    expect(pkg.MAX_JSON_DEPTH).toBe(40);
+  });
+
+  it("does NOT export the schemas from the main entry (zod must stay out of the root barrel)", async () => {
+    const pkg = await import("../src/index.js");
+
+    expect("dashboardSpecSchema" in pkg).toBe(false);
+    expect("buildDashboardSpecSchema" in pkg).toBe(false);
+  });
+
+  it("exports the schemas from the schemas sub-path", async () => {
+    const schemas = await import("../src/schemas/index.js");
+
+    expect(schemas.buildDashboardSpecSchema).toBeTypeOf("function");
+    expect(schemas.dashboardSpecSchema).toBeDefined();
+
+    // Every leaf schema the editor and the server compose against.
+    expect(schemas.filterSchema).toBeDefined();
+    expect(schemas.filterOpSchema).toBeDefined();
+    expect(schemas.aggSchema).toBeDefined();
+    expect(schemas.builtinMetricSchema).toBeDefined();
+    expect(schemas.baseMetricSchema).toBeDefined();
+    expect(schemas.exprSchema).toBeDefined();
+    expect(schemas.metricSchema).toBeDefined();
+    expect(schemas.groupBySchema).toBeDefined();
+    expect(schemas.granularitySchema).toBeDefined();
+    expect(schemas.thresholdSchema).toBeDefined();
+    expect(schemas.thresholdStatusSchema).toBeDefined();
+    expect(schemas.sourceSchema).toBeDefined();
+    expect(schemas.dateRangeSchema).toBeDefined();
+    expect(schemas.dateRangePresetSchema).toBeDefined();
+    expect(schemas.bindingSchema).toBeDefined();
+    expect(schemas.columnSchema).toBeDefined();
+    expect(schemas.layoutSchema).toBeDefined();
+    expect(schemas.widgetSchema).toBeDefined();
+    expect(schemas.widgetTypeSchema).toBeDefined();
+    expect(schemas.sectionSchema).toBeDefined();
+  });
+
+  it("does not leak the raw, unguarded schemas", async () => {
+    const schemas = await import("../src/schemas/index.js");
+
+    // Raw schemas bypass the structural depth guard and can throw RangeError.
+    // They are private to the module by design — nothing may re-export them.
+    for (const name of ["filterSchemaRaw", "metricSchemaRaw", "widgetSchemaRaw", "bindingSchemaRaw", "columnSchemaRaw", "baseMetricSchemaRaw", "exprSchemaRaw"]) {
+      expect(name in schemas).toBe(false);
+    }
+  });
+});
+
 describe("Package exports — enums sub-path", () => {
   it("exports all enums from enums entry", async () => {
     const enums = await import("../src/enums/index.js");

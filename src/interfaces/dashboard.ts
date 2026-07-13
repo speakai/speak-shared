@@ -6,6 +6,43 @@
  * document type may extend these; the client imports them directly.
  */
 
+/* ===================================================================
+ * Dashboard spec v2 — types
+ * ===================================================================
+ *
+ * Type-only re-exports of the Zod-inferred spec types. `export type` is erased
+ * at build, so importing these from the package root does NOT pull zod into the
+ * consumer's bundle. To VALIDATE a spec (not just type it), import the schema
+ * from the `@speakai/shared/schemas` subpath instead.
+ */
+export type {
+  Agg,
+  BaseMetric,
+  Binding,
+  BuiltinMetric,
+  Column,
+  DashboardSpec,
+  DashboardSpecInput,
+  DateRange,
+  DateRangePreset,
+  Expr,
+  FieldTypeMap,
+  Filter,
+  FilterOp,
+  Granularity,
+  GroupBy,
+  Metric,
+  Section,
+  Source,
+  SpecFieldType,
+  Threshold,
+  ThresholdStatus,
+  Widget,
+  WidgetLayout,
+  WidgetOf,
+  WidgetType,
+} from '../schemas/dashboard-spec.schema.js';
+
 /**
  * Built-in dashboard widget types — the canonical render contract shared by the
  * builder (speak-client) and the public view (speak-media-library).
@@ -14,6 +51,8 @@
  * widget-data endpoint; the last four (`people`, `comparison`, `sentiment-trend`,
  * `notes`) are client-rendered bodies the builder enumerates. Persisting these
  * extra literals is safe because `IDashboardWidget.type` is `… | string`.
+ *
+ * @deprecated Spec v2 — use `WidgetType` from the dashboard spec. Removed in @speakai/shared 2.0.0.
  */
 export type DashboardWidgetType =
   | 'stat-cards'
@@ -29,7 +68,11 @@ export type DashboardWidgetType =
   | 'sentiment-trend'
   | 'notes';
 
-/** Grid placement for a widget (react-grid-layout geometry; legacy order/colSpan optional). */
+/**
+ * Grid placement for a widget (react-grid-layout geometry; legacy order/colSpan optional).
+ *
+ * @deprecated Spec v2 — use `WidgetLayout`. Removed in @speakai/shared 2.0.0.
+ */
 export interface IDashboardWidgetLayout {
   x?: number;
   y?: number;
@@ -43,7 +86,11 @@ export interface IDashboardWidgetLayout {
   colSpan?: number;
 }
 
-/** A single configured widget on a dashboard. */
+/**
+ * A single configured widget on a dashboard.
+ *
+ * @deprecated Spec v2 — use `Widget`. Removed in @speakai/shared 2.0.0.
+ */
 export interface IDashboardWidget {
   id: string;
   type: DashboardWidgetType | string;
@@ -53,14 +100,22 @@ export interface IDashboardWidget {
   layout: IDashboardWidgetLayout;
 }
 
-/** Date scope for a dashboard (preset key, with optional explicit bounds). */
+/**
+ * Date scope for a dashboard (preset key, with optional explicit bounds).
+ *
+ * @deprecated Spec v2 — use `DateRange`. Removed in @speakai/shared 2.0.0.
+ */
 export interface IDashboardDateRange {
   preset?: string;
   startDate?: string | Date;
   endDate?: string | Date;
 }
 
-/** Full dashboard wire shape (owner/authed view). */
+/**
+ * Full dashboard wire shape (owner/authed view).
+ *
+ * @deprecated Spec v2 — use `DashboardSpec`. Removed in @speakai/shared 2.0.0.
+ */
 export interface IDashboard {
   dashboardId: string;
   title: string;
@@ -82,7 +137,11 @@ export interface IDashboard {
   updatedAt?: string | Date;
 }
 
-/** Public (token-resolved, unauthenticated) projection — secret/internal fields stripped. */
+/**
+ * Public (token-resolved, unauthenticated) projection — secret/internal fields stripped.
+ *
+ * @deprecated Spec v2 — use `DashboardSpec`. Removed in @speakai/shared 2.0.0.
+ */
 export interface IPublicDashboard {
   title: string;
   description?: string;
@@ -92,7 +151,11 @@ export interface IPublicDashboard {
   dateRange?: IDashboardDateRange;
 }
 
-/** Create payload. */
+/**
+ * Create payload.
+ *
+ * @deprecated Spec v2 — use `DashboardSpecInput`. Removed in @speakai/shared 2.0.0.
+ */
 export interface ICreateDashboardPayload {
   title: string;
   description?: string;
@@ -105,15 +168,25 @@ export interface ICreateDashboardPayload {
   isDefault?: boolean;
 }
 
-/** Update payload (partial). */
+/**
+ * Update payload (partial).
+ *
+ * @deprecated Spec v2 — use `Partial<DashboardSpecInput>`. Removed in @speakai/shared 2.0.0.
+ */
 export type IUpdateDashboardPayload = Partial<ICreateDashboardPayload>;
 
 /* ===================================================================
  * Widget metadata + sizing (builder layout contract)
  * =================================================================== */
 
-/** react-grid-layout column count the dashboard grid is laid out on. */
-export const DASHBOARD_GRID_COLS = 12;
+/**
+ * react-grid-layout column count the dashboard grid is laid out on.
+ *
+ * Defined in `utils/dashboard-spec.ts` (which must stay zod-free, and which the
+ * schema's `layout` bounds import) and re-exported here so existing consumers
+ * keep compiling unchanged. One grid width, one name — do not add a second.
+ */
+export { DASHBOARD_GRID_COLS } from '../utils/dashboard-spec.js';
 
 /**
  * Per-widget-type presentation metadata: default title, default grid geometry,
