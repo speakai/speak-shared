@@ -46,6 +46,9 @@ export const MODEL_PRICING: Record<string, ModelPricing> = {
   [LLMModels.GPT_5_4_NANO]: { inputPerMillion: 0.2, outputPerMillion: 1.25, cachedInputPerMillion: 0.02, provider: LLMProvider.OPENAI },
   [LLMModels.GPT_5_5]: { inputPerMillion: 5, outputPerMillion: 30, cachedInputPerMillion: 0.5, longContextThresholdTokens: 272000, inputPerMillionLong: 10, outputPerMillionLong: 45, cachedInputPerMillionLong: 1, provider: LLMProvider.OPENAI },
   [LLMModels.GPT_5_5_THINKING]: { inputPerMillion: 5, outputPerMillion: 30, cachedInputPerMillion: 0.5, longContextThresholdTokens: 272000, inputPerMillionLong: 10, outputPerMillionLong: 45, cachedInputPerMillionLong: 1, provider: LLMProvider.OPENAI }, // gpt-5.5 reasoning mode (same rate)
+  [LLMModels.GPT_5_6_SOL]: { inputPerMillion: 5, outputPerMillion: 30, cachedInputPerMillion: 0.5, provider: LLMProvider.OPENAI },
+  [LLMModels.GPT_5_6_TERRA]: { inputPerMillion: 2.5, outputPerMillion: 15, cachedInputPerMillion: 0.25, provider: LLMProvider.OPENAI },
+  [LLMModels.GPT_5_6_LUNA]: { inputPerMillion: 1, outputPerMillion: 6, cachedInputPerMillion: 0.1, provider: LLMProvider.OPENAI },
 
   // ═══════════════ Anthropic (cache read = 0.1x input) ═══════════════
   // Deprecated
@@ -56,6 +59,7 @@ export const MODEL_PRICING: Record<string, ModelPricing> = {
   // Live
   [LLMModels.CLAUDE_HAIKU_4_5]: { inputPerMillion: 1, outputPerMillion: 5, cachedInputPerMillion: 0.1, provider: LLMProvider.ANTHROPIC },
   [LLMModels.CLAUDE_SONNET_4_6]: { inputPerMillion: 3, outputPerMillion: 15, cachedInputPerMillion: 0.3, provider: LLMProvider.ANTHROPIC },
+  [LLMModels.CLAUDE_SONNET_5]: { inputPerMillion: 3, outputPerMillion: 15, cachedInputPerMillion: 0.3, provider: LLMProvider.ANTHROPIC },
   [LLMModels.CLAUDE_OPUS_4_8]: { inputPerMillion: 5, outputPerMillion: 25, cachedInputPerMillion: 0.5, provider: LLMProvider.ANTHROPIC },
 
   // ═══════════════ Google Gemini ═══════════════
@@ -67,10 +71,10 @@ export const MODEL_PRICING: Record<string, ModelPricing> = {
   [LLMModels.GEMINI_2_5_PRO]: { inputPerMillion: 1.25, outputPerMillion: 10, longContextThresholdTokens: 200000, inputPerMillionLong: 2.5, outputPerMillionLong: 15, provider: LLMProvider.GOOGLE },
   [LLMModels.GEMINI_2_5_FLASH]: { inputPerMillion: 0.3, outputPerMillion: 2.5, cachedInputPerMillion: 0.03, provider: LLMProvider.GOOGLE },
   [LLMModels.GEMINI_2_5_FLASH_LITE]: { inputPerMillion: 0.1, outputPerMillion: 0.4, cachedInputPerMillion: 0.01, provider: LLMProvider.GOOGLE },
-  [LLMModels.GEMINI_3_FLASH_PREVIEW]: { inputPerMillion: 0.5, outputPerMillion: 3, provider: LLMProvider.GOOGLE },
+  [LLMModels.GEMINI_3_FLASH_PREVIEW]: { inputPerMillion: 0.5, outputPerMillion: 3, cachedInputPerMillion: 0.05, provider: LLMProvider.GOOGLE },
   [LLMModels.GEMINI_3_1_FLASH_LITE]: { inputPerMillion: 0.25, outputPerMillion: 1.5, provider: LLMProvider.GOOGLE },
   [LLMModels.GEMINI_3_1_PRO_PREVIEW]: { inputPerMillion: 2, outputPerMillion: 12, longContextThresholdTokens: 200000, inputPerMillionLong: 4, outputPerMillionLong: 18, provider: LLMProvider.GOOGLE },
-  [LLMModels.GEMINI_3_5_FLASH]: { inputPerMillion: 1.5, outputPerMillion: 9, provider: LLMProvider.GOOGLE },
+  [LLMModels.GEMINI_3_5_FLASH]: { inputPerMillion: 1.5, outputPerMillion: 9, cachedInputPerMillion: 0.15, provider: LLMProvider.GOOGLE },
 };
 
 /** Look up pricing for a model id (enum value or raw string). Undefined if unknown. */

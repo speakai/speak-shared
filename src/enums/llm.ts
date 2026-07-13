@@ -35,6 +35,9 @@ export enum LLMModels {
   GPT_5_4_NANO = 'gpt-5.4-nano',
   GPT_5_5 = 'gpt-5.5',
   GPT_5_5_THINKING = 'gpt-5.5-thinking',
+  GPT_5_6_SOL = 'gpt-5.6-sol',
+  GPT_5_6_TERRA = 'gpt-5.6-terra',
+  GPT_5_6_LUNA = 'gpt-5.6-luna',
 
   // ═══════════════ Anthropic ═══════════════
   // Deprecated
@@ -45,6 +48,7 @@ export enum LLMModels {
   // Live
   CLAUDE_HAIKU_4_5 = 'claude-haiku-4-5',
   CLAUDE_SONNET_4_6 = 'claude-sonnet-4-6',
+  CLAUDE_SONNET_5 = 'claude-sonnet-5',
   CLAUDE_OPUS_4_8 = 'claude-opus-4-8',
 
   // ═══════════════ Google Gemini ═══════════════
