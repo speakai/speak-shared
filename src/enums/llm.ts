@@ -9,6 +9,7 @@ export enum LLMProvider {
   OPENAI = 'openai',
   GOOGLE = 'google',
   ANTHROPIC = 'anthropic',
+  OPENROUTER = 'openrouter',
 }
 
 export enum LLMModels {
@@ -35,6 +36,9 @@ export enum LLMModels {
   GPT_5_4_NANO = 'gpt-5.4-nano',
   GPT_5_5 = 'gpt-5.5',
   GPT_5_5_THINKING = 'gpt-5.5-thinking',
+  GPT_5_6_SOL = 'gpt-5.6-sol',
+  GPT_5_6_TERRA = 'gpt-5.6-terra',
+  GPT_5_6_LUNA = 'gpt-5.6-luna',
 
   // ═══════════════ Anthropic ═══════════════
   // Deprecated
@@ -45,6 +49,7 @@ export enum LLMModels {
   // Live
   CLAUDE_HAIKU_4_5 = 'claude-haiku-4-5',
   CLAUDE_SONNET_4_6 = 'claude-sonnet-4-6',
+  CLAUDE_SONNET_5 = 'claude-sonnet-5',
   CLAUDE_OPUS_4_8 = 'claude-opus-4-8',
 
   // ═══════════════ Google Gemini ═══════════════
@@ -60,4 +65,7 @@ export enum LLMModels {
   GEMINI_3_1_FLASH_LITE = 'gemini-3.1-flash-lite',
   GEMINI_3_1_PRO_PREVIEW = 'gemini-3.1-pro-preview',
   GEMINI_3_5_FLASH = 'gemini-3.5-flash',
+
+  GROK_4_5 = 'x-ai/grok-4.5',
+  GLM_5_2 = 'z-ai/glm-5.2',
 }
