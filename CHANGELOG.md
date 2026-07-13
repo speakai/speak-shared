@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.24.0 (2026-07-13)
+
+- Added new chat models and updated pricing for Grok, GLM, GPT, and Claude.
+
 ## v1.23.0 (2026-07-02)
 
 - Added IFieldValueMatch interface and IAutomation.triggers[] for multi-trigger functionality
