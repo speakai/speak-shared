@@ -17,18 +17,36 @@
  * appears in comments throughout the built output; only a real import matters.
  */
 import { execSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 const DIST = resolve(dirname(fileURLToPath(import.meta.url)), '../dist');
+const SRC = resolve(dirname(fileURLToPath(import.meta.url)), '../src');
+
+/** Newest mtime (ms) among all `.ts` sources — the freshness bar `dist` must clear. */
+function newestSrcMtimeMs(dir: string = SRC): number {
+  let newest = 0;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      newest = Math.max(newest, newestSrcMtimeMs(full));
+    } else if (entry.name.endsWith('.ts')) {
+      newest = Math.max(newest, statSync(full).mtimeMs);
+    }
+  }
+  return newest;
+}
 
 /** Every module specifier a built ESM file imports or re-exports from. */
 function importSpecifiers(source: string): string[] {
   const specifiers: string[] = [];
-  // `import ... from 'x'` / `export ... from 'x'` / bare `import 'x'`
-  const staticRe = /(?:^|[\s;}])(?:import|export)\s+(?:[\s\S]*?\sfrom\s+)?['"]([^'"]+)['"]/g;
+  // `import ... from 'x'` / `export ... from 'x'` / bare `import 'x'`.
+  // The clause-before-`from` scan excludes `;` and quotes so a match can never
+  // span past the end of its own statement — otherwise a bare side-effect import
+  // sitting between a no-`from` `export { x };` and a later ` from ` is swallowed.
+  const staticRe = /(?:^|[\s;}])(?:import|export)\s+(?:[^;'"]*?\sfrom\s+)?['"]([^'"]+)['"]/g;
   // `import('x')`
   const dynamicRe = /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
 
@@ -65,13 +83,22 @@ const isZod = (spec: string) => spec === 'zod' || spec.startsWith('zod/');
 
 describe('root barrel is zod-free', () => {
   beforeAll(() => {
-    if (!existsSync(resolve(DIST, 'index.js'))) {
+    // Rebuild when dist is MISSING or STALE. A missing-only check walks a stale
+    // dist on local runs — a developer who edits src/index.ts without rebuilding
+    // gets a false green, so the barrel regression escapes until CI.
+    const indexJs = resolve(DIST, 'index.js');
+    if (!existsSync(indexJs) || statSync(indexJs).mtimeMs < newestSrcMtimeMs()) {
       execSync('npm run build', { cwd: resolve(DIST, '..'), stdio: 'inherit' });
     }
   });
 
   it('dist/index.js has been built', () => {
     expect(existsSync(resolve(DIST, 'index.js'))).toBe(true);
+  });
+
+  it('dist is not stale relative to src — the walk ran against current output', () => {
+    const indexMtime = statSync(resolve(DIST, 'index.js')).mtimeMs;
+    expect(indexMtime).toBeGreaterThanOrEqual(newestSrcMtimeMs());
   });
 
   it('no module reachable from dist/index.js imports zod', () => {
@@ -91,5 +118,28 @@ describe('root barrel is zod-free', () => {
     // `export type { … }` must be fully erased — a value re-export here would
     // silently drag the schema module (and zod) into the root barrel.
     expect(built).not.toContain('dashboard-spec.schema.js');
+  });
+});
+
+describe('importSpecifiers — statement-bounded parsing', () => {
+  // Regression: a lazy cross-statement scan swallowed a bare side-effect import
+  // that followed a no-`from` `export { x };` while hunting for the next ` from `,
+  // hiding that import's subtree (and any zod behind it) from the graph walk.
+  it('captures a side-effect import that follows a no-"from" export statement', () => {
+    const src = "export { other };\nimport './zz.js';\nexport { other as o2 } from './other.js';";
+    const specs = importSpecifiers(src);
+    expect(specs).toContain('./zz.js');
+    expect(specs).toContain('./other.js');
+  });
+
+  it('still captures the ordinary import/export/side-effect/dynamic forms', () => {
+    const src = [
+      "import { z } from 'zod';",
+      "export * from './schemas/index.js';",
+      "import './polyfill.js';",
+      "const x = await import('./lazy.js');",
+    ].join('\n');
+    const specs = importSpecifiers(src);
+    expect(specs).toEqual(expect.arrayContaining(['zod', './schemas/index.js', './polyfill.js', './lazy.js']));
   });
 });

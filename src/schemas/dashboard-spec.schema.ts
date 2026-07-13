@@ -179,10 +179,18 @@ export const groupBySchema = z.discriminatedUnion('kind', [
 export const thresholdStatusSchema = z.enum(['good', 'warn', 'critical', 'neutral']);
 
 /** Discriminated on `op` so `between` is the only form that takes a tuple. */
-const thresholdWhenSchema = z.discriminatedUnion('op', [
-  z.strictObject({ op: z.enum(['gte', 'gt', 'lt', 'lte']), value: z.number() }),
-  z.strictObject({ op: z.literal('between'), value: z.tuple([z.number(), z.number()]) }),
-]);
+const thresholdWhenSchema = z
+  .discriminatedUnion('op', [
+    z.strictObject({ op: z.enum(['gte', 'gt', 'lt', 'lte']), value: z.number() }),
+    z.strictObject({ op: z.literal('between'), value: z.tuple([z.number(), z.number()]) }),
+  ])
+  .superRefine((w, ctx) => {
+    // A reversed band ([high, low]) validates structurally but matches no value —
+    // the configured coloring silently never fires. Reject it, don't strip it.
+    if (w.op === 'between' && w.value[0] > w.value[1]) {
+      ctx.addIssue({ code: 'custom', path: ['value'], message: 'between bounds must be [low, high]' });
+    }
+  });
 
 export const thresholdSchema = z.strictObject({
   when: thresholdWhenSchema,
@@ -276,6 +284,9 @@ const tableConfigSchema = z
     }
     if (c.rowsAre === 'groups' && !c.groupBy) {
       ctx.addIssue({ code: 'custom', path: ['groupBy'], message: 'rowsAre:"groups" requires a groupBy' });
+    }
+    if (c.rowsAre === 'records' && c.groupBy) {
+      ctx.addIssue({ code: 'custom', path: ['groupBy'], message: 'rowsAre:"records" must not carry a groupBy' });
     }
   });
 
@@ -446,6 +457,21 @@ export type WidgetType = z.infer<typeof widgetTypeSchema>;
 export type Section = z.infer<typeof sectionSchema>;
 
 /**
+ * Drift guard: `widgetTypeSchema` (which drives the editor palette and MCP tool
+ * enum) is hand-written, so it can silently fall out of sync with the discriminated
+ * union in `widgetSchemaRaw`. This assertion ties the two at compile time — add a
+ * variant to one but not the other and `_WidgetTypeParity` resolves to `false`,
+ * failing `AssertTrue` and breaking the build. Bidirectional by construction.
+ */
+type AssertTrue<T extends true> = T;
+type WidgetTypeParity = [Widget['type']] extends [WidgetType]
+  ? [WidgetType] extends [Widget['type']]
+    ? true
+    : false
+  : false;
+type _WidgetTypeParity = AssertTrue<WidgetTypeParity>;
+
+/**
  * Parsed/persisted spec — `revision` is always present.
  *
  * Derived from the BASE schema, not from `dashboardSpecSchema`. The exported
@@ -476,14 +502,16 @@ type Path = (string | number)[];
 /**
  * A reference to a field by name, and how it is being used.
  *
- * - `agg`      — an aggregator is applied (must be a number/currency field)
- * - `group`    — used as a `kind:"field"` groupBy (must NOT be date/datetime)
- * - `mention`  — merely named (filter predicate, raw table column, distribution).
- *                Only existence is checked; any field type is fine.
+ * - `agg`       — an aggregator is applied (must be a number/currency field)
+ * - `group`     — used as a `kind:"field"` groupBy (must NOT be date/datetime)
+ * - `timeGroup` — used as a `kind:"time"` groupBy (MUST be date/datetime)
+ * - `mention`   — merely named (filter predicate, raw table column, distribution).
+ *                 Only existence is checked; any field type is fine.
  */
 type FieldRef =
   | { use: 'agg'; fieldName: string; agg: Agg; path: Path }
   | { use: 'group'; fieldName: string; path: Path }
+  | { use: 'timeGroup'; fieldName: string; path: Path }
   | { use: 'mention'; fieldName: string; path: Path };
 
 /**
@@ -531,8 +559,8 @@ function addMetric(acc: WidgetRefs, metric: Metric, path: Path): void {
     addBaseMetric(acc, metric, path);
     return;
   }
-  exprOperands(metric.expr).forEach((operand, i) =>
-    addBaseMetric(acc, operand, [...path, 'expr', 'operands', i]),
+  exprOperands(metric.expr).forEach(([key, operand]) =>
+    addBaseMetric(acc, operand, [...path, 'expr', key]),
   );
   addFilter(acc, metric.filter, [...path, 'filter']);
 }
@@ -541,7 +569,7 @@ function addGroupBy(acc: WidgetRefs, groupBy: GroupBy, path: Path): void {
   if (groupBy.kind === 'field') {
     acc.fields.push({ use: 'group', fieldName: groupBy.fieldName, path: [...path, 'fieldName'] });
   } else if (groupBy.kind === 'time') {
-    acc.fields.push({ use: 'mention', fieldName: groupBy.fieldName, path: [...path, 'fieldName'] });
+    acc.fields.push({ use: 'timeGroup', fieldName: groupBy.fieldName, path: [...path, 'fieldName'] });
   }
   // folder | speaker name no field.
 }
@@ -630,13 +658,18 @@ function assertNoFieldRefs(widget: never): never {
   throw new Error(`unhandled widget type in collectWidgetRefs: ${JSON.stringify(widget)}`);
 }
 
-/** The four bounded ops, flattened to their base-metric operands. */
-function exprOperands(expr: Expr): BaseMetric[] {
+/**
+ * The four bounded ops, flattened to `[documentKey, operand]` pairs. The key is
+ * the operand's ACTUAL name in the payload (`numerator`, `a`, `metric`, …) so an
+ * issue path points at a location the caller can navigate — there is no synthetic
+ * `operands` array in the document.
+ */
+function exprOperands(expr: Expr): Array<[string, BaseMetric]> {
   switch (expr.op) {
-    case 'ratio': return [expr.numerator, expr.denominator];
-    case 'diff': return [expr.a, expr.b];
+    case 'ratio': return [['numerator', expr.numerator], ['denominator', expr.denominator]];
+    case 'diff': return [['a', expr.a], ['b', expr.b]];
     case 'delta':
-    case 'rank': return [expr.metric];
+    case 'rank': return [['metric', expr.metric]];
   }
 }
 
@@ -751,7 +784,11 @@ export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap) {
     refsByWidget.forEach((refs, wi) => {
       for (const ref of refs.fields) {
         const path = ['widgets', wi, ...ref.path];
-        const type = fieldTypes[ref.fieldName];
+        // Own-property lookup only: a field named after a JS prototype member
+        // ("toString", "constructor", "__proto__", …) must resolve to undefined,
+        // not to `Object.prototype.toString`, or the unknown-field guard below is
+        // bypassed and the widget silently renders a confident 0.
+        const type = Object.hasOwn(fieldTypes, ref.fieldName) ? fieldTypes[ref.fieldName] : undefined;
 
         if (!type) {
           ctx.addIssue({ code: 'custom', path, message: `unknown field "${ref.fieldName}"` });
@@ -771,6 +808,14 @@ export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap) {
             code: 'custom',
             path,
             message: `field "${ref.fieldName}" is ${type}; grouping it requires kind:"time" with an explicit granularity`,
+          });
+        }
+
+        if (ref.use === 'timeGroup' && !TEMPORAL_FIELD_TYPES.has(type)) {
+          ctx.addIssue({
+            code: 'custom',
+            path,
+            message: `grouping by time requires a date/datetime field; "${ref.fieldName}" is ${type}`,
           });
         }
       }

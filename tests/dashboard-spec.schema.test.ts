@@ -26,8 +26,10 @@ import {
   filterSchema,
   metricSchema,
   widgetSchema,
+  widgetTypeSchema,
 } from '../src/schemas/dashboard-spec.schema.js';
 import type { DashboardSpec, DashboardSpecInput, FieldTypeMap } from '../src/schemas/dashboard-spec.schema.js';
+import * as schemaModule from '../src/schemas/dashboard-spec.schema.js';
 
 /* ── Fixtures ────────────────────────────────────────────────────────────── */
 
@@ -190,6 +192,41 @@ describe('valid specs', () => {
       chart({ metric: { ...MEDIA_COUNT, filter: { and: [{ or: [{ field: 'Status', op: 'eq', value: 'x' }] }] } } }),
     ]));
     expect(result.success).toBe(true);
+  });
+});
+
+/* ── widgetTypeSchema parity with the widget union ───────────────────────── */
+
+describe('widgetTypeSchema parity with the widget union', () => {
+  // The hand-written enum drives the editor palette and the MCP tool enum. The
+  // compile-time `_WidgetTypeParity` assertion in the schema module ties it to the
+  // widgetSchemaRaw discriminated union (a drift breaks `npm run build`); this pins
+  // the runtime option list a consumer iterates so a silent enum edit is caught.
+  it('lists exactly the widget discriminator literals', () => {
+    expect([...widgetTypeSchema.options].sort()).toEqual([
+      'comparison', 'field-distribution', 'metric-chart', 'narrative', 'notes',
+      'people', 'sentiment-trend', 'stat-cards', 'table', 'team-activity', 'themes',
+    ]);
+  });
+
+  it('every enum option is a type widgetSchema accepts as a fully-formed widget', () => {
+    const config: Record<string, unknown> = {
+      narrative: { focus: 'What happened?' },
+      'stat-cards': { tiles: [{ metric: MEDIA_COUNT, label: 'Media' }] },
+      'metric-chart': { mark: 'bar', metric: MEDIA_COUNT },
+      table: { rowsAre: 'records', columns: [{ header: 'Status', field: 'Status' }] },
+      comparison: { dimension: 'folder', a: {}, b: {}, metrics: [MEDIA_COUNT] },
+      'field-distribution': { fieldName: 'Status', measure: 'count', chartType: 'bar' },
+      'sentiment-trend': { granularity: 'week' },
+      themes: { limit: 10 },
+      people: { metrics: [MEDIA_COUNT], limit: 10 },
+      'team-activity': { metrics: ['uploads'] },
+      notes: { content: 'A note' },
+    };
+    for (const type of widgetTypeSchema.options) {
+      const widget = { id: 'w', type, title: 'W', layout: LAYOUT, config: config[type] };
+      expect(widgetSchema.safeParse(widget).success, `type "${type}" should parse`).toBe(true);
+    }
   });
 });
 
@@ -398,6 +435,27 @@ describe('aggregator / field-type compatibility', () => {
     expect(result.success).toBe(true);
   });
 
+  it.each(['Status', 'Age', 'Active'])('rejects groupBy kind:"time" on the non-temporal field %s', (fieldName) => {
+    const result = schema.safeParse(specWith([
+      chart({ metric: MEDIA_COUNT, groupBy: { kind: 'time', fieldName, granularity: 'month' } }),
+    ]));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      message: expect.stringContaining('grouping by time requires a date/datetime field'),
+      path: ['widgets', 0, 'config', 'groupBy', 'fieldName'],
+    }));
+  });
+
+  it('rejects a time series (2nd dimension) on a non-temporal field', () => {
+    const result = schema.safeParse(specWith([
+      chart({ metric: MEDIA_COUNT, series: { kind: 'time', fieldName: 'Status', granularity: 'week' } }),
+    ]));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      path: ['widgets', 0, 'config', 'series', 'fieldName'],
+    }));
+  });
+
   it('degrades structurally with NO field map — the same bad-agg spec parses', () => {
     const result = dashboardSpecSchema.safeParse(metricChart({ kind: 'field', fieldName: 'Status', agg: 'avg' }));
     expect(result.success).toBe(true);
@@ -482,6 +540,34 @@ describe('unknown field name — all five sites', () => {
     expect(result.error!.issues).toContainEqual(expect.objectContaining({ path }));
   });
 
+  // A field named after a JS prototype member must NOT resolve via prototype
+  // lookup ("toString" → Object.prototype.toString). Left unguarded, the
+  // unknown-field check is bypassed and the widget silently renders a 0.
+  it.each(['toString', 'constructor', 'hasOwnProperty', 'valueOf', '__proto__'])(
+    'treats prototype-named field "%s" as unknown at a mention site (filter predicate)',
+    (fieldName) => {
+      const result = schema.safeParse(specWith([
+        chart({ metric: { ...MEDIA_COUNT, filter: { field: fieldName, op: 'exists' } } }),
+      ]));
+      expect(result.success).toBe(false);
+      expect(result.error!.issues).toContainEqual(expect.objectContaining({
+        message: `unknown field "${fieldName}"`,
+        path: ['widgets', 0, 'config', 'metric', 'filter', 'field'],
+      }));
+    },
+  );
+
+  it('treats a prototype-named field as unknown at an agg site — no garbage type in the message', () => {
+    const result = schema.safeParse(specWith([
+      chart({ metric: { kind: 'field', fieldName: 'toString', agg: 'sum' } }),
+    ]));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      message: 'unknown field "toString"',
+      path: ['widgets', 0, 'config', 'metric', 'fieldName'],
+    }));
+  });
+
   // THE HEADLINE CASE — hallucinated field, two levels deep, inside an expr
   // operand's filter. Assert the EXACT path: a vague path is an error the LLM
   // cannot self-correct from, and it is how you catch a walker that descends but
@@ -517,7 +603,20 @@ describe('unknown field name — all five sites', () => {
     expect(result.success).toBe(false);
     expect(result.error!.issues).toContainEqual(expect.objectContaining({
       message: 'unknown field "Ageee"',
-      path: ['widgets', 0, 'config', 'metric', 'expr', 'operands', 0, 'filter', 'and', 1, 'or', 0, 'field'],
+      // The operand's REAL document key is `numerator` — not a synthetic
+      // `operands[0]` segment. The path must be navigable in the input payload.
+      path: ['widgets', 0, 'config', 'metric', 'expr', 'numerator', 'filter', 'and', 1, 'or', 0, 'field'],
+    }));
+  });
+
+  it('addresses a diff operand by its real `b` key, not a synthetic operands index', () => {
+    const result = buildDashboardSpecSchema({ 'Session Score': 'number' }).safeParse(specWith([
+      chart({ metric: { kind: 'expr', expr: { op: 'diff', a: MEDIA_COUNT, b: { kind: 'field', fieldName: 'Scoree', agg: 'avg' } } } }),
+    ]));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      message: 'unknown field "Scoree"',
+      path: ['widgets', 0, 'config', 'metric', 'expr', 'b', 'fieldName'],
     }));
   });
 });
@@ -608,8 +707,11 @@ describe('filter depth', () => {
 describe('no unguarded schema in the public surface', () => {
   const DEEP = deepFilter(5000);
 
-  // A newly exported filter-containing schema that forgets withDepthGuard()
-  // fails here. Feed each one a depth-5000 payload: it must reject, not throw.
+  // Each entry feeds its schema a depth-5000 payload: it must reject, not throw.
+  // NOTE: this list is hand-maintained — appending a schema here is NOT automatic.
+  // The `guarded list covers the public surface` canary below is the mechanical
+  // backstop: it fails when ANY new schema is exported, forcing a decision about
+  // whether that schema is filter-containing and therefore needs withDepthGuard().
   const guarded: Array<[string, { safeParse: (v: unknown) => { success: boolean } }, unknown]> = [
     ['filterSchema', filterSchema, DEEP],
     ['baseMetricSchema', baseMetricSchema, { kind: 'builtin', name: 'mediaCount', filter: DEEP }],
@@ -638,6 +740,31 @@ describe('no unguarded schema in the public surface', () => {
       dashboardSpecSchema: specWith(),
     };
     expect(schema.safeParse(ok[name]).success).toBe(true);
+  });
+
+  // Mechanical backstop for the hand-maintained `guarded` list. Enumerates the
+  // ACTUAL exported schema surface; a newly exported schema fails this until the
+  // author accounts for it — and, if it can transitively hold a Filter, adds it to
+  // `guarded` above with withDepthGuard(). Without this, a new unguarded
+  // filter-schema export would reintroduce the depth-500 RangeError undetected.
+  it('the guarded list covers every exported schema (canary — no silent new export)', () => {
+    const exportedSchemas = Object.entries(schemaModule)
+      .filter(([, v]) => typeof (v as { safeParse?: unknown } | undefined)?.safeParse === 'function')
+      .map(([name]) => name)
+      .sort();
+
+    // Filter-containing schemas MUST appear in `guarded` above with a depth guard.
+    const filterContaining = new Set(guarded.map(([name]) => name));
+    // Filter-FREE exported schemas — safe without a depth guard.
+    const filterFree = [
+      'filterOpSchema', 'aggSchema', 'builtinMetricSchema', 'granularitySchema',
+      'groupBySchema', 'thresholdStatusSchema', 'thresholdSchema', 'sourceSchema',
+      'dateRangePresetSchema', 'dateRangeSchema', 'layoutSchema', 'widgetTypeSchema',
+      'sectionSchema',
+    ];
+    const accountedFor = [...filterContaining, ...filterFree].sort();
+
+    expect(exportedSchemas).toEqual(accountedFor);
   });
 });
 
@@ -716,6 +843,19 @@ describe('threshold op/value coherence', () => {
       { when: { op: 'lt', value: 5 }, status: 'critical' },
     ])).success).toBe(true);
   });
+
+  it('rejects {op:"between", value:[50,0]} — reversed bounds never fire', () => {
+    const result = dashboardSpecSchema.safeParse(withThresholds([{ when: { op: 'between', value: [50, 0] }, status: 'good' }]));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      message: 'between bounds must be [low, high]',
+      path: ['widgets', 0, 'config', 'thresholds', 0, 'when', 'value'],
+    }));
+  });
+
+  it('accepts {op:"between", value:[5,5]} — an equal-bounds band is degenerate but valid', () => {
+    expect(dashboardSpecSchema.safeParse(withThresholds([{ when: { op: 'between', value: [5, 5] }, status: 'good' }])).success).toBe(true);
+  });
 });
 
 describe('table config', () => {
@@ -752,6 +892,19 @@ describe('table config', () => {
     }));
     expect(result.success).toBe(false);
     expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      path: ['widgets', 0, 'config', 'groupBy'],
+    }));
+  });
+
+  it('rejects rowsAre:"records" carrying a groupBy — a meaningless combination', () => {
+    const result = dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      groupBy: { kind: 'folder' },
+      columns: [{ header: 'Status', field: 'Status' }],
+    }));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      message: 'rowsAre:"records" must not carry a groupBy',
       path: ['widgets', 0, 'config', 'groupBy'],
     }));
   });
