@@ -44,31 +44,6 @@ export type {
 } from '../schemas/dashboard-spec.schema.js';
 
 /**
- * Built-in dashboard widget types — the canonical render contract shared by the
- * builder (speak-client) and the public view (speak-media-library).
- *
- * The first eight are the server-recognised core types served by the public
- * widget-data endpoint; the last four (`people`, `comparison`, `sentiment-trend`,
- * `notes`) are client-rendered bodies the builder enumerates. Persisting these
- * extra literals is safe because `IDashboardWidget.type` is `… | string`.
- *
- * @deprecated Spec v2 — use `WidgetType` from the dashboard spec. Removed in @speakai/shared 2.0.0.
- */
-export type DashboardWidgetType =
-  | 'stat-cards'
-  | 'sentiment'
-  | 'media-list'
-  | 'field-distribution'
-  | 'upload-timeline'
-  | 'themes'
-  | 'team-activity'
-  | 'kpi-trend'
-  | 'people'
-  | 'comparison'
-  | 'sentiment-trend'
-  | 'notes';
-
-/**
  * Grid placement for a widget (react-grid-layout geometry; legacy order/colSpan optional).
  *
  * @deprecated Spec v2 — use `WidgetLayout`. Removed in @speakai/shared 2.0.0.
@@ -93,7 +68,7 @@ export interface IDashboardWidgetLayout {
  */
 export interface IDashboardWidget {
   id: string;
-  type: DashboardWidgetType | string;
+  type: string;
   title: string;
   /** Render-only, widget-type-specific settings (chartType, fieldId, accentColor, …). */
   config: Record<string, unknown>;
@@ -110,70 +85,6 @@ export interface IDashboardDateRange {
   startDate?: string | Date;
   endDate?: string | Date;
 }
-
-/**
- * Full dashboard wire shape (owner/authed view).
- *
- * @deprecated Spec v2 — use `DashboardSpec`. Removed in @speakai/shared 2.0.0.
- */
-export interface IDashboard {
-  dashboardId: string;
-  title: string;
-  description?: string;
-  icon?: string;
-  /** Folder ids the dashboard is scoped to (empty = all accessible). */
-  folderScope: string[];
-  dateRange?: IDashboardDateRange;
-  filters?: Record<string, unknown>;
-  widgets: IDashboardWidget[];
-  /** Public share token — present only to the owner when sharing is enabled. */
-  shareToken?: string;
-  isShareEnabled?: boolean;
-  /** Team/group ids the dashboard is shared with ("<id> (G)" convention). */
-  sharedWithGroups?: string[];
-  isDefault?: boolean;
-  schemaVersion?: number;
-  createdAt?: string | Date;
-  updatedAt?: string | Date;
-}
-
-/**
- * Public (token-resolved, unauthenticated) projection — secret/internal fields stripped.
- *
- * @deprecated Spec v2 — use `DashboardSpec`. Removed in @speakai/shared 2.0.0.
- */
-export interface IPublicDashboard {
-  title: string;
-  description?: string;
-  icon?: string;
-  widgets: IDashboardWidget[];
-  folderScope: string[];
-  dateRange?: IDashboardDateRange;
-}
-
-/**
- * Create payload.
- *
- * @deprecated Spec v2 — use `DashboardSpecInput`. Removed in @speakai/shared 2.0.0.
- */
-export interface ICreateDashboardPayload {
-  title: string;
-  description?: string;
-  icon?: string;
-  folderScope?: string[];
-  dateRange?: IDashboardDateRange;
-  filters?: Record<string, unknown>;
-  widgets?: IDashboardWidget[];
-  sharedWithGroups?: string[];
-  isDefault?: boolean;
-}
-
-/**
- * Update payload (partial).
- *
- * @deprecated Spec v2 — use `Partial<DashboardSpecInput>`. Removed in @speakai/shared 2.0.0.
- */
-export type IUpdateDashboardPayload = Partial<ICreateDashboardPayload>;
 
 /* ===================================================================
  * Widget metadata + sizing (builder layout contract)
