@@ -668,10 +668,14 @@ describe('filter depth', () => {
   });
 
   it('a depth-1200 payload is only ~12 KB and survives JSON.parse — the body parser hands it straight to us', () => {
-    const payload = specWith([chart({ metric: { ...MEDIA_COUNT, filter: deepFilter(1200) } })]);
-    const bytes = JSON.stringify(payload).length;
-    expect(bytes).toBeLessThan(64_000);
-    expect(() => JSON.parse(JSON.stringify(payload))).not.toThrow();
+    // Measure and parse the RAW JSON string the body parser would receive. Stringifying a
+    // 1200-deep OBJECT recurses ~1200 frames and overflows the smaller Windows stack — that's
+    // a JSON.stringify limitation, not what this test is about (JSON.parse of this depth survives
+    // everywhere, as the depth-ladder tests confirm, and the iterative guard rejects it before zod).
+    const leaf = '{"field":"Status","op":"eq","value":"x"}';
+    const filterJson = '{"and":['.repeat(1200) + leaf + ']}'.repeat(1200);
+    expect(filterJson.length).toBeLessThan(64_000);
+    expect(() => JSON.parse(filterJson)).not.toThrow();
   });
 
   // Negative control: the deepest LEGAL spec must still parse. If this ever
