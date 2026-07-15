@@ -6,114 +6,55 @@
  * document type may extend these; the client imports them directly.
  */
 
-/**
- * Built-in dashboard widget types — the canonical render contract shared by the
- * builder (speak-client) and the public view (speak-media-library).
+/* ===================================================================
+ * Dashboard spec v2 — types
+ * ===================================================================
  *
- * The first eight are the server-recognised core types served by the public
- * widget-data endpoint; the last four (`people`, `comparison`, `sentiment-trend`,
- * `notes`) are client-rendered bodies the builder enumerates. Persisting these
- * extra literals is safe because `IDashboardWidget.type` is `… | string`.
+ * Type-only re-exports of the Zod-inferred spec types. `export type` is erased
+ * at build, so importing these from the package root does NOT pull zod into the
+ * consumer's bundle. To VALIDATE a spec (not just type it), import the schema
+ * from the `@speakai/shared/schemas` subpath instead.
  */
-export type DashboardWidgetType =
-  | 'stat-cards'
-  | 'sentiment'
-  | 'media-list'
-  | 'field-distribution'
-  | 'upload-timeline'
-  | 'themes'
-  | 'team-activity'
-  | 'kpi-trend'
-  | 'people'
-  | 'comparison'
-  | 'sentiment-trend'
-  | 'notes';
-
-/** Grid placement for a widget (react-grid-layout geometry; legacy order/colSpan optional). */
-export interface IDashboardWidgetLayout {
-  x?: number;
-  y?: number;
-  w?: number;
-  h?: number;
-  minW?: number;
-  minH?: number;
-  /** @deprecated legacy linear ordering — superseded by x/y. */
-  order?: number;
-  /** @deprecated legacy column span — superseded by w. */
-  colSpan?: number;
-}
-
-/** A single configured widget on a dashboard. */
-export interface IDashboardWidget {
-  id: string;
-  type: DashboardWidgetType | string;
-  title: string;
-  /** Render-only, widget-type-specific settings (chartType, fieldId, accentColor, …). */
-  config: Record<string, unknown>;
-  layout: IDashboardWidgetLayout;
-}
-
-/** Date scope for a dashboard (preset key, with optional explicit bounds). */
-export interface IDashboardDateRange {
-  preset?: string;
-  startDate?: string | Date;
-  endDate?: string | Date;
-}
-
-/** Full dashboard wire shape (owner/authed view). */
-export interface IDashboard {
-  dashboardId: string;
-  title: string;
-  description?: string;
-  icon?: string;
-  /** Folder ids the dashboard is scoped to (empty = all accessible). */
-  folderScope: string[];
-  dateRange?: IDashboardDateRange;
-  filters?: Record<string, unknown>;
-  widgets: IDashboardWidget[];
-  /** Public share token — present only to the owner when sharing is enabled. */
-  shareToken?: string;
-  isShareEnabled?: boolean;
-  /** Team/group ids the dashboard is shared with ("<id> (G)" convention). */
-  sharedWithGroups?: string[];
-  isDefault?: boolean;
-  schemaVersion?: number;
-  createdAt?: string | Date;
-  updatedAt?: string | Date;
-}
-
-/** Public (token-resolved, unauthenticated) projection — secret/internal fields stripped. */
-export interface IPublicDashboard {
-  title: string;
-  description?: string;
-  icon?: string;
-  widgets: IDashboardWidget[];
-  folderScope: string[];
-  dateRange?: IDashboardDateRange;
-}
-
-/** Create payload. */
-export interface ICreateDashboardPayload {
-  title: string;
-  description?: string;
-  icon?: string;
-  folderScope?: string[];
-  dateRange?: IDashboardDateRange;
-  filters?: Record<string, unknown>;
-  widgets?: IDashboardWidget[];
-  sharedWithGroups?: string[];
-  isDefault?: boolean;
-}
-
-/** Update payload (partial). */
-export type IUpdateDashboardPayload = Partial<ICreateDashboardPayload>;
+export type {
+  Agg,
+  BaseMetric,
+  Binding,
+  BuiltinMetric,
+  Column,
+  DashboardSpec,
+  DashboardSpecInput,
+  DateRange,
+  DateRangePreset,
+  Expr,
+  FieldTypeMap,
+  Filter,
+  FilterOp,
+  Granularity,
+  GroupBy,
+  Metric,
+  Section,
+  Source,
+  SpecFieldType,
+  Threshold,
+  ThresholdStatus,
+  Widget,
+  WidgetLayout,
+  WidgetOf,
+  WidgetType,
+} from '../schemas/dashboard-spec.schema.js';
 
 /* ===================================================================
  * Widget metadata + sizing (builder layout contract)
  * =================================================================== */
 
-/** react-grid-layout column count the dashboard grid is laid out on. */
-export const DASHBOARD_GRID_COLS = 12;
+/**
+ * react-grid-layout column count the dashboard grid is laid out on.
+ *
+ * Defined in `utils/dashboard-spec.ts` (which must stay zod-free, and which the
+ * schema's `layout` bounds import) and re-exported here so existing consumers
+ * keep compiling unchanged. One grid width, one name — do not add a second.
+ */
+export { DASHBOARD_GRID_COLS } from '../utils/dashboard-spec.js';
 
 /**
  * Per-widget-type presentation metadata: default title, default grid geometry,

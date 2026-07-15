@@ -20,6 +20,11 @@
       "types": "./dist/interfaces/index.d.ts",
       "import": "./dist/interfaces/index.js",
       "require": "./dist/interfaces/index.js"
+    },
+    "./schemas": {
+      "types": "./dist/schemas/index.d.ts",
+      "import": "./dist/schemas/index.js",
+      "require": "./dist/schemas/index.js"
     }
   },
   "scripts": {
@@ -45,5 +50,8 @@
     "@vitest/coverage-v8": "^4.1.2",
     "typescript": "^5.4.0",
     "vitest": "^4.1.2"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
   }
 }
