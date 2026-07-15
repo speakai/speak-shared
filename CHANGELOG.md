@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.0.0 (2026-07-15)
+
+- Removed legacy v1 interfaces and types, added new dashboard spec v2 zod schema.
+
 ## v1.24.0 (2026-07-13)
 
 - Added new chat models and updated pricing for Grok, GLM, GPT, and Claude.
