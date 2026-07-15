@@ -49,7 +49,6 @@ const FIELD_TYPES: FieldTypeMap = {
 /** A valid envelope wrapping the given widgets/sections. */
 function specWith(widgets: unknown[] = [], sections: unknown[] = [], overrides: Record<string, unknown> = {}) {
   return {
-    schemaVersion: 2,
     title: 'Test dashboard',
     source: { type: 'workspace' },
     dateRange: { preset: 'allTime' },
@@ -1019,7 +1018,6 @@ describe('fuzz — safeParse never throws', () => {
   it('500 structurally random payloads — never throws, never hangs', () => {
     for (let i = 0; i < 500; i++) {
       const payload = {
-        schemaVersion: rand() < 0.8 ? 2 : randomValue(0),
         title: randomValue(2),
         source: randomValue(1),
         dateRange: randomValue(1),
@@ -1033,7 +1031,7 @@ describe('fuzz — safeParse never throws', () => {
 
   it('mutation fuzz — deleting or retyping any leaf of a valid spec never crashes', () => {
     const valid = specWith([chart({ metric: { ...MEDIA_COUNT, filter: { and: [{ field: 'Status', op: 'eq', value: 'x' }] } } })]);
-    const keys = ['schemaVersion', 'title', 'source', 'dateRange', 'sections', 'widgets'] as const;
+    const keys = ['title', 'source', 'dateRange', 'sections', 'widgets'] as const;
 
     for (const key of keys) {
       const deleted: Record<string, unknown> = { ...valid };
@@ -1066,7 +1064,7 @@ describe('fuzz — safeParse never throws', () => {
 describe('input vs output types', () => {
   it('DashboardSpecInput omits revision; DashboardSpec requires it', () => {
     const input: DashboardSpecInput = {
-      schemaVersion: 2, title: 'T', source: { type: 'team' },
+      title: 'T', source: { type: 'team' },
       dateRange: { preset: 'allTime' }, sections: [], widgets: [],
     };
     const parsed = dashboardSpecSchema.safeParse(input);
