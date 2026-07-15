@@ -422,7 +422,6 @@ export const sectionSchema = z.strictObject({
  * guidance is a generation-prompt rule, not a persistence invariant.
  */
 const dashboardSpecBaseSchema = z.strictObject({
-  schemaVersion: z.literal(2).optional(),
   title: z.string().min(1).max(60),
   description: z.string().max(280).optional(),
   source: sourceSchema,

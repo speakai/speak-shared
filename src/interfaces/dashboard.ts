@@ -43,49 +43,6 @@ export type {
   WidgetType,
 } from '../schemas/dashboard-spec.schema.js';
 
-/**
- * Grid placement for a widget (react-grid-layout geometry; legacy order/colSpan optional).
- *
- * @deprecated Spec v2 — use `WidgetLayout`. Removed in @speakai/shared 2.0.0.
- */
-export interface IDashboardWidgetLayout {
-  x?: number;
-  y?: number;
-  w?: number;
-  h?: number;
-  minW?: number;
-  minH?: number;
-  /** @deprecated legacy linear ordering — superseded by x/y. */
-  order?: number;
-  /** @deprecated legacy column span — superseded by w. */
-  colSpan?: number;
-}
-
-/**
- * A single configured widget on a dashboard.
- *
- * @deprecated Spec v2 — use `Widget`. Removed in @speakai/shared 2.0.0.
- */
-export interface IDashboardWidget {
-  id: string;
-  type: string;
-  title: string;
-  /** Render-only, widget-type-specific settings (chartType, fieldId, accentColor, …). */
-  config: Record<string, unknown>;
-  layout: IDashboardWidgetLayout;
-}
-
-/**
- * Date scope for a dashboard (preset key, with optional explicit bounds).
- *
- * @deprecated Spec v2 — use `DateRange`. Removed in @speakai/shared 2.0.0.
- */
-export interface IDashboardDateRange {
-  preset?: string;
-  startDate?: string | Date;
-  endDate?: string | Date;
-}
-
 /* ===================================================================
  * Widget metadata + sizing (builder layout contract)
  * =================================================================== */
