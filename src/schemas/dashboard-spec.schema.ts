@@ -208,7 +208,7 @@ export const sourceSchema = z.discriminatedUnion('type', [
 ]);
 
 export const dateRangePresetSchema = z.enum([
-  'last7days', 'last30days', 'last3months', 'yearToDate', 'allTime',
+  'today', 'yesterday', 'last7days', 'last30days', 'last3months', 'yearToDate', 'allTime',
 ]);
 export const dateRangeSchema = z.strictObject({ preset: dateRangePresetSchema });
 
