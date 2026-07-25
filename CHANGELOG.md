@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.0 (2026-07-25)
+
+- Added today and yesterday date-range presets to dashboards
+
 ## v2.0.0 (2026-07-15)
 
 - Removed legacy v1 interfaces and types, added new dashboard spec v2 zod schema.
