@@ -271,6 +271,9 @@ const tableConfigSchema = z
     limit: z.number().int().min(1).max(500).optional(),
     searchable: z.boolean().optional(),
     rowClick: z.enum(['openMedia', 'none']).optional(),
+    // Records tables show a leading media-name column; set false to hide it when
+    // the media name is an opaque id (e.g. webhook-ingested recordings).
+    showName: z.boolean().optional(),
   })
   .superRefine((c, ctx) => {
     const headers = c.columns.map((col) => col.header);
