@@ -359,10 +359,11 @@ const widgetSchemaRaw = z.discriminatedUnion('type', [
     config: z.strictObject({
       fieldName: z.string().min(1).max(120), // name, not id
       measure: z.enum(['count', 'percent']),
-      chartType: z.enum(['bar', 'donut']),
+      chartType: z.enum(['bar', 'donut', 'table']),
       // Opt-in period-over-period comparison. When set, the server also computes
       // the prior equal-length window (`compareInsights`) so the bar chart can
-      // draw paired bars (this period vs previous) with a delta.
+      // draw paired bars (this period vs previous) with a delta, or the table can
+      // add a "vs prev period" column.
       compare: z.enum(['prev-period']).optional(),
     }),
   }),
