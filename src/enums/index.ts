@@ -10,6 +10,7 @@ export * from './fields.js';
 export * from './filter.js';
 export * from './integration.js';
 export * from './media.js';
+export * from './menu.js';
 export * from './meeting.js';
 export * from './notification.js';
 export * from './prompt.js';
