@@ -14,7 +14,21 @@ export enum MenuItemId {
   Integrations = 'integrations',
   Team = 'team-manage',
   Developers = 'developers-manage',
+  AiAssistant = 'ai-assistant',
+  Fields = 'fields',
 }
+
+/** Sidebar sections that can be reordered or hidden as blocks (primary/ungrouped and Folders stay fixed). */
+export enum SectionId {
+  Content = 'content',
+  Workspace = 'workspace',
+}
+
+/** Sections the user is allowed to reorder or hide. */
+export const MANAGEABLE_SECTION_IDS: SectionId[] = [SectionId.Content, SectionId.Workspace];
+
+/** Profile-menu items the user is allowed to manage. */
+export const PROFILE_MANAGEABLE_IDS: MenuItemId[] = [MenuItemId.AiAssistant, MenuItemId.Fields];
 
 /** System default order the user starts from and can reset to (Home first). */
 export const SIDEMENU_DEFAULT_ORDER: MenuItemId[] = [
