@@ -6,15 +6,12 @@
  */
 
 export * from "./agent.js";
-export * from "./auth.js";
 export * from "./avatar.js";
 export * from "./billing.js";
 export * from "./conversation.js";
 export * from "./dataCollection.js";
 export * from "./integration.js";
 export * from "./livekit.js";
-export * from "./notification.js";
-export * from "./organization.js";
 export * from "./prospect.js";
 export * from "./providers.js";
 export * from "./structuredOutput.js";

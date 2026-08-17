@@ -2,26 +2,6 @@
  * Billing Types
  */
 
-export enum SubscriptionStatus {
-  TRIALING = "trialing",
-  ACTIVE = "active",
-  PAST_DUE = "past_due",
-  CANCELED = "canceled",
-  INACTIVE = "inactive",
-  TRIAL_EXPIRED = "trial_expired",
-}
-
-export enum BillingCycle {
-  MONTHLY = "monthly",
-  ANNUAL = "annual",
-}
-
-export enum PlanTier {
-  TRIAL = "trial",
-  TEAM = "team",
-  ENTERPRISE = "enterprise",
-}
-
 export type CallType = "web" | "phone";
 
 export type RecordingStatus = "pending" | "recording" | "processing" | "completed" | "failed";
