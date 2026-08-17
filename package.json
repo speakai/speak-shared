@@ -25,6 +25,21 @@
       "types": "./dist/schemas/index.d.ts",
       "import": "./dist/schemas/index.js",
       "require": "./dist/schemas/index.js"
+    },
+    "./voice": {
+      "types": "./dist/voice/index.d.ts",
+      "import": "./dist/voice/index.js",
+      "require": "./dist/voice/index.js"
+    },
+    "./voice/enums": {
+      "types": "./dist/voice/enums/index.d.ts",
+      "import": "./dist/voice/enums/index.js",
+      "require": "./dist/voice/enums/index.js"
+    },
+    "./voice/interfaces": {
+      "types": "./dist/voice/interfaces/index.d.ts",
+      "import": "./dist/voice/interfaces/index.js",
+      "require": "./dist/voice/interfaces/index.js"
     }
   },
   "scripts": {
