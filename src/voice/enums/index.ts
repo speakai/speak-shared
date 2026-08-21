@@ -20,3 +20,6 @@ export * from "./providers.js";
 export * from "./structuredOutput.js";
 export * from "./telephony.js";
 export * from "./voice.js";
+// Compatibility re-export: consumers import LLMProvider (the canonical enum in the root package)
+// from "@speakai/shared/voice"; keep it available here until they migrate to the root import.
+export { LLMProvider } from "../../enums/llm.js";
