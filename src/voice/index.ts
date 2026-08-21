@@ -9,7 +9,7 @@
  *
  * Note on resolved name collisions with the platform root barrel — these are
  * distinct types and are only safe to use because they live under this subpath:
- *   - IntegrationAuthType  (voice 'apiKey' vs platform 'api_key')
+ *   - VoiceIntegrationAuthType  (voice 'apiKey' vs platform 'api_key')
  *   - UserType             (voice USER/DEMO vs platform Individual/Company)
  */
 

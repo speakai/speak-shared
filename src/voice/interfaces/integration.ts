@@ -1,6 +1,6 @@
 import {
   IntegrationSlug,
-  IntegrationAuthType,
+  VoiceIntegrationAuthType,
   IntegrationStatus,
   RuleConditionField,
   RuleOperator,
@@ -69,10 +69,10 @@ export interface ConnectedIntegration {
  * Describes a single credential field the user must supply when connecting an
  * API-key integration. The backend is the source of truth for these specs
  * (per-provider field names come from the provider's connect-account schema);
- * the client renders a form from `ConnectFieldsResponse.fields`.
+ * the client renders a form from `VoiceConnectFieldsResponse.fields`.
  */
-export interface CredentialFieldSpec {
-  /** Provider-specific field key sent back in `ConnectKeyRequest.fields`. */
+export interface VoiceCredentialFieldSpec {
+  /** Provider-specific field key sent back in `VoiceConnectKeyRequest.fields`. */
   name: string;
   /** Human-facing label for the input. */
   label: string;
@@ -94,18 +94,18 @@ export interface CredentialFieldSpec {
  * which auth flow a provider uses and, for API-key providers, the fields to
  * render in the connect form.
  */
-export interface ConnectFieldsResponse {
+export interface VoiceConnectFieldsResponse {
   slug: IntegrationSlug;
-  authType: IntegrationAuthType;
-  fields: CredentialFieldSpec[];
+  authType: VoiceIntegrationAuthType;
+  fields: VoiceCredentialFieldSpec[];
 }
 
 /**
  * Request body for `POST /integrations/:slug/connect-key`. Maps each
- * `CredentialFieldSpec.name` to the user-entered value. Pass-through only —
+ * `VoiceCredentialFieldSpec.name` to the user-entered value. Pass-through only —
  * the secret is never persisted by our backend.
  */
-export interface ConnectKeyRequest {
+export interface VoiceConnectKeyRequest {
   fields: Record<string, string>;
 }
 
@@ -114,7 +114,7 @@ export interface ConnectKeyRequest {
  * connected account summary is returned; on failure `reason` carries a
  * machine-readable code (e.g. failed key verification).
  */
-export interface ConnectKeyResponse {
+export interface VoiceConnectKeyResponse {
   status: "connected" | "failed";
   reason?: string;
   account?: {

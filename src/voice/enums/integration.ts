@@ -62,7 +62,7 @@ export enum IntegrationCategory {
   VIDEO        = 'Video',
 }
 
-export enum IntegrationAuthType {
+export enum VoiceIntegrationAuthType {
   OAUTH   = 'oauth',
   API_KEY = 'apiKey',
 }

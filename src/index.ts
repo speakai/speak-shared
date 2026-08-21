@@ -4,6 +4,9 @@ export * from './enums/index.js';
 // Interfaces
 export * from './interfaces/index.js';
 
+// Voice agent domain (formerly the separate '@speakai/shared/voice' entrypoint)
+export * from './voice/index.js';
+
 // Utils
 export * from './utils/transcript.js';
 export * from './utils/dashboard-spec.js';
