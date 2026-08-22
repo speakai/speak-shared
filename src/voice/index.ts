@@ -1,16 +1,10 @@
 /**
- * @speakai/shared/voice
- * Client-facing Voice Agent domain types (enums + interfaces).
+ * Voice Agent domain types (enums + interfaces).
  *
- * This namespace is deliberately kept OUT of the root barrel (`@speakai/shared`)
- * so that Voice Agent types never collide with the existing platform types and
- * so the root barrel stays thin (cold-compile hazard from fat barrels). Consume
- * these types via the `@speakai/shared/voice` subpath.
- *
- * Note on resolved name collisions with the platform root barrel — these are
- * distinct types and are only safe to use because they live under this subpath:
- *   - VoiceIntegrationAuthType  (voice 'apiKey' vs platform 'api_key')
- *   - UserType             (voice USER/DEMO vs platform Individual/Company)
+ * Re-exported from the root barrel (`@speakai/shared`) — there is no separate
+ * `/voice` subpath. Types that overlap a platform concept carry a `Voice` prefix
+ * (e.g. `VoiceIntegrationAuthType` with 'apiKey' vs the platform
+ * `IntegrationAuthType` with 'api_key') so both value sets coexist on the root.
  */
 
 export * from "./enums/index.js";
