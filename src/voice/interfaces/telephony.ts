@@ -39,25 +39,6 @@ export interface AvailableNumber {
 }
 
 /**
- * Telephony Configuration
- */
-export interface TelephonyConfig {
-  telephonyConfigId: string;
-  userId: string;
-  twilio?: {
-    accountSid: string;
-    authToken: string;
-    isVerified: boolean;
-  };
-  sipTrunk?: {
-    inboundTrunkId: string;
-    outboundTrunkId: string;
-  };
-  createdAt: Date | string;
-  updatedAt: Date | string;
-}
-
-/**
  * Agent Telephony Settings
  */
 export interface AgentTelephonySettings {

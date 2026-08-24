@@ -2,7 +2,7 @@
  * Notification Types
  */
 
-export type NotificationType =
+export type VoiceNotificationType =
   | "agent_created"
   | "agent_updated"
   | "agent_deleted"

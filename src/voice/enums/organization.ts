@@ -1,3 +1,7 @@
+/**
+ * Organization Enums
+ */
+
 export enum OrgRole {
   OWNER  = 'owner',
   ADMIN  = 'admin',

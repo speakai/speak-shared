@@ -1,5 +1,12 @@
+/**
+ * Organization / Workspace Interfaces (client-facing)
+ *
+ * The nested billing block (`OrgBilling`) and Stripe identifiers (`OrgStripe`)
+ * are intentionally NOT part of this public package — they remain private to
+ * speak-server. `Workspace.billing` is therefore omitted here.
+ */
+
 import { OrgRole } from "../enums/organization.js";
-import { OrgBilling } from "../interfaces/billing.js";
 
 export interface WorkspaceMember {
   userId: string;
@@ -19,7 +26,6 @@ export interface Workspace {
   inviteTokenExpiresAt?: string;
   agentCount?: number; // virtual, computed in list API
   myRole?: OrgRole; // virtual, injected by API for current user
-  billing?: OrgBilling;
   createdAt: string;
   updatedAt: string;
 }

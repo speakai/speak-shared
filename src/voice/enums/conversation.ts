@@ -70,19 +70,3 @@ export enum CanonicalEndReason {
   LIVEKIT_ORPHAN     = "livekit-orphan",
   PARTICIPANT_NEVER_JOINED = "participant-never-joined",
 }
-
-/**
- * End reasons that represent technical failures or non-user-initiated ends.
- * Sub-30s sessions with these reasons are NOT product-quality signals and
- * should not trigger early-dropoff alerts to admins.
- */
-export const EARLY_DROPOFF_EXCLUDED_REASONS: ReadonlySet<CanonicalEndReason> = new Set([
-  CanonicalEndReason.LIVEKIT_ORPHAN,
-  CanonicalEndReason.SYSTEM_SHUTDOWN,
-  CanonicalEndReason.SYSTEM_ERROR,
-  CanonicalEndReason.PHONE_NO_ANSWER,
-  CanonicalEndReason.PHONE_BUSY,
-  CanonicalEndReason.PHONE_FAILED,
-  CanonicalEndReason.PHONE_CANCELED,
-  CanonicalEndReason.PARTICIPANT_NEVER_JOINED,
-]);

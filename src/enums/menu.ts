@@ -16,12 +16,17 @@ export enum MenuItemId {
   Developers = 'developers-manage',
   AiAssistant = 'ai-assistant',
   Fields = 'fields',
+  KnowledgeBase = 'knowledge-base',
+  AgentsList = 'agents-list',
+  AgentsConversations = 'agents-conversations',
+  AgentsPhoneNumbers = 'agents-phone-numbers',
 }
 
 /** Sidebar sections that can be reordered or hidden as blocks (primary/ungrouped and Folders stay fixed). */
 export enum SectionId {
   Content = 'content',
   Workspace = 'workspace',
+  Agents = 'agents',
 }
 
 /** Sections the user is allowed to reorder or hide. */
@@ -44,6 +49,7 @@ export const SIDEMENU_DEFAULT_ORDER: MenuItemId[] = [
   MenuItemId.Clips,
   MenuItemId.Automations,
   MenuItemId.Integrations,
+  MenuItemId.KnowledgeBase,
   MenuItemId.Team,
   MenuItemId.Developers,
 ];

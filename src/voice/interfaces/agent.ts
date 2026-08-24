@@ -1,19 +1,23 @@
 /**
  * Agent Types and Interfaces
- * Shared across backend, worker, and client
+ * Client-facing agent contract shared across backend and client.
+ *
+ * The proprietary agent-generation pipeline types (GenerationMeta/Step/Event,
+ * ExtractedInput, InstructionGapSuggestion, GENERATION_STEP_ORDER/_LABELS,
+ * PromptQuality, …) and the runtime AgentConfig/WorkerConfig live privately in
+ * speak-server (`@speak-voice-generation-internal`) and are intentionally NOT
+ * part of this public package.
  */
 
 import {
   AvatarProvider,
   TTSProvider,
-  LLMProvider,
   STTProvider,
 } from "../enums/providers.js";
+import { LLMProvider } from "../../enums/llm.js";
 import { AgentStatusType } from "../enums/agent.js";
 import { IntegrationSlug } from "../enums/integration.js";
 import { AgentTelephonySettings } from "./telephony.js";
-import { ResolvedDataCollectionField } from "./dataCollection.js";
-import { DemoConfig } from "./prospect.js";
 
 /**
  * Pronunciation rule for TTS providers that support pronunciation dictionaries
@@ -205,8 +209,6 @@ export interface Agent {
   shareSettings: AgentShareSettings;
   structuredOutputIds?: string[];
   telephony?: AgentTelephonySettings;
-  demoConfig?: DemoConfig;
-  generation?: GenerationMeta;
   conversationCount?: number;
   websiteUrl?: string;
   enableWebSearch?: boolean;
@@ -254,149 +256,6 @@ export interface CreateAgentRequest {
   creativityLevel: number;
 }
 
-/**
- * AI Agent Generation Types
- */
-
-export type GenerationStepStatus =
-  | "pending"
-  | "running"
-  | "done"
-  | "failed"
-  | "skipped";
-export type GenerationStatus =
-  | "extracting"
-  | "awaiting_followup"
-  | "awaiting_page_selection"
-  | "generating"
-  | "ready"
-  | null;
-
-export interface ExtractedPage {
-  url: string;
-  title?: string;
-  /** URL category assigned by classifyUrl() — e.g. "services", "pricing", "about" */
-  bucket?: string;
-  score?: number;
-}
-export type GenerationMode =
-  | "ai-generate"
-  | "ai-template-hybrid"
-  | "template"
-  | "manual";
-export type PromptQuality = "rich" | "adequate" | "vague";
-
-export interface ExtractedInput {
-  companyName: string | null;
-  agentName: string | null;
-  industry: string | null;
-  useCase: string | null;
-  targetAudience: string | null;
-  // primaryGoal?: string | null;
-  // relationshipStyle?: string | null;
-  // interactionSetting?: string | null;
-  websiteUrl: string | null;
-  wantsFileUpload: boolean;
-  brandColors: string[] | null;
-  logoUrl: string | null;
-  toneHints: string[] | null;
-  // formalityLevel?: string | null;
-  // emotionalStyle?: string | null;
-  // handoffPreference?: string | null;
-  // forbiddenClaims?: string[] | null;
-  language: string | null;
-  voicePreference: string | null;
-  promptQuality: PromptQuality;
-  instructionAnchors?: string[];
-}
-
-export interface GenerationStep {
-  status: GenerationStepStatus;
-  startedAt: string | null;
-  completedAt: string | null;
-  detail: string | null;
-}
-
-/** Ordered step keys for the AI generation pipeline. */
-export const GENERATION_STEP_ORDER = [
-  "extract",
-  "scrape",
-  "brand",
-  "generate",
-  "config",
-  "kb",
-] as const;
-export type GenerationStepKey = (typeof GENERATION_STEP_ORDER)[number];
-
-/** Canonical display labels for each pipeline step (used in admin UI). */
-export const GENERATION_STEP_LABELS: Record<GenerationStepKey, string> = {
-  extract: "Extract",
-  scrape: "Scrape",
-  brand: "Brand",
-  generate: "Generate",
-  config: "Config",
-  kb: "Knowledge Base",
-};
-
-/** A single instruction gap suggestion produced by analyzeInstructionGaps() */
-export interface InstructionGapSuggestion {
-  /** Index into instructionAnchors[] if this gap maps to a specific anchor */
-  anchorIndex?: number;
-  /** One sentence describing the gap (e.g. "Agent is not collecting caller email before ending calls") */
-  description: string;
-  /** Prose paragraph written in the same style as the existing instructions; appended verbatim on apply */
-  suggestedPatch: string;
-  /** Section heading in the current instructions after which to insert the patch; append to end if omitted */
-  insertAfterSection?: string;
-  severity: "low" | "medium" | "high";
-  /** Number of conversation summaries sampled when gap was detected */
-  conversationSampleCount: number;
-  createdAt: string;
-  appliedAt?: string | null;
-  dismissedAt?: string | null;
-}
-
-export interface GenerationMeta {
-  status: GenerationStatus;
-  mode: GenerationMode;
-  originalPrompt: string | null;
-  /** Optional explicit behavioral rules/constraints the user provided at creation time */
-  manualInstructions?: string | null;
-  followUpQuestion: string | null;
-  /** All follow-up submissions in order */
-  followUpHistory: string[];
-  /** Explicit behavioral rules extracted from originalPrompt + manualInstructions + follow-ups */
-  instructionAnchors?: string[];
-  /** Pending gap suggestions from analyzeInstructionGaps() */
-  instructionGapSuggestions?: InstructionGapSuggestion[];
-  /** Timestamp of last gap analysis run (auto or on-demand) */
-  lastGapAnalysisAt?: string | null;
-  extracted: ExtractedInput | null;
-  extractedPages?: ExtractedPage[];
-  steps: {
-    extract: GenerationStep;
-    scrape: GenerationStep;
-    brand: GenerationStep;
-    generate: GenerationStep;
-    config: GenerationStep;
-    kb: GenerationStep;
-  };
-  fieldsEditedByUser: string[];
-  totalDurationMs: number | null;
-  createdAt: string | null;
-}
-
-/** SSE event emitted during agent generation */
-export interface GenerationEvent {
-  step: string;
-  status?: GenerationStepStatus;
-  detail?: string;
-  data?: any;
-  question?: string;
-  pages?: ExtractedPage[];
-  agentPreview?: Partial<Agent>;
-}
-
 export interface AgentResource {
   resourceId: string;
   agentId: string;
@@ -410,75 +269,4 @@ export interface AgentResource {
   deletedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
-}
-
-export interface AgentConfig {
-  agentId: string;
-  userId: string;
-  orgId: string;
-  name: string;
-  instructions: string;
-  personality: string;
-  avatar: {
-    avatarId?: string;
-    avatarUrl?: string;
-    provider?: AvatarProvider;
-    tavusFaceId?: string;
-    tavusPalId?: string;
-  };
-  voice: {
-    provider: TTSProvider;
-    voiceId: string;
-    model?: string;
-    pronunciationRules?: PronunciationRule[];
-    elevenLabsDictId?: string;
-    elevenLabsVersionId?: string;
-    pronunciationSyncedAt?: string;
-    /**
-     * Set to `true` when the most recent ElevenLabs sync attempt failed.
-     * Mirrors `Agent.voice.pronunciationSyncFailed` so the worker/backend
-     * can read and report sync state from the dispatched config. Cleared
-     * on the next successful sync or when rules are cleared.
-     */
-    pronunciationSyncFailed?: boolean;
-  };
-  stt: {
-    provider: STTProvider;
-    model?: string;
-    lexiconTerms?: string[];
-  };
-  llm: {
-    provider: LLMProvider;
-    model?: string;
-  };
-  chatSettings: {
-    welcomeMessage: string;
-    maxSessionLength: number;
-    maxResponseLength?: number;
-    topicsToAvoid?: string[];
-    language: string;
-  };
-  knowledgeBase?: {
-    hasEmbeddings: boolean;
-    creativityLevel: number;
-  };
-  creativityLevel: number;
-  recordingEnabled?: boolean;
-  conversationMode?: "voice" | "avatar";
-  telephony?: AgentTelephonySettings;
-  resources?: AgentResource[];
-  websiteUrl?: string;
-  enableWebSearch?: boolean;
-  /** Composio tools (max 3) selected for this agent; enforced backend-side. */
-  selectedTools?: AgentSelectedTool[];
-}
-
-/**
- * WorkerConfig — everything the worker needs, bundled for room metadata transport.
- * Serialized into LiveKit room metadata at room creation so the worker can read
- * it at +0ms instead of making HTTP round-trips.
- */
-export interface WorkerConfig {
-  agentConfig: AgentConfig;
-  dataCollectionFields: ResolvedDataCollectionField[];
 }

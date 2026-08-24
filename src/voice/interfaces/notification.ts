@@ -3,7 +3,7 @@
  */
 
 import {
-  NotificationType,
+  VoiceNotificationType,
   NotificationResourceType,
 } from "../enums/notification.js";
 
@@ -13,7 +13,7 @@ import {
 export interface Notification {
   notificationId: string;
   userId: string;
-  type: NotificationType;
+  type: VoiceNotificationType;
   resourceType: NotificationResourceType;
   resourceId: string;
   title: string;
