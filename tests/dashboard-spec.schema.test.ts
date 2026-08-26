@@ -1156,3 +1156,73 @@ describe('exceedsJsonDepth', () => {
     expect(exceedsJsonDepth(nested, MAX_JSON_DEPTH)).toBe(true);
   });
 });
+
+/* ── Reserved media timestamp: `createdAt` ───────────────────────────────── */
+
+describe('reserved "createdAt" name', () => {
+  const schema = buildDashboardSpecSchema(FIELD_TYPES);
+
+  it('is valid as a raw records-table column', () => {
+    const result = schema.safeParse(specWith([
+      {
+        id: 'tbl', type: 'table', title: 'T', layout: LAYOUT,
+        config: {
+          rowsAre: 'records',
+          columns: [{ header: 'Date', field: 'createdAt' }, { header: 'Status', field: 'Status' }],
+        },
+      },
+    ]));
+    expect(result.success).toBe(true);
+  });
+
+  it('is valid as a kind:"time" groupBy', () => {
+    const result = schema.safeParse(specWith([
+      chart({ metric: MEDIA_COUNT, groupBy: { kind: 'time', fieldName: 'createdAt', granularity: 'week' } }),
+    ]));
+    expect(result.success).toBe(true);
+  });
+
+  it('stays unknown as a kind:"field" groupBy', () => {
+    const result = schema.safeParse(specWith([
+      chart({ metric: MEDIA_COUNT, groupBy: { kind: 'field', fieldName: 'createdAt' } }),
+    ]));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      message: 'unknown field "createdAt"',
+      path: ['widgets', 0, 'config', 'groupBy', 'fieldName'],
+    }));
+  });
+
+  it('stays unknown under an aggregator', () => {
+    const result = schema.safeParse(specWith([
+      chart({ metric: { kind: 'field', fieldName: 'createdAt', agg: 'avg' } }),
+    ]));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      message: 'unknown field "createdAt"',
+      path: ['widgets', 0, 'config', 'metric', 'fieldName'],
+    }));
+  });
+
+  it('stays unknown in a filter predicate', () => {
+    const result = schema.safeParse(specWith([
+      chart({ metric: { ...MEDIA_COUNT, filter: { field: 'createdAt', op: 'exists' } } }),
+    ]));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      message: 'unknown field "createdAt"',
+      path: ['widgets', 0, 'config', 'metric', 'filter', 'field'],
+    }));
+  });
+
+  it('a real custom field named createdAt keeps normal type checks', () => {
+    const withField = buildDashboardSpecSchema({ ...FIELD_TYPES, createdAt: 'text' });
+    const result = withField.safeParse(specWith([
+      chart({ metric: MEDIA_COUNT, groupBy: { kind: 'time', fieldName: 'createdAt', granularity: 'week' } }),
+    ]));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      message: expect.stringContaining('grouping by time requires a date/datetime field'),
+    }));
+  });
+});

@@ -512,14 +512,25 @@ type Path = (string | number)[];
  * - `agg`       — an aggregator is applied (must be a number/currency field)
  * - `group`     — used as a `kind:"field"` groupBy (must NOT be date/datetime)
  * - `timeGroup` — used as a `kind:"time"` groupBy (MUST be date/datetime)
- * - `mention`   — merely named (filter predicate, raw table column, distribution).
+ * - `column`    — a raw table column. Existence-only, and the one site besides
+ *                 `timeGroup` where the reserved `createdAt` name is valid.
+ * - `mention`   — merely named (filter predicate, distribution).
  *                 Only existence is checked; any field type is fine.
  */
 type FieldRef =
   | { use: 'agg'; fieldName: string; agg: Agg; path: Path }
   | { use: 'group'; fieldName: string; path: Path }
   | { use: 'timeGroup'; fieldName: string; path: Path }
+  | { use: 'column'; fieldName: string; path: Path }
   | { use: 'mention'; fieldName: string; path: Path };
+
+/**
+ * Reserved field name: the media's own ingestion timestamp. Not a custom field,
+ * so the existence check must not reject it where it is meaningful — a raw
+ * table column (rendered as the record's date) and a `kind:"time"` groupBy
+ * (trend over when recordings came in). Everywhere else it stays unknown.
+ */
+const RESERVED_MEDIA_TIMESTAMP = 'createdAt';
 
 /**
  * Everything the envelope's semantic checks need from one widget: every field
@@ -632,7 +643,7 @@ function collectWidgetRefs(widget: Widget): WidgetRefs {
           addMetric(acc, col.metric, [...c, 'columns', i, 'metric']);
         } else {
           // A raw-field column names a field. Easy to miss; unchecked = silent 0.
-          acc.fields.push({ use: 'mention', fieldName: col.field, path: [...c, 'columns', i, 'field'] });
+          acc.fields.push({ use: 'column', fieldName: col.field, path: [...c, 'columns', i, 'field'] });
         }
       });
       break;
@@ -796,6 +807,16 @@ export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap) {
         // not to `Object.prototype.toString`, or the unknown-field guard below is
         // bypassed and the widget silently renders a confident 0.
         const type = Object.hasOwn(fieldTypes, ref.fieldName) ? fieldTypes[ref.fieldName] : undefined;
+
+        // Reserved media timestamp: valid as a raw table column or a time
+        // groupBy without existing as a custom field; no type checks apply.
+        if (
+          ref.fieldName === RESERVED_MEDIA_TIMESTAMP &&
+          (ref.use === 'column' || ref.use === 'timeGroup') &&
+          !type
+        ) {
+          continue;
+        }
 
         if (!type) {
           ctx.addIssue({ code: 'custom', path, message: `unknown field "${ref.fieldName}"` });
