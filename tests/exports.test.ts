@@ -73,6 +73,7 @@ describe("Package exports — main entry", () => {
     expect(pkg.RecorderAnswerType).toBeDefined();
     expect(pkg.CalendarType).toBeDefined();
     expect(pkg.TeamInviteStatus).toBeDefined();
+    expect(pkg.KnowledgeBaseOwnerType).toBeDefined();
   });
 });
 
@@ -146,6 +147,7 @@ describe("Package exports — enums sub-path", () => {
     expect(enums.UserRole).toBeDefined();
     expect(enums.AssistantType).toBeDefined();
     expect(enums.WebhookEvent).toBeDefined();
+    expect(enums.KnowledgeBaseOwnerType).toBeDefined();
   });
 });
 
@@ -486,6 +488,17 @@ describe("Enum values — clip", () => {
     expect(ClipGenerationSource.CHAT).toBe("chat");
     expect(ClipGenerationSource.AI).toBe("ai");
     expect(Object.values(ClipGenerationSource)).toHaveLength(3);
+  });
+});
+
+describe("Enum values — knowledge base", () => {
+  it("KnowledgeBaseOwnerType has expected owner surfaces", async () => {
+    const { KnowledgeBaseOwnerType } = await import("../src/enums/knowledgeBase.js");
+
+    expect(KnowledgeBaseOwnerType.FOLDER).toBe("folder");
+    expect(KnowledgeBaseOwnerType.AGENT).toBe("agent");
+    expect(KnowledgeBaseOwnerType.AUTOMATION).toBe("automation");
+    expect(Object.values(KnowledgeBaseOwnerType)).toHaveLength(3);
   });
 });
 
