@@ -78,6 +78,17 @@ export const MODEL_PRICING: Record<string, ModelPricing> = {
 
   [LLMModels.GROK_4_5]: { inputPerMillion: 2.2, outputPerMillion: 6.6, cachedInputPerMillion: 0.22, provider: LLMProvider.OPENROUTER },
   [LLMModels.GLM_5_2]: { inputPerMillion: 1.023, outputPerMillion: 3.3, cachedInputPerMillion: 0.1023, provider: LLMProvider.OPENROUTER },
+
+  // OpenRouter-routed aliases, rates read from https://openrouter.ai/api/v1/models on 2026-09-01.
+  [LLMModels.OR_GPT_5_5]: { inputPerMillion: 5, outputPerMillion: 30, cachedInputPerMillion: 0.5, provider: LLMProvider.OPENROUTER },
+  [LLMModels.OR_GPT_5_6_TERRA]: { inputPerMillion: 2, outputPerMillion: 12, cachedInputPerMillion: 0.2, provider: LLMProvider.OPENROUTER },
+  [LLMModels.OR_GPT_5_6_SOL]: { inputPerMillion: 2, outputPerMillion: 10, cachedInputPerMillion: 0.2, provider: LLMProvider.OPENROUTER },
+  [LLMModels.OR_GPT_5_4_MINI]: { inputPerMillion: 0.75, outputPerMillion: 4.5, cachedInputPerMillion: 0.075, provider: LLMProvider.OPENROUTER },
+  [LLMModels.OR_CLAUDE_SONNET_5]: { inputPerMillion: 2, outputPerMillion: 10, cachedInputPerMillion: 0.2, provider: LLMProvider.OPENROUTER },
+  [LLMModels.OR_CLAUDE_OPUS_4_8]: { inputPerMillion: 5, outputPerMillion: 25, cachedInputPerMillion: 0.5, provider: LLMProvider.OPENROUTER },
+  [LLMModels.OR_CLAUDE_SONNET_4_6]: { inputPerMillion: 3, outputPerMillion: 15, cachedInputPerMillion: 0.3, provider: LLMProvider.OPENROUTER },
+  [LLMModels.OR_GEMINI_2_5_FLASH]: { inputPerMillion: 0.3, outputPerMillion: 2.5, cachedInputPerMillion: 0.03, provider: LLMProvider.OPENROUTER },
+  [LLMModels.OR_GEMINI_3_5_FLASH]: { inputPerMillion: 1.5, outputPerMillion: 9, cachedInputPerMillion: 0.15, provider: LLMProvider.OPENROUTER },
 };
 
 /** Look up pricing for a model id (enum value or raw string). Undefined if unknown. */

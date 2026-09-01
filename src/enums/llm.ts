@@ -68,4 +68,18 @@ export enum LLMModels {
 
   GROK_4_5 = 'x-ai/grok-4.5',
   GLM_5_2 = 'z-ai/glm-5.2',
+
+  // ═══════════════ OpenRouter-routed ═══════════════
+  // The same models as above, addressed by their OpenRouter slug so a workspace's own
+  // OpenRouter key pays for them. Kept as separate ids because the provider a request is
+  // billed through is a property of the id, not of the workspace.
+  OR_GPT_5_5 = 'openai/gpt-5.5',
+  OR_GPT_5_6_TERRA = 'openai/gpt-5.6-terra',
+  OR_GPT_5_6_SOL = 'openai/gpt-5.6-sol',
+  OR_GPT_5_4_MINI = 'openai/gpt-5.4-mini',
+  OR_CLAUDE_SONNET_5 = 'anthropic/claude-sonnet-5',
+  OR_CLAUDE_OPUS_4_8 = 'anthropic/claude-opus-4.8',
+  OR_CLAUDE_SONNET_4_6 = 'anthropic/claude-sonnet-4.6',
+  OR_GEMINI_2_5_FLASH = 'google/gemini-2.5-flash',
+  OR_GEMINI_3_5_FLASH = 'google/gemini-3.5-flash',
 }
