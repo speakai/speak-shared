@@ -91,7 +91,7 @@ jobs:
         if: steps.commits.outputs.has_changes == 'true'
         id: ai
         continue-on-error: true
-        uses: actions/ai-inference@v2
+        uses: actions/ai-inference@v3
         with:
           model: openai/gpt-4o-mini
           temperature: 0
