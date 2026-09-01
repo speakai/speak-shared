@@ -34,6 +34,9 @@ export type SpecFieldType =
 /** `fieldName → type`, built by the caller from the company's Field collection. */
 export type FieldTypeMap = Readonly<Record<string, SpecFieldType>>;
 
+/** `fieldId → {name, type}`. The name rides along so an issue can quote the field a `ref` resolved to. */
+export type FieldMapById = Readonly<Record<string, { name: string; type: SpecFieldType }>>;
+
 const NUMERIC_FIELD_TYPES: ReadonlySet<SpecFieldType> = new Set(['number', 'currency']);
 const TEMPORAL_FIELD_TYPES: ReadonlySet<SpecFieldType> = new Set(['date', 'datetime']);
 const NUMERIC_AGGS: ReadonlySet<string> = new Set(['sum', 'avg', 'median', 'min', 'max']);
@@ -46,7 +49,7 @@ const NUMERIC_AGGS: ReadonlySet<string> = new Set(['sum', 'avg', 'median', 'min'
  * table column (rendered as the record's date) and a `kind:"time"` groupBy
  * (trend over when recordings came in). Everywhere else it stays unknown.
  */
-const RESERVED_MEDIA_TIMESTAMP = 'createdAt';
+export const RESERVED_MEDIA_TIMESTAMP = 'createdAt';
 
 /**
  * The immutable companion to a `fieldName`. The KEY is the discriminator: a
@@ -598,7 +601,7 @@ export const widgetSchema = withDepthGuard(widgetSchemaRaw);
 
 /* ── Field-reference + filter walker ─────────────────────────────────────── */
 
-type Path = (string | number)[];
+export type Path = (string | number)[];
 
 /**
  * A reference to a field by name, and how it is being used.
@@ -614,7 +617,7 @@ type Path = (string | number)[];
  * `ref` is the optional immutable companion to the name, carried through so the
  * envelope can check the reserved arm against the use.
  */
-type FieldRef =
+export type FieldRef =
   | { use: 'agg'; fieldName: string; ref?: FieldReference; agg: Agg; path: Path }
   | { use: 'group'; fieldName: string; ref?: FieldReference; path: Path }
   | { use: 'timeGroup'; fieldName: string; ref?: FieldReference; path: Path }
@@ -622,7 +625,7 @@ type FieldRef =
   | { use: 'mention'; fieldName: string; ref?: FieldReference; path: Path };
 
 /** A site's `ref` key sits beside the name key the walker recorded a path to. */
-function refPath(site: FieldRef): Path {
+export function refPath(site: FieldRef): Path {
   return [...site.path.slice(0, -1), 'ref'];
 }
 
@@ -636,7 +639,7 @@ function refPath(site: FieldRef): Path {
  * one of them would have the `never` guard — so a newly added widget type would
  * silently escape the other check.
  */
-interface WidgetRefs {
+export interface WidgetRefs {
   fields: FieldRef[];
   filters: Array<{ filter: Filter; path: Path }>;
 }
@@ -700,7 +703,7 @@ function addBinding(acc: WidgetRefs, binding: Binding | undefined, path: Path): 
  * matches nothing, and renders a confident `0` — a plausible wrong number, which
  * is strictly worse than an error. Do not narrow this function.
  */
-function collectWidgetRefs(widget: Widget): WidgetRefs {
+export function collectWidgetRefs(widget: Widget): WidgetRefs {
   const acc: WidgetRefs = { fields: [], filters: [] };
 
   // Site 5: per-widget binding filter (applies to every widget type).
@@ -766,7 +769,7 @@ function collectWidgetRefs(widget: Widget): WidgetRefs {
 }
 
 /** Exhaustiveness guard: a new widget type fails to compile here until handled. */
-function assertNoFieldRefs(widget: never): never {
+export function assertNoFieldRefs(widget: never): never {
   throw new Error(`unhandled widget type in collectWidgetRefs: ${JSON.stringify(widget)}`);
 }
 
@@ -806,8 +809,14 @@ function filterDepth(filter: Filter): number {
  *   Pass it on the SERVER (which already loads the company's fields). The
  *   CLIENT may omit it and validate structurally in `zodResolver`; the server
  *   is the authority.
+ *
+ * @param fieldsById Optional `fieldId → {name, type}` map. A site carrying a
+ *   `{ fieldId }` ref resolves through this FIRST, so a field the user renamed
+ *   after the spec was written still resolves. Without it the check falls back
+ *   to the name and a renamed field reports `unknown field` — the production
+ *   failure this reference exists to end. Supply both maps or neither.
  */
-export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap) {
+export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap, fieldsById?: FieldMapById) {
   const checked = dashboardSpecBaseSchema.superRefine((spec, ctx) => {
     const widgetsById = new Map(spec.widgets.map((w) => [w.id, w]));
 
@@ -918,15 +927,20 @@ export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap) {
         // ("toString", "constructor", "__proto__", …) must resolve to undefined,
         // not to `Object.prototype.toString`, or the unknown-field guard below is
         // bypassed and the widget silently renders a confident 0.
-        const type = Object.hasOwn(fieldTypes, ref.fieldName) ? fieldTypes[ref.fieldName] : undefined;
+        const resolved =
+          ref.ref && 'fieldId' in ref.ref && fieldsById && Object.hasOwn(fieldsById, ref.ref.fieldId)
+            ? fieldsById[ref.ref.fieldId]
+            : undefined;
+        const type = resolved?.type ?? (Object.hasOwn(fieldTypes, ref.fieldName) ? fieldTypes[ref.fieldName] : undefined);
+        // Quote whichever field the type came from, or the message names one field and describes another.
+        const label = resolved?.name ?? ref.fieldName;
 
         // Reserved media timestamp: valid as a raw table column or a time
         // groupBy without existing as a custom field; no type checks apply.
-        if (
-          ref.fieldName === RESERVED_MEDIA_TIMESTAMP &&
-          (ref.use === 'column' || ref.use === 'timeGroup') &&
-          !type
-        ) {
+        // The ref settles it structurally where there is one; the name is the
+        // fallback for the references not yet carrying a ref.
+        const isReserved = ref.ref ? 'reserved' in ref.ref : ref.fieldName === RESERVED_MEDIA_TIMESTAMP;
+        if (isReserved && (ref.use === 'column' || ref.use === 'timeGroup') && !type) {
           continue;
         }
 
@@ -939,7 +953,7 @@ export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap) {
           ctx.addIssue({
             code: 'custom',
             path,
-            message: `agg "${ref.agg}" requires a number/currency field; "${ref.fieldName}" is ${type}`,
+            message: `agg "${ref.agg}" requires a number/currency field; "${label}" is ${type}`,
           });
         }
 
@@ -947,7 +961,7 @@ export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap) {
           ctx.addIssue({
             code: 'custom',
             path,
-            message: `field "${ref.fieldName}" is ${type}; grouping it requires kind:"time" with an explicit granularity`,
+            message: `field "${label}" is ${type}; grouping it requires kind:"time" with an explicit granularity`,
           });
         }
 
@@ -955,7 +969,7 @@ export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap) {
           ctx.addIssue({
             code: 'custom',
             path,
-            message: `grouping by time requires a date/datetime field; "${ref.fieldName}" is ${type}`,
+            message: `grouping by time requires a date/datetime field; "${label}" is ${type}`,
           });
         }
       }

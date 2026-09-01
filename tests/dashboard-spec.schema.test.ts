@@ -30,7 +30,7 @@ import {
   widgetSchema,
   widgetTypeSchema,
 } from '../src/schemas/dashboard-spec.schema.js';
-import type { DashboardSpec, DashboardSpecInput, FieldTypeMap } from '../src/schemas/dashboard-spec.schema.js';
+import type { DashboardSpec, DashboardSpecInput, FieldMapById, FieldTypeMap } from '../src/schemas/dashboard-spec.schema.js';
 import * as schemaModule from '../src/schemas/dashboard-spec.schema.js';
 
 /* ── Fixtures ────────────────────────────────────────────────────────────── */
@@ -1546,5 +1546,62 @@ describe('field reference is optional everywhere — pre-migration specs are unt
     const result = schema.safeParse(specWith(widgets));
     expect(result.error?.issues ?? []).toEqual([]);
     expect((result.data as DashboardSpec).widgets).toStrictEqual(widgets);
+  });
+});
+
+describe('field reference — resolving through the id map', () => {
+  const FIELDS_BY_ID: FieldMapById = {
+    '3fdf29434505': { name: 'Quality Score', type: 'number' },
+    aaaaaaaaaaaa: { name: 'Recorded On', type: 'datetime' },
+  };
+  const schema = buildDashboardSpecSchema(FIELD_TYPES, FIELDS_BY_ID);
+
+  const messageFor = (doc: unknown) => schema.safeParse(doc).error?.issues.map((i) => i.message).join(' | ') ?? '';
+
+  it('resolves a field whose name went stale after a rename', () => {
+    const result = schema.safeParse(specWith([
+      chart({ metric: { kind: 'field', fieldName: 'Old Score', ref: FIELD_ID, agg: 'avg' } }),
+    ]));
+    expect(result.error?.issues ?? []).toEqual([]);
+    expect(result.success).toBe(true);
+  });
+
+  it('reports that same stale name as unknown when no id map is supplied', () => {
+    expect(buildDashboardSpecSchema(FIELD_TYPES).safeParse(specWith([
+      chart({ metric: { kind: 'field', fieldName: 'Old Score', ref: FIELD_ID, agg: 'avg' } }),
+    ])).success).toBe(false);
+  });
+
+  // The type comes from the ref, so the message has to quote the ref's field.
+  // Quoting the stale name describes one field's type under another's label.
+  it('quotes the resolved field in an aggregator issue', () => {
+    const message = messageFor(specWith([
+      chart({ metric: { kind: 'field', fieldName: 'Session Score', ref: { fieldId: 'aaaaaaaaaaaa' }, agg: 'avg' } }),
+    ]));
+    expect(message).toContain('"Recorded On" is datetime');
+    expect(message).not.toContain('"Session Score" is datetime');
+  });
+
+  it('quotes the resolved field in a groupBy issue', () => {
+    const message = messageFor(specWith([
+      chart({ metric: MEDIA_COUNT, groupBy: { kind: 'field', fieldName: 'Status', ref: { fieldId: 'aaaaaaaaaaaa' } } }),
+    ]));
+    expect(message).toContain('field "Recorded On" is datetime');
+    expect(message).not.toContain('field "Status" is datetime');
+  });
+
+  it('quotes the resolved field in a time-groupBy issue', () => {
+    const message = messageFor(specWith([
+      chart({ metric: MEDIA_COUNT, groupBy: { kind: 'time', fieldName: 'Recorded On', ref: FIELD_ID, granularity: 'week' } }),
+    ]));
+    expect(message).toContain('"Quality Score" is number');
+    expect(message).not.toContain('"Recorded On" is number');
+  });
+
+  it('still names the site itself when nothing resolved', () => {
+    const message = messageFor(specWith([
+      chart({ metric: { kind: 'field', fieldName: 'Nope', ref: { fieldId: 'bbbbbbbbbbbb' }, agg: 'avg' } }),
+    ]));
+    expect(message).toContain('unknown field "Nope"');
   });
 });
