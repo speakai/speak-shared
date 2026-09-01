@@ -124,6 +124,8 @@ describe("Package exports — dashboard spec v2", () => {
     expect(schemas.widgetSchema).toBeDefined();
     expect(schemas.widgetTypeSchema).toBeDefined();
     expect(schemas.sectionSchema).toBeDefined();
+    expect(schemas.fieldReferenceSchema).toBeDefined();
+    expect(schemas.fieldRef).toBeTypeOf("function");
   });
 
   it("does not leak the raw, unguarded schemas", async () => {
