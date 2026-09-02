@@ -34,9 +34,50 @@ export type SpecFieldType =
 /** `fieldName → type`, built by the caller from the company's Field collection. */
 export type FieldTypeMap = Readonly<Record<string, SpecFieldType>>;
 
+/** `fieldId → {name, type}`. The name rides along so an issue can quote the field a `ref` resolved to. */
+export type FieldMapById = Readonly<Record<string, { name: string; type: SpecFieldType }>>;
+
 const NUMERIC_FIELD_TYPES: ReadonlySet<SpecFieldType> = new Set(['number', 'currency']);
 const TEMPORAL_FIELD_TYPES: ReadonlySet<SpecFieldType> = new Set(['date', 'datetime']);
 const NUMERIC_AGGS: ReadonlySet<string> = new Set(['sum', 'avg', 'median', 'min', 'max']);
+
+/* ── Field reference ─────────────────────────────────────────────────────── */
+
+/**
+ * Reserved field name: the media's own ingestion timestamp. Not a custom field,
+ * so the existence check must not reject it where it is meaningful — a raw
+ * table column (rendered as the record's date) and a `kind:"time"` groupBy
+ * (trend over when recordings came in). Everywhere else it stays unknown.
+ */
+export const RESERVED_MEDIA_TIMESTAMP = 'createdAt';
+
+/**
+ * The immutable companion to a `fieldName`. The KEY is the discriminator: a
+ * custom field carries `fieldId`, and the reserved timestamp — our own constant,
+ * which has no field id — carries `reserved`. Both arms are strict, so a
+ * reference naming both keys parses as neither.
+ *
+ * `fieldName` is the value every consumer reads.
+ *
+ * The union carries an explicit message: a bare union failure reports only
+ * "Invalid input", and at the two sites nested inside a parent union the path
+ * collapses to the parent with `ref` named nowhere, leaving a caller that
+ * emitted `field_id` nothing to repair from.
+ */
+export const fieldReferenceSchema = z.union(
+  [
+    // Every one of the 8,881 field ids in production is 12 lowercase hex chars.
+    z.strictObject({ fieldId: z.string().regex(/^[0-9a-f]{12}$/) }),
+    z.strictObject({ reserved: z.literal(RESERVED_MEDIA_TIMESTAMP) }),
+  ],
+  {
+    error: `field reference must be exactly one of { fieldId } or { reserved: "${RESERVED_MEDIA_TIMESTAMP}" }`,
+  },
+);
+
+export function fieldRef(source: unknown): FieldReference {
+  return fieldReferenceSchema.parse(source);
+}
 
 /* ── Structural depth guard ──────────────────────────────────────────────── */
 
@@ -64,8 +105,58 @@ function withDepthGuard<T extends z.ZodType>(schema: T) {
       });
       return z.NEVER;
     }
+    reportMalformedRefs(raw, ctx);
     return raw;
   }, schema);
+}
+
+/**
+ * Reports a malformed `ref` at its own path, before parsing begins.
+ *
+ * Two of the sites that accept a `ref` sit inside a parent `z.union`
+ * (`columnSchemaRaw`, `filterSchemaRaw`). When the inner strict object rejects,
+ * the parent tries its other branch, fails that too, and reports one collapsed
+ * "Invalid input" at the parent — naming neither `ref` nor what was wrong with
+ * it. Like the depth guard, this cannot be a `superRefine`: by then the union
+ * has already swallowed the detail. Running first is the only way to keep the
+ * path.
+ */
+function reportMalformedRefs(raw: unknown, ctx: z.RefinementCtx, path: PropertyKey[] = []): void {
+  if (Array.isArray(raw)) {
+    raw.forEach((item, i) => reportMalformedRefs(item, ctx, [...path, i]));
+    return;
+  }
+  if (raw === null || typeof raw !== 'object') return;
+
+  const entries = Object.entries(raw as Record<string, unknown>);
+  const named = entries.find(([k]) => k === 'field' || k === 'fieldName')?.[1];
+
+  for (const [key, value] of entries) {
+    if (key === 'ref' && value !== undefined) {
+      const parsed = fieldReferenceSchema.safeParse(value);
+      if (!parsed.success) {
+        ctx.addIssue({
+          code: 'custom',
+          path: [...path, 'ref'],
+          message: `field reference must be exactly one of { fieldId } or { reserved: "${RESERVED_MEDIA_TIMESTAMP}" }`,
+        });
+      } else if (
+        'reserved' in parsed.data &&
+        typeof named === 'string' &&
+        named !== RESERVED_MEDIA_TIMESTAMP
+      ) {
+        // Locally decidable, so it holds for the standalone exports too, unlike
+        // the use restriction below which needs the walker to know the use.
+        ctx.addIssue({
+          code: 'custom',
+          path: [...path, 'ref'],
+          message: `reserved "${parsed.data.reserved}" contradicts the name "${named}"`,
+        });
+      }
+      continue;
+    }
+    reportMalformedRefs(value, ctx, [...path, key]);
+  }
 }
 
 /* ── Filter (self-recursive) ─────────────────────────────────────────────── */
@@ -80,6 +171,7 @@ const filterListSchema = z.array(z.union([z.string(), z.number()])).min(1).max(1
 const filterLeafSchema = z
   .strictObject({
     field: z.string().min(1).max(120),
+    ref: fieldReferenceSchema.optional(),
     op: filterOpSchema,
     value: z.union([filterScalarSchema, filterListSchema]).optional(),
   })
@@ -136,6 +228,7 @@ const baseMetricSchemaRaw = z.discriminatedUnion('kind', [
   z.strictObject({
     kind: z.literal('field'),
     fieldName: z.string().min(1).max(120),
+    ref: fieldReferenceSchema.optional(),
     agg: aggSchema,
     filter: filterSchemaRaw.optional(),
   }),
@@ -168,8 +261,8 @@ const metricSchemaRaw = z.discriminatedUnion('kind', [
 export const granularitySchema = z.enum(['record', 'day', 'week', 'month', 'quarter']);
 
 export const groupBySchema = z.discriminatedUnion('kind', [
-  z.strictObject({ kind: z.literal('field'), fieldName: z.string().min(1).max(120) }),
-  z.strictObject({ kind: z.literal('time'), fieldName: z.string().min(1).max(120), granularity: granularitySchema }),
+  z.strictObject({ kind: z.literal('field'), fieldName: z.string().min(1).max(120), ref: fieldReferenceSchema.optional() }),
+  z.strictObject({ kind: z.literal('time'), fieldName: z.string().min(1).max(120), ref: fieldReferenceSchema.optional(), granularity: granularitySchema }),
   z.strictObject({ kind: z.literal('folder') }),
   z.strictObject({ kind: z.literal('speaker') }),
 ]);
@@ -231,6 +324,7 @@ const columnSchemaRaw = z.union([
   z.strictObject({
     header: z.string().min(1).max(40),
     field: z.string().min(1).max(120),
+    ref: fieldReferenceSchema.optional(),
     thresholds: thresholdsSchema.optional(),
   }),
   z.strictObject({
@@ -359,6 +453,7 @@ const widgetSchemaRaw = z.discriminatedUnion('type', [
     type: z.literal('field-distribution'),
     config: z.strictObject({
       fieldName: z.string().min(1).max(120), // name, not id
+      ref: fieldReferenceSchema.optional(),
       measure: z.enum(['count', 'percent']),
       chartType: z.enum(['bar', 'donut', 'table']),
       // Opt-in period-over-period comparison. When set, the server also computes
@@ -459,6 +554,7 @@ export type DateRange = z.infer<typeof dateRangeSchema>;
 export type DateRangePreset = z.infer<typeof dateRangePresetSchema>;
 export type Binding = z.infer<typeof bindingSchemaRaw>;
 export type Column = z.infer<typeof columnSchemaRaw>;
+export type FieldReference = z.infer<typeof fieldReferenceSchema>;
 export type WidgetLayout = z.infer<typeof layoutSchema>;
 export type Widget = z.infer<typeof widgetSchemaRaw>;
 export type WidgetType = z.infer<typeof widgetTypeSchema>;
@@ -505,7 +601,7 @@ export const widgetSchema = withDepthGuard(widgetSchemaRaw);
 
 /* ── Field-reference + filter walker ─────────────────────────────────────── */
 
-type Path = (string | number)[];
+export type Path = (string | number)[];
 
 /**
  * A reference to a field by name, and how it is being used.
@@ -517,21 +613,21 @@ type Path = (string | number)[];
  *                 `timeGroup` where the reserved `createdAt` name is valid.
  * - `mention`   — merely named (filter predicate, distribution).
  *                 Only existence is checked; any field type is fine.
+ *
+ * `ref` is the optional immutable companion to the name, carried through so the
+ * envelope can check the reserved arm against the use.
  */
-type FieldRef =
-  | { use: 'agg'; fieldName: string; agg: Agg; path: Path }
-  | { use: 'group'; fieldName: string; path: Path }
-  | { use: 'timeGroup'; fieldName: string; path: Path }
-  | { use: 'column'; fieldName: string; path: Path }
-  | { use: 'mention'; fieldName: string; path: Path };
+export type FieldRef =
+  | { use: 'agg'; fieldName: string; ref?: FieldReference; agg: Agg; path: Path }
+  | { use: 'group'; fieldName: string; ref?: FieldReference; path: Path }
+  | { use: 'timeGroup'; fieldName: string; ref?: FieldReference; path: Path }
+  | { use: 'column'; fieldName: string; ref?: FieldReference; path: Path }
+  | { use: 'mention'; fieldName: string; ref?: FieldReference; path: Path };
 
-/**
- * Reserved field name: the media's own ingestion timestamp. Not a custom field,
- * so the existence check must not reject it where it is meaningful — a raw
- * table column (rendered as the record's date) and a `kind:"time"` groupBy
- * (trend over when recordings came in). Everywhere else it stays unknown.
- */
-const RESERVED_MEDIA_TIMESTAMP = 'createdAt';
+/** A site's `ref` key sits beside the name key the walker recorded a path to. */
+export function refPath(site: FieldRef): Path {
+  return [...site.path.slice(0, -1), 'ref'];
+}
 
 /**
  * Everything the envelope's semantic checks need from one widget: every field
@@ -543,7 +639,7 @@ const RESERVED_MEDIA_TIMESTAMP = 'createdAt';
  * one of them would have the `never` guard — so a newly added widget type would
  * silently escape the other check.
  */
-interface WidgetRefs {
+export interface WidgetRefs {
   fields: FieldRef[];
   filters: Array<{ filter: Filter; path: Path }>;
 }
@@ -563,12 +659,12 @@ function fieldRefsInFilter(filter: Filter, path: Path): FieldRef[] {
   if ('or' in filter) {
     return filter.or.flatMap((f, i) => fieldRefsInFilter(f, [...path, 'or', i]));
   }
-  return [{ use: 'mention', fieldName: filter.field, path: [...path, 'field'] }];
+  return [{ use: 'mention', fieldName: filter.field, ref: filter.ref, path: [...path, 'field'] }];
 }
 
 function addBaseMetric(acc: WidgetRefs, metric: BaseMetric, path: Path): void {
   if (metric.kind === 'field') {
-    acc.fields.push({ use: 'agg', fieldName: metric.fieldName, agg: metric.agg, path: [...path, 'fieldName'] });
+    acc.fields.push({ use: 'agg', fieldName: metric.fieldName, ref: metric.ref, agg: metric.agg, path: [...path, 'fieldName'] });
   }
   addFilter(acc, metric.filter, [...path, 'filter']);
 }
@@ -586,9 +682,9 @@ function addMetric(acc: WidgetRefs, metric: Metric, path: Path): void {
 
 function addGroupBy(acc: WidgetRefs, groupBy: GroupBy, path: Path): void {
   if (groupBy.kind === 'field') {
-    acc.fields.push({ use: 'group', fieldName: groupBy.fieldName, path: [...path, 'fieldName'] });
+    acc.fields.push({ use: 'group', fieldName: groupBy.fieldName, ref: groupBy.ref, path: [...path, 'fieldName'] });
   } else if (groupBy.kind === 'time') {
-    acc.fields.push({ use: 'timeGroup', fieldName: groupBy.fieldName, path: [...path, 'fieldName'] });
+    acc.fields.push({ use: 'timeGroup', fieldName: groupBy.fieldName, ref: groupBy.ref, path: [...path, 'fieldName'] });
   }
   // folder | speaker name no field.
 }
@@ -607,7 +703,7 @@ function addBinding(acc: WidgetRefs, binding: Binding | undefined, path: Path): 
  * matches nothing, and renders a confident `0` — a plausible wrong number, which
  * is strictly worse than an error. Do not narrow this function.
  */
-function collectWidgetRefs(widget: Widget): WidgetRefs {
+export function collectWidgetRefs(widget: Widget): WidgetRefs {
   const acc: WidgetRefs = { fields: [], filters: [] };
 
   // Site 5: per-widget binding filter (applies to every widget type).
@@ -644,13 +740,13 @@ function collectWidgetRefs(widget: Widget): WidgetRefs {
           addMetric(acc, col.metric, [...c, 'columns', i, 'metric']);
         } else {
           // A raw-field column names a field. Easy to miss; unchecked = silent 0.
-          acc.fields.push({ use: 'column', fieldName: col.field, path: [...c, 'columns', i, 'field'] });
+          acc.fields.push({ use: 'column', fieldName: col.field, ref: col.ref, path: [...c, 'columns', i, 'field'] });
         }
       });
       break;
 
     case 'field-distribution':
-      acc.fields.push({ use: 'mention', fieldName: widget.config.fieldName, path: [...c, 'fieldName'] });
+      acc.fields.push({ use: 'mention', fieldName: widget.config.fieldName, ref: widget.config.ref, path: [...c, 'fieldName'] });
       break;
 
     // Field-free widget types, listed EXPLICITLY — no `default:` clause.
@@ -673,7 +769,7 @@ function collectWidgetRefs(widget: Widget): WidgetRefs {
 }
 
 /** Exhaustiveness guard: a new widget type fails to compile here until handled. */
-function assertNoFieldRefs(widget: never): never {
+export function assertNoFieldRefs(widget: never): never {
   throw new Error(`unhandled widget type in collectWidgetRefs: ${JSON.stringify(widget)}`);
 }
 
@@ -713,8 +809,14 @@ function filterDepth(filter: Filter): number {
  *   Pass it on the SERVER (which already loads the company's fields). The
  *   CLIENT may omit it and validate structurally in `zodResolver`; the server
  *   is the authority.
+ *
+ * @param fieldsById Optional `fieldId → {name, type}` map. A site carrying a
+ *   `{ fieldId }` ref resolves through this FIRST, so a field the user renamed
+ *   after the spec was written still resolves. Without it the check falls back
+ *   to the name and a renamed field reports `unknown field` — the production
+ *   failure this reference exists to end. Supply both maps or neither.
  */
-export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap) {
+export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap, fieldsById?: FieldMapById) {
   const checked = dashboardSpecBaseSchema.superRefine((spec, ctx) => {
     const widgetsById = new Map(spec.widgets.map((w) => [w.id, w]));
 
@@ -793,6 +895,24 @@ export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap) {
       }
     });
 
+    /* ── 6. Reserved reference — the same two uses the reserved NAME has ──── */
+    // Needs the walker to know each site's USE, so only the envelope can run it.
+    // The contradiction half is locally decidable and runs in the depth-guard
+    // preprocess instead, which every standalone export is wrapped in.
+    refsByWidget.forEach((refs, wi) => {
+      for (const site of refs.fields) {
+        if (!site.ref || !('reserved' in site.ref)) continue;
+
+        if (site.use !== 'column' && site.use !== 'timeGroup') {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['widgets', wi, ...refPath(site)],
+            message: `reserved "${site.ref.reserved}" is only valid as a raw table column or a kind:"time" groupBy`,
+          });
+        }
+      }
+    });
+
     /* ── 3. Field existence + aggregator/field-type compatibility ──────────── */
     // Context-dependent: runs only when the caller supplied a field-type map.
     // Walks ALL FIVE sites a field name can appear (see collectWidgetRefs) —
@@ -807,15 +927,20 @@ export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap) {
         // ("toString", "constructor", "__proto__", …) must resolve to undefined,
         // not to `Object.prototype.toString`, or the unknown-field guard below is
         // bypassed and the widget silently renders a confident 0.
-        const type = Object.hasOwn(fieldTypes, ref.fieldName) ? fieldTypes[ref.fieldName] : undefined;
+        const resolved =
+          ref.ref && 'fieldId' in ref.ref && fieldsById && Object.hasOwn(fieldsById, ref.ref.fieldId)
+            ? fieldsById[ref.ref.fieldId]
+            : undefined;
+        const type = resolved?.type ?? (Object.hasOwn(fieldTypes, ref.fieldName) ? fieldTypes[ref.fieldName] : undefined);
+        // Quote whichever field the type came from, or the message names one field and describes another.
+        const label = resolved?.name ?? ref.fieldName;
 
         // Reserved media timestamp: valid as a raw table column or a time
         // groupBy without existing as a custom field; no type checks apply.
-        if (
-          ref.fieldName === RESERVED_MEDIA_TIMESTAMP &&
-          (ref.use === 'column' || ref.use === 'timeGroup') &&
-          !type
-        ) {
+        // The ref settles it structurally where there is one; the name is the
+        // fallback for the references not yet carrying a ref.
+        const isReserved = ref.ref ? 'reserved' in ref.ref : ref.fieldName === RESERVED_MEDIA_TIMESTAMP;
+        if (isReserved && (ref.use === 'column' || ref.use === 'timeGroup') && !type) {
           continue;
         }
 
@@ -828,7 +953,7 @@ export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap) {
           ctx.addIssue({
             code: 'custom',
             path,
-            message: `agg "${ref.agg}" requires a number/currency field; "${ref.fieldName}" is ${type}`,
+            message: `agg "${ref.agg}" requires a number/currency field; "${label}" is ${type}`,
           });
         }
 
@@ -836,7 +961,7 @@ export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap) {
           ctx.addIssue({
             code: 'custom',
             path,
-            message: `field "${ref.fieldName}" is ${type}; grouping it requires kind:"time" with an explicit granularity`,
+            message: `field "${label}" is ${type}; grouping it requires kind:"time" with an explicit granularity`,
           });
         }
 
@@ -844,7 +969,7 @@ export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap) {
           ctx.addIssue({
             code: 'custom',
             path,
-            message: `grouping by time requires a date/datetime field; "${ref.fieldName}" is ${type}`,
+            message: `grouping by time requires a date/datetime field; "${label}" is ${type}`,
           });
         }
       }

@@ -26,6 +26,7 @@ export type {
   DateRange,
   DateRangePreset,
   Expr,
+  FieldReference,
   FieldTypeMap,
   Filter,
   FilterOp,

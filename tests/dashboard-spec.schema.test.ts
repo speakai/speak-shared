@@ -23,12 +23,14 @@ import {
   columnSchema,
   dashboardSpecSchema,
   exprSchema,
+  fieldRef,
+  fieldReferenceSchema,
   filterSchema,
   metricSchema,
   widgetSchema,
   widgetTypeSchema,
 } from '../src/schemas/dashboard-spec.schema.js';
-import type { DashboardSpec, DashboardSpecInput, FieldTypeMap } from '../src/schemas/dashboard-spec.schema.js';
+import type { DashboardSpec, DashboardSpecInput, FieldMapById, FieldTypeMap } from '../src/schemas/dashboard-spec.schema.js';
 import * as schemaModule from '../src/schemas/dashboard-spec.schema.js';
 
 /* ── Fixtures ────────────────────────────────────────────────────────────── */
@@ -763,7 +765,7 @@ describe('no unguarded schema in the public surface', () => {
       'filterOpSchema', 'aggSchema', 'builtinMetricSchema', 'granularitySchema',
       'groupBySchema', 'thresholdStatusSchema', 'thresholdSchema', 'sourceSchema',
       'dateRangePresetSchema', 'dateRangeSchema', 'layoutSchema', 'widgetTypeSchema',
-      'sectionSchema',
+      'sectionSchema', 'fieldReferenceSchema',
     ];
     const accountedFor = [...filterContaining, ...filterFree].sort();
 
@@ -1224,5 +1226,382 @@ describe('reserved "createdAt" name', () => {
     expect(result.error!.issues).toContainEqual(expect.objectContaining({
       message: expect.stringContaining('grouping by time requires a date/datetime field'),
     }));
+  });
+});
+
+/* ── Field reference: { fieldId } | { reserved: "createdAt" } ────────────── */
+
+const FIELD_ID = { fieldId: '3fdf29434505' } as const;
+const RESERVED = { reserved: 'createdAt' } as const;
+
+const tableWidget = (config: Record<string, unknown>, overrides: Record<string, unknown> = {}) =>
+  ({ id: 'tbl-1', type: 'table', title: 'T', layout: LAYOUT, config, ...overrides });
+
+const tiles = (tile: Record<string, unknown>) =>
+  ({ id: 'tiles-1', type: 'stat-cards', title: 'Tiles', layout: LAYOUT, config: { tiles: [tile] } });
+
+const comparison = (config: Record<string, unknown>) =>
+  ({ id: 'cmp-1', type: 'comparison', title: 'Cmp', layout: LAYOUT, config: { dimension: 'folder', a: {}, b: {}, metrics: [MEDIA_COUNT], ...config } });
+
+const distribution = (config: Record<string, unknown>, overrides: Record<string, unknown> = {}) =>
+  ({ id: 'fd-1', type: 'field-distribution', title: 'FD', layout: LAYOUT, config: { measure: 'count', chartType: 'bar', ...config }, ...overrides });
+
+describe('field reference — { fieldId } arm', () => {
+  const schema = buildDashboardSpecSchema(FIELD_TYPES);
+
+  // Every path that holds a field reference. A site missing from the schema
+  // rejects `ref` as an unknown key (strictObject), so this list IS the coverage.
+  const sites: Array<[string, unknown[]]> = [
+    ['config.metric.fieldName', [chart({ metric: { kind: 'field', fieldName: 'Session Score', ref: FIELD_ID, agg: 'avg' } })]],
+    ['config.metric.filter.field', [chart({ metric: { ...MEDIA_COUNT, filter: { field: 'Status', ref: FIELD_ID, op: 'exists' } } })]],
+    ['config.metric.expr operand fieldName', [chart({ metric: { kind: 'expr', expr: { op: 'diff', a: MEDIA_COUNT, b: { kind: 'field', fieldName: 'Revenue', ref: FIELD_ID, agg: 'sum' } } } })]],
+    ['config.groupBy.fieldName', [chart({ metric: MEDIA_COUNT, groupBy: { kind: 'field', fieldName: 'Country', ref: FIELD_ID } })]],
+    ['config.groupBy.fieldName (kind:"time")', [chart({ metric: MEDIA_COUNT, groupBy: { kind: 'time', fieldName: 'Recorded On', ref: FIELD_ID, granularity: 'week' } })]],
+    ['config.series.fieldName', [chart({ metric: MEDIA_COUNT, series: { kind: 'field', fieldName: 'Region', ref: FIELD_ID } })]],
+    ['config.tiles[].metric.fieldName', [tiles({ metric: { kind: 'field', fieldName: 'Revenue', ref: FIELD_ID, agg: 'sum' }, label: 'Rev' })]],
+    ['config.tiles[].metric.filter.field', [tiles({ metric: { ...MEDIA_COUNT, filter: { field: 'Status', ref: FIELD_ID, op: 'exists' } }, label: 'Count' })]],
+    ['config.columns[].field', [tableWidget({ rowsAre: 'records', columns: [{ header: 'Status', field: 'Status', ref: FIELD_ID }] })]],
+    ['config.columns[].metric.fieldName', [tableWidget({ rowsAre: 'groups', groupBy: { kind: 'folder' }, columns: [{ header: 'Rev', metric: { kind: 'field', fieldName: 'Revenue', ref: FIELD_ID, agg: 'sum' } }] })]],
+    ['config.columns[].metric.filter.field', [tableWidget({ rowsAre: 'groups', groupBy: { kind: 'folder' }, columns: [{ header: 'N', metric: { ...MEDIA_COUNT, filter: { field: 'Status', ref: FIELD_ID, op: 'exists' } } }] })]],
+    ['table config.groupBy.fieldName', [tableWidget({ rowsAre: 'groups', groupBy: { kind: 'field', fieldName: 'Country', ref: FIELD_ID }, columns: [{ header: 'N', metric: MEDIA_COUNT }] })]],
+    ['config.fieldName (field-distribution)', [distribution({ fieldName: 'Sentiment', ref: FIELD_ID })]],
+    ['config.metrics[].fieldName (comparison)', [comparison({ metrics: [{ kind: 'field', fieldName: 'Age', ref: FIELD_ID, agg: 'avg' }] })]],
+    ['config.metrics[].fieldName (people)', [{ id: 'ppl-1', type: 'people', title: 'P', layout: LAYOUT, config: { limit: 10, metrics: [{ kind: 'field', fieldName: 'Age', ref: FIELD_ID, agg: 'avg' }] } }]],
+    ['comparison binding filter.field', [comparison({ a: { filter: { field: 'Region', ref: FIELD_ID, op: 'exists' } } })]],
+    ['binding.filter.field', [chart({ metric: MEDIA_COUNT }, { binding: { filter: { field: 'Region', ref: FIELD_ID, op: 'exists' } } })]],
+  ];
+
+  it.each(sites)('parses a fieldId reference at %s', (_name, widgets) => {
+    const result = schema.safeParse(specWith(widgets));
+    expect(result.error?.issues ?? []).toEqual([]);
+    expect(result.success).toBe(true);
+  });
+
+  it('keeps the reference intact — additive, never stripped', () => {
+    const widgets = [tableWidget({ rowsAre: 'records', columns: [{ header: 'Status', field: 'Status', ref: FIELD_ID }] })];
+    const result = schema.safeParse(specWith(widgets));
+    expect(result.success).toBe(true);
+    expect((result.data as DashboardSpec).widgets).toStrictEqual(widgets);
+  });
+
+  it('does not relax the name check — fieldName is still resolved and validated', () => {
+    const result = schema.safeParse(specWith([
+      chart({ metric: { kind: 'field', fieldName: 'Sessionn Score', ref: FIELD_ID, agg: 'avg' } }),
+    ]));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      message: 'unknown field "Sessionn Score"',
+      path: ['widgets', 0, 'config', 'metric', 'fieldName'],
+    }));
+  });
+
+  it('rejects an empty fieldId', () => {
+    expect(schema.safeParse(specWith([
+      tableWidget({ rowsAre: 'records', columns: [{ header: 'Status', field: 'Status', ref: { fieldId: '' } }] }),
+    ])).success).toBe(false);
+  });
+});
+
+describe('field reference — { reserved } arm', () => {
+  const schema = buildDashboardSpecSchema(FIELD_TYPES);
+  const ONLY_TWO_USES = 'reserved "createdAt" is only valid as a raw table column or a kind:"time" groupBy';
+
+  const permitted: Array<[string, unknown[]]> = [
+    ['a raw records-table column', [tableWidget({ rowsAre: 'records', columns: [{ header: 'Date', field: 'createdAt', ref: RESERVED }] })]],
+    ['a kind:"time" groupBy', [chart({ metric: MEDIA_COUNT, groupBy: { kind: 'time', fieldName: 'createdAt', ref: RESERVED, granularity: 'week' } })]],
+    ['a kind:"time" series', [chart({ metric: MEDIA_COUNT, series: { kind: 'time', fieldName: 'createdAt', ref: RESERVED, granularity: 'month' } })]],
+    ['a kind:"time" table groupBy', [tableWidget({ rowsAre: 'groups', groupBy: { kind: 'time', fieldName: 'createdAt', ref: RESERVED, granularity: 'day' }, columns: [{ header: 'N', metric: MEDIA_COUNT }] })]],
+  ];
+
+  it.each(permitted)('parses at %s', (_name, widgets) => {
+    const result = schema.safeParse(specWith(widgets));
+    expect(result.error?.issues ?? []).toEqual([]);
+    expect(result.success).toBe(true);
+  });
+
+  const forbidden: Array<[string, unknown[], (string | number)[]]> = [
+    [
+      'under an aggregator',
+      [chart({ metric: { kind: 'field', fieldName: 'createdAt', ref: RESERVED, agg: 'avg' } })],
+      ['widgets', 0, 'config', 'metric', 'ref'],
+    ],
+    [
+      'a kind:"field" groupBy',
+      [chart({ metric: MEDIA_COUNT, groupBy: { kind: 'field', fieldName: 'createdAt', ref: RESERVED } })],
+      ['widgets', 0, 'config', 'groupBy', 'ref'],
+    ],
+    [
+      'a kind:"field" series',
+      [chart({ metric: MEDIA_COUNT, series: { kind: 'field', fieldName: 'createdAt', ref: RESERVED } })],
+      ['widgets', 0, 'config', 'series', 'ref'],
+    ],
+    [
+      'a metric filter predicate',
+      [chart({ metric: { ...MEDIA_COUNT, filter: { field: 'createdAt', ref: RESERVED, op: 'exists' } } })],
+      ['widgets', 0, 'config', 'metric', 'filter', 'ref'],
+    ],
+    [
+      'a filter predicate nested inside and/or',
+      [chart({ metric: { ...MEDIA_COUNT, filter: { and: [{ field: 'Status', op: 'exists' }, { field: 'createdAt', ref: RESERVED, op: 'exists' }] } } })],
+      ['widgets', 0, 'config', 'metric', 'filter', 'and', 1, 'ref'],
+    ],
+    [
+      'a widget binding filter',
+      [chart({ metric: MEDIA_COUNT }, { binding: { filter: { field: 'createdAt', ref: RESERVED, op: 'exists' } } })],
+      ['widgets', 0, 'binding', 'filter', 'ref'],
+    ],
+    [
+      'a field-distribution',
+      [distribution({ fieldName: 'createdAt', ref: RESERVED })],
+      ['widgets', 0, 'config', 'ref'],
+    ],
+    [
+      'a stat-card metric',
+      [tiles({ metric: { kind: 'field', fieldName: 'createdAt', ref: RESERVED, agg: 'max' }, label: 'Latest' })],
+      ['widgets', 0, 'config', 'tiles', 0, 'metric', 'ref'],
+    ],
+  ];
+
+  it.each(forbidden)('rejects at %s, pointing at the ref', (_name, widgets, path) => {
+    const result = schema.safeParse(specWith(widgets));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({ message: ONLY_TWO_USES, path }));
+  });
+
+  // The use rule is structural: a client validating without a field-type map
+  // must reject a misplaced reserved arm too, or the server is the only gate.
+  it('applies without a field-type map', () => {
+    const result = dashboardSpecSchema.safeParse(specWith([
+      chart({ metric: { kind: 'field', fieldName: 'createdAt', ref: RESERVED, agg: 'avg' } }),
+    ]));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      message: ONLY_TWO_USES,
+      path: ['widgets', 0, 'config', 'metric', 'ref'],
+    }));
+  });
+
+  it('rejects a reserved arm that contradicts the name it accompanies', () => {
+    const result = schema.safeParse(specWith([
+      chart({ metric: MEDIA_COUNT, groupBy: { kind: 'time', fieldName: 'Recorded On', ref: RESERVED, granularity: 'week' } }),
+    ]));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      message: 'reserved "createdAt" contradicts the name "Recorded On"',
+      path: ['widgets', 0, 'config', 'groupBy', 'ref'],
+    }));
+  });
+
+  it('rejects any other reserved name — the arm is a closed protocol constant', () => {
+    expect(schema.safeParse(specWith([
+      tableWidget({ rowsAre: 'records', columns: [{ header: 'Date', field: 'updatedAt', ref: { reserved: 'updatedAt' } }] }),
+    ])).success).toBe(false);
+  });
+});
+
+describe('field reference — the two keys are mutually exclusive', () => {
+  const schema = buildDashboardSpecSchema(FIELD_TYPES);
+
+  it('rejects a reference carrying both keys', () => {
+    expect(fieldReferenceSchema.safeParse({ fieldId: '3fdf29434505', reserved: 'createdAt' }).success).toBe(false);
+  });
+
+  it('rejects a spec whose reference carries both keys', () => {
+    expect(schema.safeParse(specWith([
+      tableWidget({ rowsAre: 'records', columns: [{ header: 'Date', field: 'createdAt', ref: { fieldId: '3fdf29434505', reserved: 'createdAt' } }] }),
+    ])).success).toBe(false);
+  });
+
+  it('rejects a reference carrying neither key', () => {
+    expect(fieldReferenceSchema.safeParse({}).success).toBe(false);
+  });
+
+  // Zod's default would STRIP each wrong key, leaving a reference that resolves
+  // to nothing while looking configured — the same trust bug as a confident zero.
+  it.each([
+    ['field_id', { field_id: 'abc' }],
+    ['id', { id: 'abc' }],
+    ['fieldID', { fieldID: 'abc' }],
+    ['a sentinel name instead of the reserved arm', { fieldId: '@createdAt', reserved: 'createdAt' }],
+    ['an extra key beside fieldId', { fieldId: '3fdf29434505', kind: 'field' }],
+    ['an extra key beside reserved', { reserved: 'createdAt', kind: 'reserved' }],
+  ])('rejects %s', (_name, ref) => {
+    expect(fieldReferenceSchema.safeParse(ref).success).toBe(false);
+    expect(schema.safeParse(specWith([
+      tableWidget({ rowsAre: 'records', columns: [{ header: 'Status', field: 'Status', ref }] }),
+    ])).success).toBe(false);
+  });
+});
+
+describe('fieldRef builder', () => {
+  it('builds both arms', () => {
+    expect(fieldRef({ fieldId: '3fdf29434505' })).toStrictEqual({ fieldId: '3fdf29434505' });
+    expect(fieldRef({ reserved: 'createdAt' })).toStrictEqual({ reserved: 'createdAt' });
+  });
+
+  it('throws on a reference the schema would reject', () => {
+    expect(() => fieldRef({ fieldId: '' })).toThrow();
+    expect(() => fieldRef({ fieldId: '3fdf29434505', reserved: 'createdAt' } as never)).toThrow();
+  });
+
+  it('produces references the spec accepts', () => {
+    const result = buildDashboardSpecSchema(FIELD_TYPES).safeParse(specWith([
+      tableWidget({
+        rowsAre: 'records',
+        columns: [
+          { header: 'Date', field: 'createdAt', ref: fieldRef({ reserved: 'createdAt' }) },
+          { header: 'Status', field: 'Status', ref: fieldRef({ fieldId: '3fdf29434505' }) },
+        ],
+      }),
+    ]));
+    expect(result.error?.issues ?? []).toEqual([]);
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('a malformed ref is reported at its own path', () => {
+  const schema = buildDashboardSpecSchema(FIELD_TYPES);
+
+  const refIssue = (doc: unknown) => {
+    const r = schema.safeParse(doc);
+    const hit = (r.error?.issues ?? []).find((i) => i.path.join('.').endsWith('.ref'));
+    return hit ? { path: hit.path.join('.'), message: hit.message } : undefined;
+  };
+
+  const columnWith = (ref: unknown) =>
+    specWith([tableWidget({ rowsAre: 'records', columns: [{ header: 'S', field: 'Status', ref }] })]);
+
+  const filterWith = (ref: unknown) =>
+    specWith([
+      chart({
+        metric: {
+          kind: 'field', fieldName: 'Session Score', agg: 'avg',
+          filter: { field: 'Status', op: 'eq', value: 'x', ref },
+        },
+        groupBy: { kind: 'field', fieldName: 'Country' },
+      }),
+    ]);
+
+  // Both sites sit inside a parent z.union, which collapsed the failure to the
+  // parent as a bare "Invalid input" naming neither ref nor the problem.
+  it.each([
+    ['both keys', { fieldId: '3fdf29434505', reserved: 'createdAt' }],
+    ['neither key', {}],
+    ['a typo key', { field_id: '3fdf29434505' }],
+    ['a sentinel string', '@createdAt'],
+  ])('names the column ref for %s', (_label, ref) => {
+    const issue = refIssue(columnWith(ref));
+    expect(issue?.path).toBe('widgets.0.config.columns.0.ref');
+    expect(issue?.message).toContain('exactly one of');
+  });
+
+  it.each([
+    ['both keys', { fieldId: '3fdf29434505', reserved: 'createdAt' }],
+    ['a typo key', { fieldID: '3fdf29434505' }],
+  ])('names the filter ref for %s', (_label, ref) => {
+    const issue = refIssue(filterWith(ref));
+    expect(issue?.path).toBe('widgets.0.config.metric.filter.ref');
+    expect(issue?.message).toContain('exactly one of');
+  });
+
+  it('rejects a fieldId that is not 12 lowercase hex characters', () => {
+    for (const bad of ['abc', 'ABCDEF123456', '3fdf2943450', '3fdf294345050', '../../etc/passwd']) {
+      expect(fieldReferenceSchema.safeParse({ fieldId: bad }).success).toBe(false);
+    }
+    expect(fieldReferenceSchema.safeParse({ fieldId: '3fdf29434505' }).success).toBe(true);
+  });
+
+  // Locally decidable, so unlike the use restriction it holds on the standalone
+  // exports, which never run the envelope's superRefine.
+  it('catches a reserved arm contradicting its name on a standalone export', () => {
+    const r = columnSchema.safeParse({ header: 'S', field: 'Status', ref: { reserved: 'createdAt' } });
+    expect(r.success).toBe(false);
+    expect(r.error?.issues.some((i) => i.message.includes('contradicts the name'))).toBe(true);
+  });
+
+  it('accepts the reserved arm on a standalone export when the name agrees', () => {
+    expect(
+      columnSchema.safeParse({ header: 'D', field: 'createdAt', ref: { reserved: 'createdAt' } }).success,
+    ).toBe(true);
+  });
+});
+
+describe('field reference is optional everywhere — pre-migration specs are untouched', () => {
+  const schema = buildDashboardSpecSchema(FIELD_TYPES);
+
+  it('parses a ref-free spec at every site and injects no ref key', () => {
+    const widgets = [
+      chart({
+        metric: { kind: 'field', fieldName: 'Session Score', agg: 'avg', filter: { field: 'Status', op: 'eq', value: 'Scored' } },
+        groupBy: { kind: 'time', fieldName: 'Recorded On', granularity: 'week' },
+        series: { kind: 'field', fieldName: 'Country' },
+      }, { binding: { filter: { field: 'Region', op: 'exists' } } }),
+      tableWidget({
+        rowsAre: 'records',
+        columns: [{ header: 'Status', field: 'Status' }, { header: 'Date', field: 'createdAt' }],
+      }, { id: 'tbl-2', layout: { x: 0, y: 4, w: 6, h: 4 } }),
+      distribution({ fieldName: 'Sentiment' }, { id: 'fd-2', layout: { x: 6, y: 4, w: 6, h: 4 } }),
+    ];
+
+    const result = schema.safeParse(specWith(widgets));
+    expect(result.error?.issues ?? []).toEqual([]);
+    expect((result.data as DashboardSpec).widgets).toStrictEqual(widgets);
+  });
+});
+
+describe('field reference — resolving through the id map', () => {
+  const FIELDS_BY_ID: FieldMapById = {
+    '3fdf29434505': { name: 'Quality Score', type: 'number' },
+    aaaaaaaaaaaa: { name: 'Recorded On', type: 'datetime' },
+  };
+  const schema = buildDashboardSpecSchema(FIELD_TYPES, FIELDS_BY_ID);
+
+  const messageFor = (doc: unknown) => schema.safeParse(doc).error?.issues.map((i) => i.message).join(' | ') ?? '';
+
+  it('resolves a field whose name went stale after a rename', () => {
+    const result = schema.safeParse(specWith([
+      chart({ metric: { kind: 'field', fieldName: 'Old Score', ref: FIELD_ID, agg: 'avg' } }),
+    ]));
+    expect(result.error?.issues ?? []).toEqual([]);
+    expect(result.success).toBe(true);
+  });
+
+  it('reports that same stale name as unknown when no id map is supplied', () => {
+    expect(buildDashboardSpecSchema(FIELD_TYPES).safeParse(specWith([
+      chart({ metric: { kind: 'field', fieldName: 'Old Score', ref: FIELD_ID, agg: 'avg' } }),
+    ])).success).toBe(false);
+  });
+
+  // The type comes from the ref, so the message has to quote the ref's field.
+  // Quoting the stale name describes one field's type under another's label.
+  it('quotes the resolved field in an aggregator issue', () => {
+    const message = messageFor(specWith([
+      chart({ metric: { kind: 'field', fieldName: 'Session Score', ref: { fieldId: 'aaaaaaaaaaaa' }, agg: 'avg' } }),
+    ]));
+    expect(message).toContain('"Recorded On" is datetime');
+    expect(message).not.toContain('"Session Score" is datetime');
+  });
+
+  it('quotes the resolved field in a groupBy issue', () => {
+    const message = messageFor(specWith([
+      chart({ metric: MEDIA_COUNT, groupBy: { kind: 'field', fieldName: 'Status', ref: { fieldId: 'aaaaaaaaaaaa' } } }),
+    ]));
+    expect(message).toContain('field "Recorded On" is datetime');
+    expect(message).not.toContain('field "Status" is datetime');
+  });
+
+  it('quotes the resolved field in a time-groupBy issue', () => {
+    const message = messageFor(specWith([
+      chart({ metric: MEDIA_COUNT, groupBy: { kind: 'time', fieldName: 'Recorded On', ref: FIELD_ID, granularity: 'week' } }),
+    ]));
+    expect(message).toContain('"Quality Score" is number');
+    expect(message).not.toContain('"Recorded On" is number');
+  });
+
+  it('still names the site itself when nothing resolved', () => {
+    const message = messageFor(specWith([
+      chart({ metric: { kind: 'field', fieldName: 'Nope', ref: { fieldId: 'bbbbbbbbbbbb' }, agg: 'avg' } }),
+    ]));
+    expect(message).toContain('unknown field "Nope"');
   });
 });
