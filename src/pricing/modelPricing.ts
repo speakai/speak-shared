@@ -75,6 +75,10 @@ export const MODEL_PRICING: Record<string, ModelPricing> = {
   [LLMModels.GEMINI_3_1_FLASH_LITE]: { inputPerMillion: 0.25, outputPerMillion: 1.5, provider: LLMProvider.GOOGLE },
   [LLMModels.GEMINI_3_1_PRO_PREVIEW]: { inputPerMillion: 2, outputPerMillion: 12, longContextThresholdTokens: 200000, inputPerMillionLong: 4, outputPerMillionLong: 18, provider: LLMProvider.GOOGLE },
   [LLMModels.GEMINI_3_5_FLASH]: { inputPerMillion: 1.5, outputPerMillion: 9, cachedInputPerMillion: 0.15, provider: LLMProvider.GOOGLE },
+  // Introductory pricing through 2026-12-31; rises to 1.5/7.5 (cached 0.15) on 2027-01-01.
+  [LLMModels.GEMINI_3_7_FLASH]: { inputPerMillion: 0.75, outputPerMillion: 3.75, cachedInputPerMillion: 0.075, provider: LLMProvider.GOOGLE },
+  // Introductory pricing through 2026-12-31; rises to 1.5/7.5 (cached 0.15) on 2027-01-01.
+  [LLMModels.GEMINI_3_8_FLASH]: { inputPerMillion: 0.75, outputPerMillion: 3.75, cachedInputPerMillion: 0.075, provider: LLMProvider.GOOGLE },
 
   [LLMModels.GROK_4_5]: { inputPerMillion: 2.2, outputPerMillion: 6.6, cachedInputPerMillion: 0.22, provider: LLMProvider.OPENROUTER },
   [LLMModels.GLM_5_2]: { inputPerMillion: 1.023, outputPerMillion: 3.3, cachedInputPerMillion: 0.1023, provider: LLMProvider.OPENROUTER }
