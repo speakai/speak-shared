@@ -18,6 +18,7 @@ import {
 } from '../src/utils/dashboard-spec.js';
 import {
   baseMetricSchema,
+  dateRangePresetSchema,
   bindingSchema,
   buildDashboardSpecSchema,
   columnSchema,
@@ -91,6 +92,15 @@ function deepFilter(depth: number): unknown {
 /* ── Valid specs parse ───────────────────────────────────────────────────── */
 
 describe('valid specs', () => {
+  it.each(['lastHour', 'last4Hours', 'last12Hours', 'today', 'yesterday'])(
+    'accepts the %s preset at the dashboard level and as a widget binding override',
+    (preset) => {
+      expect(dateRangePresetSchema.safeParse(preset).success).toBe(true);
+      const topLevel = dashboardSpecSchema.safeParse(specWith([], [], { dateRange: { preset } }));
+      expect(topLevel.success).toBe(true);
+    },
+  );
+
   it('parses a blank canvas — zero widgets, zero sections', () => {
     const result = dashboardSpecSchema.safeParse(specWith());
     expect(result.success).toBe(true);

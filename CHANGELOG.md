@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.15 (2026-09-10)
+
+- `dateRangePresetSchema` accepts the rolling-hour presets `lastHour`, `last4Hours` and `last12Hours` (the server already resolves them; the validator was rejecting them on every dashboard write).
+
 ## v2.1.14 (2026-09-09)
 
 - Maintenance release
