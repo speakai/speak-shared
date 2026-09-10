@@ -25,6 +25,7 @@ export enum NotificationType {
   FOLDER = 'folder',
   FIELDS = 'fields',
   ASSISTANT_TEMPLATE = 'assistant template',
+  KNOWLEDGE_BASE = 'knowledge base',
 }
 
 export enum NotificationAction {
