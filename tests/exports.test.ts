@@ -649,7 +649,8 @@ describe("Enum values — notification", () => {
     expect(NotificationType.MEDIA).toBe("media");
     expect(NotificationType.TEAM).toBe("team");
     expect(NotificationType.MEETING_ASSISTANT).toBe("meeting assistant");
-    expect(Object.values(NotificationType)).toHaveLength(26);
+    expect(NotificationType.KNOWLEDGE_BASE).toBe("knowledge base");
+    expect(Object.values(NotificationType)).toHaveLength(27);
   });
 
   it("NotificationAction has expected values", async () => {
