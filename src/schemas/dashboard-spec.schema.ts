@@ -301,6 +301,7 @@ export const sourceSchema = z.discriminatedUnion('type', [
 ]);
 
 export const dateRangePresetSchema = z.enum([
+  'lastHour', 'last4Hours', 'last12Hours',
   'today', 'yesterday', 'thisWeek', 'last7days', 'thisMonth', 'last30days',
   'last3months', 'quarterToDate', 'yearToDate', 'allTime',
 ]);
