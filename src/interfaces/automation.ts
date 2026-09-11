@@ -112,14 +112,14 @@ export interface IAutomationConditionConfig {
 /** A node in a graph automation (schemaVersion >= 2). */
 /**
  * WEB_SEARCH step: a Tavily search, an LLM pass over the results, and a write of that
- * answer into `fieldId`. `fieldId` is required because a search whose answer lands
- * nowhere spends credits for no effect.
+ * answer into `destinationFieldId`, which is required because a search whose answer
+ * lands nowhere spends credits for no effect.
  */
 export interface IAutomationWebSearchConfig {
   /** Token-templated search query. */
   query: string;
   /** Custom field the condensed answer is written to. */
-  fieldId: string;
+  destinationFieldId: string;
   searchDepth?: "ultra-fast" | "fast" | "basic" | "advanced";
   maxResults?: number;
   topic?: "general" | "news";
