@@ -295,7 +295,7 @@ const thresholdsSchema = z.array(thresholdSchema).max(8);
 /* ── Source / DateRange / Binding ────────────────────────────────────────── */
 
 export const sourceSchema = z.discriminatedUnion('type', [
-  z.strictObject({ type: z.literal('folders'), folderIds: z.array(z.string().min(1).max(64)).min(1).max(50) }),
+  z.strictObject({ type: z.literal('folders'), folderIds: z.array(z.string().min(1).max(64)).min(1).max(250) }),
   z.strictObject({ type: z.literal('team') }),
   z.strictObject({ type: z.literal('workspace') }),
 ]);

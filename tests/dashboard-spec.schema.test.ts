@@ -92,6 +92,11 @@ function deepFilter(depth: number): unknown {
 /* ── Valid specs parse ───────────────────────────────────────────────────── */
 
 describe('valid specs', () => {
+  it('accepts a folders source with 200 folder ids', () => {
+    const ids = Array.from({ length: 200 }, (_, i) => `f${String(i).padStart(11, '0')}`);
+    expect(dashboardSpecSchema.safeParse(specWith([], [], { source: { type: 'folders', folderIds: ids } })).success).toBe(true);
+  });
+
   it.each(['lastHour', 'last4Hours', 'last12Hours', 'today', 'yesterday'])(
     'accepts the %s preset at the dashboard level and as a widget binding override',
     (preset) => {
