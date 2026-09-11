@@ -175,20 +175,34 @@ export interface IAutomationWebSearchConfig {
   destinationFieldId: string;
   /** Which provider runs the search. Absent means Tavily, so saved steps are unaffected. */
   provider?: WebSearchProvider;
-  searchDepth?: "ultra-fast" | "fast" | "basic" | "advanced";
+
+  // Shared across providers.
+  /** Results requested. On an agentic provider this caps one search, not the request. */
   maxResults?: number;
-  topic?: "general" | "news";
   timeRange?: "day" | "week" | "month" | "year";
+  /** ISO 3166-1 alpha-2. Translated to each provider's own country format. */
   country?: string;
   includeDomains?: string[];
   excludeDomains?: string[];
+
+  // Tavily only.
+  searchDepth?: "ultra-fast" | "fast" | "basic" | "advanced";
+  topic?: "general" | "news";
   /** Ask Tavily for its own answer and pass it to the LLM as a cross-check input. */
   includeAnswer?: boolean | "advanced";
+  /** Relevance floor. Only meaningful for a provider that ranks. */
+  minScore?: number;
+
+  // Perplexity only.
+  /** Agent effort. The main cost lever, so it is exposed rather than pinned. */
+  preset?: "fast" | "low" | "medium" | "high" | "xhigh";
+  /** How much page content the agent pulls per result. */
+  contextSize?: "low" | "medium" | "high";
+  /** Deliberately not mapped from `topic`: news-vs-general and web-vs-academic differ. */
+  searchMode?: "web" | "academic" | "sec";
   /** Author override of the condensation instruction. */
   prompt?: string;
   modelId?: string;
-  /** Relevance floor; results below it are dropped before the LLM sees them. */
-  minScore?: number;
 }
 
 export interface IAutomationStep {
