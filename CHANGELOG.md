@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.18 (2026-09-11)
+
+- Dashboard `source.folderIds` accepts up to 250 folders (was 50): a company-wide dashboard over one folder per consultant needs more than 50 (Foxtons: 75 people).
+
 ## v2.1.17 (2026-09-10)
 
 - Maintenance release
