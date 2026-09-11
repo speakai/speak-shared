@@ -65,3 +65,9 @@ export enum AssistantType {
   RECRUITER = "recruiter",
   CUSTOM = "custom",
 }
+
+/** Web search providers a WEB_SEARCH step can be pointed at. Absent on a step means TAVILY. */
+export enum WebSearchProvider {
+  TAVILY = "tavily",
+  PERPLEXITY = "perplexity",
+}
