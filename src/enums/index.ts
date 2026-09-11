@@ -8,6 +8,7 @@ export * from './embed.js';
 export * from './export.js';
 export * from './fields.js';
 export * from './filter.js';
+export * from './genesys.js';
 export * from './integration.js';
 export * from './knowledgeBase.js';
 export * from './media.js';
