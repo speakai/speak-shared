@@ -24,6 +24,8 @@ export enum AutomationStepType {
   OUTBOUND_WEBHOOK = "outbound-webhook",
   // Branch step: evaluates rules and routes execution down the matching ('true'/'false') edge.
   CONDITION = "condition",
+  // Tavily web search followed by an LLM pass that writes its answer to a custom field.
+  WEB_SEARCH = "web-search",
 }
 
 export enum AutomationRunStatus {

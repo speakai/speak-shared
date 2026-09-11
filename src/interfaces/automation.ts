@@ -110,6 +110,32 @@ export interface IAutomationConditionConfig {
 }
 
 /** A node in a graph automation (schemaVersion >= 2). */
+/**
+ * WEB_SEARCH step: a Tavily search, an LLM pass over the results, and a write of that
+ * answer into `fieldId`. `fieldId` is required because a search whose answer lands
+ * nowhere spends credits for no effect.
+ */
+export interface IAutomationWebSearchConfig {
+  /** Token-templated search query. */
+  query: string;
+  /** Custom field the condensed answer is written to. */
+  fieldId: string;
+  searchDepth?: "ultra-fast" | "fast" | "basic" | "advanced";
+  maxResults?: number;
+  topic?: "general" | "news";
+  timeRange?: "day" | "week" | "month" | "year";
+  country?: string;
+  includeDomains?: string[];
+  excludeDomains?: string[];
+  /** Ask Tavily for its own answer and pass it to the LLM as a cross-check input. */
+  includeAnswer?: boolean | "advanced";
+  /** Author override of the condensation instruction. */
+  prompt?: string;
+  modelId?: string;
+  /** Relevance floor; results below it are dropped before the LLM sees them. */
+  minScore?: number;
+}
+
 export interface IAutomationStep {
   stepId: string;
   stepType: AutomationStepType;
@@ -120,6 +146,7 @@ export interface IAutomationStep {
   notify?: IAutomationNotifyConfig;
   outboundWebhook?: IAutomationOutboundWebhookConfig;
   condition?: IAutomationConditionConfig;
+  webSearch?: IAutomationWebSearchConfig;
   filter?: {
     logic: 'AND' | 'OR';
     rules: IAutomationFilterRule[];
