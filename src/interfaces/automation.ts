@@ -206,6 +206,11 @@ export interface IAutomationWebSearchConfig {
    * template and empty is the normal case, so sharing the name would mislead.
    */
   instruction?: string;
+  /**
+   * Override of the condensation persona. Token-templated like the query, so the persona can
+   * be pointed at a field. Empty falls back to the built-in prompt.
+   */
+  systemPrompt?: string;
   modelId?: string;
 }
 
