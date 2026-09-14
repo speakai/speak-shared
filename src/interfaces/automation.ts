@@ -200,8 +200,12 @@ export interface IAutomationWebSearchConfig {
   contextSize?: "low" | "medium" | "high";
   /** Deliberately not mapped from `topic`: news-vs-general and web-vs-academic differ. */
   searchMode?: "web" | "academic" | "sec";
-  /** Author override of the condensation instruction. */
-  prompt?: string;
+  /**
+   * Override of the built-in condensation instruction. Named `instruction`, not `prompt`:
+   * on a magic prompt the prompt IS the instruction and is required, here it overrides a
+   * template and empty is the normal case, so sharing the name would mislead.
+   */
+  instruction?: string;
   modelId?: string;
 }
 
