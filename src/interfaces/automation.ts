@@ -206,6 +206,9 @@ export interface IAutomationWebSearchConfig {
    * template and empty is the normal case, so sharing the name would mislead.
    */
   instruction?: string;
+  /** Override of the built-in condensation system message. Empty uses a generic one. */
+  systemPrompt?: string;
+  /** Which model writes the answer. Absent falls back to the company default. */
   modelId?: string;
 }
 
