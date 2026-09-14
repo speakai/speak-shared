@@ -4,7 +4,12 @@ on:
   push:
     branches: [main]
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+# Releases queue rather than cancel: every merge must reach npm. The release job
+# re-bases onto the latest main before bumping, so a queued run does not release
+# from the checkout it was triggered with.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -58,6 +63,14 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # A second merge while this run was queued leaves the triggering checkout behind
+      # main. Bumping from it produced a version that was already tagged, and pushing it
+      # was rejected as non-fast-forward. Start from what main actually is.
+      - name: Sync to current main
+        run: |
+          git fetch origin main --tags --force
+          git reset --hard origin/main
 
       - name: Get commits since last release
         id: commits
@@ -146,8 +159,19 @@ jobs:
           echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
 
           NEW_VERSION=$(npm version "$BUMP" --no-git-tag-version)
+
+          # A failed release can leave a tag behind with nothing published, which wedges
+          # that number forever: every later run recomputes it and dies on the tag. Step
+          # over anything already tagged or already on npm instead.
+          PKG=$(node -p "require('./package.json').name")
+          while git rev-parse -q --verify "refs/tags/$NEW_VERSION" >/dev/null \
+             || npm view "$PKG@${NEW_VERSION#v}" version >/dev/null 2>&1; do
+            echo "$NEW_VERSION is already tagged or published; stepping over it."
+            NEW_VERSION=$(npm version patch --no-git-tag-version)
+          done
+
           echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
-          echo "Bumped to $NEW_VERSION"
+          echo "Releasing $NEW_VERSION"
 
           DATE=$(date +%Y-%m-%d)
           if [ -f CHANGELOG.md ]; then
@@ -168,7 +192,9 @@ jobs:
           git add package.json package-lock.json CHANGELOG.md
           git commit -m "chore: release ${{ steps.bump.outputs.new_version }} [skip ci]"
           git tag "${{ steps.bump.outputs.new_version }}"
-          git push origin main --tags
+          # Atomic: a rejected branch push previously still left the tag on origin, which
+          # is what wedged the next run. Either both refs land or neither does.
+          git push --atomic origin main "refs/tags/${{ steps.bump.outputs.new_version }}"
 
       - name: Publish to npm
         if: steps.bump.outputs.should_release == 'true'
