@@ -391,7 +391,8 @@ describe("Enum values — automation", () => {
     expect(AutomationStepType.NOTIFY).toBe("notify");
     expect(AutomationStepType.OUTBOUND_WEBHOOK).toBe("outbound-webhook");
     expect(AutomationStepType.CONDITION).toBe("condition");
-    expect(Object.values(AutomationStepType)).toHaveLength(9);
+    expect(AutomationStepType.WEB_SEARCH).toBe("web-search");
+    expect(Object.values(AutomationStepType)).toHaveLength(10);
   });
 
   it("AutomationRunStatus has expected values", async () => {

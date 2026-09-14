@@ -1,3 +1,4 @@
+import { WebSearchProvider } from "../enums/automation.js";
 import {
   AutomationTrigger,
   AutomationAction,
@@ -110,6 +111,104 @@ export interface IAutomationConditionConfig {
 }
 
 /** A node in a graph automation (schemaVersion >= 2). */
+/**
+ * One source a web search returned. Provider-neutral on purpose: `score` and
+ * `publishedAt` are optional because Tavily supplies a relevance score and no date,
+ * while Perplexity supplies a date and no score.
+ */
+export interface IWebSearchSource {
+  /** 1-based position in the result set the answer was built from. */
+  rank: number;
+  title: string;
+  url: string;
+  /** Host without "www.", denormalised so references can be queried by publisher. */
+  domain: string;
+  snippet?: string;
+  /** Tavily relevance score. Absent for providers that do not rank. */
+  score?: number;
+  /** Publication date as the provider reported it, unparsed. */
+  publishedAt?: string;
+}
+
+/**
+ * One completed web search. Stored in its own collection, not on the media and not on the
+ * run: a run carries a 90 day TTL, and one reference measures 4 KB to 23 KB against a 4 KB
+ * average media document.
+ *
+ * The shape is provider-neutral: everything a provider cannot supply is optional, and
+ * nothing in it is Tavily-specific or Perplexity-specific.
+ */
+export interface IWebSearchReference {
+  searchId: string;
+  provider: WebSearchProvider;
+  /** Which key paid, not reconstructable afterwards. */
+  keySource: "company" | "platform";
+  /** The query after token and field resolution, not the authored template. */
+  query: string;
+  /** The condensed answer, matching what was written to the field. */
+  answer: string;
+  /** Custom field the answer was written to. */
+  destinationFieldId: string;
+  sources: IWebSearchSource[];
+  /** Results the relevance floor removed. Counted, not stored. */
+  droppedBelowScore?: number;
+  /** Searches the provider actually performed; Perplexity fans out beyond one. */
+  searchesPerformed?: number;
+  latencyMs?: number;
+  /** Provider-reported cost where the provider reports one. */
+  costUsd?: number;
+  automationId?: string;
+  runId?: string;
+  stepId?: string;
+  createdAt: Date | string;
+}
+
+/**
+ * WEB_SEARCH step: a Tavily search, an LLM pass over the results, and a write of that
+ * answer into `destinationFieldId`, which is required because a search whose answer
+ * lands nowhere spends credits for no effect.
+ */
+export interface IAutomationWebSearchConfig {
+  /** Token-templated search query. */
+  query: string;
+  /** Custom field the condensed answer is written to. */
+  destinationFieldId: string;
+  /** Which provider runs the search. Absent means Tavily, so saved steps are unaffected. */
+  provider?: WebSearchProvider;
+
+  // Shared across providers.
+  /** Results requested. On an agentic provider this caps one search, not the request. */
+  maxResults?: number;
+  timeRange?: "day" | "week" | "month" | "year";
+  /** ISO 3166-1 alpha-2. Translated to each provider's own country format. */
+  country?: string;
+  includeDomains?: string[];
+  excludeDomains?: string[];
+
+  // Tavily only.
+  searchDepth?: "ultra-fast" | "fast" | "basic" | "advanced";
+  topic?: "general" | "news";
+  /** Ask Tavily for its own answer and pass it to the LLM as a cross-check input. */
+  includeAnswer?: boolean | "advanced";
+  /** Relevance floor. Only meaningful for a provider that ranks. */
+  minScore?: number;
+
+  // Perplexity only.
+  /** Agent effort. The main cost lever, so it is exposed rather than pinned. */
+  preset?: "fast" | "low" | "medium" | "high" | "xhigh";
+  /** How much page content the agent pulls per result. */
+  contextSize?: "low" | "medium" | "high";
+  /** Deliberately not mapped from `topic`: news-vs-general and web-vs-academic differ. */
+  searchMode?: "web" | "academic" | "sec";
+  /**
+   * Override of the built-in condensation instruction. Named `instruction`, not `prompt`:
+   * on a magic prompt the prompt IS the instruction and is required, here it overrides a
+   * template and empty is the normal case, so sharing the name would mislead.
+   */
+  instruction?: string;
+  modelId?: string;
+}
+
 export interface IAutomationStep {
   stepId: string;
   stepType: AutomationStepType;
@@ -120,6 +219,7 @@ export interface IAutomationStep {
   notify?: IAutomationNotifyConfig;
   outboundWebhook?: IAutomationOutboundWebhookConfig;
   condition?: IAutomationConditionConfig;
+  webSearch?: IAutomationWebSearchConfig;
   filter?: {
     logic: 'AND' | 'OR';
     rules: IAutomationFilterRule[];
