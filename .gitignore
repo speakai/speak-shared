@@ -140,3 +140,6 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Guards against a symlinked node_modules slipping past the trailing-slash rule above.
+node_modules
