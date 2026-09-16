@@ -91,7 +91,8 @@ export interface IChatStep {
   connectUrl?: string;
   externalId?: string;
   confirmation?: {
-    token: string;
+    /** Scrubbed server-side on any read path (history/messages) — only present on the live turn that minted it. */
+    token?: string;
     nonce: string;
     expiresAt: number;
     status: ChatStepConfirmationStatus;

@@ -506,7 +506,7 @@ const widgetSchemaRaw = z.discriminatedUnion('type', [
   z.strictObject({
     ...widgetBase,
     type: z.literal('chat-history'),
-    config: z.strictObject({}),
+    config: z.strictObject({ limit: z.number().int().min(1).max(100).optional() }),
   }),
 ]);
 
