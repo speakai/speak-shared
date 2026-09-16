@@ -1,4 +1,11 @@
-import { AssistantType, PromptState, MessageRole } from '../enums/index.js';
+import {
+  AssistantType,
+  PromptState,
+  MessageRole,
+  ChatStepType,
+  ChatStepConfirmationStatus,
+  ChatStepClarificationStatus,
+} from '../enums/index.js';
 
 export interface IPromptRequest {
   mediaIds: string[];
@@ -66,6 +73,38 @@ export interface IChatMessage {
   state?: string;
 }
 
+/**
+ * One agent step recorded on a chat turn — a thinking note, a tool call, or a gate awaiting
+ * user action. Server, client and media-library each read/write this shape independently today;
+ * this is the canonical form all three should converge on.
+ */
+export interface IChatStep {
+  id: string;
+  typeId: string;
+  type: ChatStepType;
+  status?: PromptState;
+  answer?: string;
+  outputs?: unknown;
+  /** Echoed verbatim back on confirm; the server recomputes a hash and rejects tampering. */
+  args?: unknown;
+  provider?: string;
+  connectUrl?: string;
+  externalId?: string;
+  confirmation?: {
+    token: string;
+    nonce: string;
+    expiresAt: number;
+    status: ChatStepConfirmationStatus;
+  };
+  clarification?: {
+    question: string;
+    options?: string[];
+    status: ChatStepClarificationStatus;
+    userReply?: string;
+    expiresAt: number;
+  };
+}
+
 export interface IPromptMessage {
   messageId: string;
   role: MessageRole;
@@ -86,4 +125,6 @@ export interface IPromptMessage {
     code: number;
     attempt: number;
   };
+  /** The agent's step-by-step trail for this turn. Absent (not empty) when the caller isn't allowed to see it. */
+  steps?: IChatStep[];
 }
