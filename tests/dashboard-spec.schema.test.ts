@@ -189,7 +189,7 @@ describe('valid specs', () => {
       ['people', { metrics: [MEDIA_COUNT], limit: 10 }],
       ['team-activity', { metrics: ['uploads'] }],
       ['notes', { content: 'A note' }],
-      ['chat-history', { limit: 20 }],
+      ['chat-history', { limit: 25 }],
     ];
 
     const widgets = configs.map(([type, config], i) => ({
