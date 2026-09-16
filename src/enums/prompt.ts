@@ -44,3 +44,28 @@ export enum FileType {
   TXT = 'txt',
   ZIP = 'zip',
 }
+
+/** What one agent step on a chat turn represents — server, client and media-library each read/write this the same way. */
+export enum ChatStepType {
+  TOOL_CALLS = 'tool_calls',
+  MESSAGE_CREATION = 'message_creation',
+  THINKING = 'thinking',
+  NEEDS_CONNECTION = 'needs_connection',
+  NEEDS_CONFIRMATION = 'needs_confirmation',
+  NEEDS_CLARIFICATION = 'needs_clarification',
+}
+
+/** HMAC-signed confirmation gate on a needs_confirmation step; walks awaiting -> approved | rejected | expired. */
+export enum ChatStepConfirmationStatus {
+  AWAITING = 'awaiting',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  EXPIRED = 'expired',
+}
+
+/** Clarification gate on a needs_clarification step. */
+export enum ChatStepClarificationStatus {
+  AWAITING = 'awaiting',
+  ANSWERED = 'answered',
+  SKIPPED = 'skipped',
+}

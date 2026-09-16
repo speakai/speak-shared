@@ -189,6 +189,7 @@ describe('valid specs', () => {
       ['people', { metrics: [MEDIA_COUNT], limit: 10 }],
       ['team-activity', { metrics: ['uploads'] }],
       ['notes', { content: 'A note' }],
+      ['chat-history', { limit: 20 }],
     ];
 
     const widgets = configs.map(([type, config], i) => ({
@@ -201,6 +202,27 @@ describe('valid specs', () => {
     );
     expect(result.error?.issues ?? []).toEqual([]);
     expect(result.success).toBe(true);
+  });
+
+  it('accepts a chat-history widget with no config at all (limit is optional)', () => {
+    const result = dashboardSpecSchema.safeParse(specWith([
+      { id: 'w-0', type: 'chat-history', title: 'History', layout: { x: 0, y: 0, w: 12, h: 4 }, config: {} },
+    ]));
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a chat-history widget config with an out-of-range limit', () => {
+    const result = dashboardSpecSchema.safeParse(specWith([
+      { id: 'w-0', type: 'chat-history', title: 'History', layout: { x: 0, y: 0, w: 12, h: 4 }, config: { limit: 0 } },
+    ]));
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a chat-history widget config with an unknown key (still strict beyond limit)', () => {
+    const result = dashboardSpecSchema.safeParse(specWith([
+      { id: 'w-0', type: 'chat-history', title: 'History', layout: { x: 0, y: 0, w: 12, h: 4 }, config: { limit: 20, sortBy: 'title' } },
+    ]));
+    expect(result.success).toBe(false);
   });
 
   it('parses a filter nested 3 levels deep', () => {
@@ -220,8 +242,8 @@ describe('widgetTypeSchema parity with the widget union', () => {
   // the runtime option list a consumer iterates so a silent enum edit is caught.
   it('lists exactly the widget discriminator literals', () => {
     expect([...widgetTypeSchema.options].sort()).toEqual([
-      'comparison', 'field-distribution', 'metric-chart', 'narrative', 'notes',
-      'people', 'sentiment-trend', 'stat-cards', 'table', 'team-activity', 'themes',
+      'chat-history', 'comparison', 'field-distribution', 'metric-chart', 'narrative',
+      'notes', 'people', 'sentiment-trend', 'stat-cards', 'table', 'team-activity', 'themes',
     ]);
   });
 
@@ -238,6 +260,7 @@ describe('widgetTypeSchema parity with the widget union', () => {
       people: { metrics: [MEDIA_COUNT], limit: 10 },
       'team-activity': { metrics: ['uploads'] },
       notes: { content: 'A note' },
+      'chat-history': {},
     };
     for (const type of widgetTypeSchema.options) {
       const widget = { id: 'w', type, title: 'W', layout: LAYOUT, config: config[type] };
