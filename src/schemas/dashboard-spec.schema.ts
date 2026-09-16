@@ -502,12 +502,18 @@ const widgetSchemaRaw = z.discriminatedUnion('type', [
     type: z.literal('notes'),
     config: z.strictObject({ content: z.string().min(1).max(4000) }),
   }),
+
+  z.strictObject({
+    ...widgetBase,
+    type: z.literal('chat-history'),
+    config: z.strictObject({}),
+  }),
 ]);
 
 export const widgetTypeSchema = z.enum([
   'narrative', 'stat-cards', 'metric-chart', 'table', 'comparison',
   'field-distribution', 'sentiment-trend', 'themes', 'people',
-  'team-activity', 'notes',
+  'team-activity', 'notes', 'chat-history',
 ]);
 
 /* ── Section ─────────────────────────────────────────────────────────────── */
@@ -760,6 +766,7 @@ export function collectWidgetRefs(widget: Widget): WidgetRefs {
     case 'themes':
     case 'team-activity':
     case 'notes':
+    case 'chat-history':
       break;
 
     default:

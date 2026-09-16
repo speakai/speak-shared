@@ -189,6 +189,7 @@ describe('valid specs', () => {
       ['people', { metrics: [MEDIA_COUNT], limit: 10 }],
       ['team-activity', { metrics: ['uploads'] }],
       ['notes', { content: 'A note' }],
+      ['chat-history', {}],
     ];
 
     const widgets = configs.map(([type, config], i) => ({
@@ -220,8 +221,8 @@ describe('widgetTypeSchema parity with the widget union', () => {
   // the runtime option list a consumer iterates so a silent enum edit is caught.
   it('lists exactly the widget discriminator literals', () => {
     expect([...widgetTypeSchema.options].sort()).toEqual([
-      'comparison', 'field-distribution', 'metric-chart', 'narrative', 'notes',
-      'people', 'sentiment-trend', 'stat-cards', 'table', 'team-activity', 'themes',
+      'chat-history', 'comparison', 'field-distribution', 'metric-chart', 'narrative',
+      'notes', 'people', 'sentiment-trend', 'stat-cards', 'table', 'team-activity', 'themes',
     ]);
   });
 
@@ -238,6 +239,7 @@ describe('widgetTypeSchema parity with the widget union', () => {
       people: { metrics: [MEDIA_COUNT], limit: 10 },
       'team-activity': { metrics: ['uploads'] },
       notes: { content: 'A note' },
+      'chat-history': {},
     };
     for (const type of widgetTypeSchema.options) {
       const widget = { id: 'w', type, title: 'W', layout: LAYOUT, config: config[type] };
