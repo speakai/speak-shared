@@ -11,7 +11,11 @@ export * from './voice/index.js';
 export * from './utils/transcript.js';
 export * from './utils/dashboard-spec.js';
 
-// LLM model pricing
+// LLM model registry — one entry per model; every other model table projects from it.
+export * from './llm/registry.js';
+export * from './llm/types.js';
+
+// LLM model pricing (a projection of the registry; kept for its existing surface)
 export * from './pricing/modelPricing.js';
 
 // NOTE: './schemas/index.js' is intentionally NOT exported here. It has a
