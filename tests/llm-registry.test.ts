@@ -274,4 +274,10 @@ describe("the pricing projection keeps its existing surface", () => {
   it("returns undefined for an unknown id", () => {
     expect(getModelPricing("not-a-model")).toBeUndefined();
   });
+
+  it("looks a model up case-insensitively, as the prefix helpers did", () => {
+    expect(getModel("CLAUDE-SONNET-5")).toBe(getModel(LLMModels.CLAUDE_SONNET_5));
+    expect(requiresMediaCapableModel("GEMINI-3.7-FLASH", new Set(["audio"]))).toBe(false);
+    expect(resolveModelId("Claude-2")).toBe(LLMModels.CLAUDE_SONNET_5);
+  });
 });

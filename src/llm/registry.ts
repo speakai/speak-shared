@@ -1023,12 +1023,19 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
   },
 ] as const;
 
-/** Indexed by id for O(1) lookup. */
-const BY_ID = new Map<string, ModelDefinition>(MODEL_REGISTRY.map((m) => [m.id, m]));
+/**
+ * Indexed by lower-cased id for O(1) lookup.
+ *
+ * Case-insensitive because the prefix helpers this registry replaces all lower-cased the id
+ * before matching, so an id that reached them in a different case still resolved. Keeping
+ * that is not cosmetic: a capability lookup that silently misses returns `false`, which reads
+ * as "this model cannot do that" rather than as an error.
+ */
+const BY_ID = new Map<string, ModelDefinition>(MODEL_REGISTRY.map((m) => [m.id.toLowerCase(), m]));
 
 /** The registry entry for a model id (enum value or raw string). Undefined if unknown. */
 export function getModel(modelId: string): ModelDefinition | undefined {
-  return BY_ID.get(modelId);
+  return BY_ID.get(modelId.toLowerCase());
 }
 
 /** Every model with the given status. */
@@ -1057,12 +1064,12 @@ export function offeredChatModels(): ModelDefinition[] {
  * Chains terminate: the invariants test proves there are no cycles.
  */
 export function resolveModelId(modelId: string): LLMModels | undefined {
-  let current = BY_ID.get(modelId);
+  let current = getModel(modelId);
   const seen = new Set<string>();
   while (current && current.status === "retired" && current.replacedBy) {
     if (seen.has(current.id)) return undefined;
     seen.add(current.id);
-    current = BY_ID.get(current.replacedBy);
+    current = getModel(current.replacedBy);
   }
   return current?.id;
 }
@@ -1073,5 +1080,5 @@ export function requiresMediaCapableModel(
   modalities: ReadonlySet<"audio" | "video" | "image">,
 ): boolean {
   if (!modalities.has("audio") && !modalities.has("video")) return false;
-  return !(modelId && BY_ID.get(modelId)?.capabilities.nativeAudioVideo);
+  return !(modelId && getModel(modelId)?.capabilities.nativeAudioVideo);
 }
