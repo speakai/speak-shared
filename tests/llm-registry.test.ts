@@ -1,17 +1,3 @@
-/**
- * Registry invariants.
- *
- * These encode the rules that were previously comments, tribal knowledge, or nothing at all.
- * Each one corresponds to a way the seven-table arrangement actually failed:
- *
- *   - a Gemini model added without modality rates priced media ~3x high via the
- *     "dearest known rates" fallback, and the affordability gate then refused turns the
- *     customer could afford;
- *   - a Gemini model added without a max-output entry silently inherited Anthropic's
- *     14.5k cap, truncating answers;
- *   - a default constant left pointing at a model that had been dropped from the catalog
- *     is exactly how the client came to hold a stale hardcoded default.
- */
 import { describe, it, expect } from "vitest";
 import { LLMModels, LLMProvider } from "../src/enums/llm.js";
 import {
@@ -51,9 +37,6 @@ describe("registry covers the enum exactly", () => {
 });
 
 describe("every model is priceable", () => {
-  // Pricing is kept for deprecated AND retired models: a stored id on an old row must still
-  // bill correctly. That is the whole reason models are retired from the catalog rather than
-  // deleted from the enum.
   it.each(MODEL_REGISTRY.map((m) => [label(m), m] as const))("%s has positive rates", (_, model) => {
     expect(model.pricing.inputPerMillion).toBeGreaterThan(0);
     expect(model.pricing.outputPerMillion).toBeGreaterThan(0);
@@ -89,8 +72,6 @@ describe("every live model is fully specified", () => {
     expect(model.maxOutputTokens).toBeGreaterThan(0);
   });
 
-  // The rule `multimodalPricing.ts` states in a comment and nothing enforced: a model that
-  // can serve a media turn MUST have modality rates, or that turn prices against the ceiling.
   it.each(live.filter((m) => m.capabilities.nativeAudioVideo).map((m) => [m.id, m] as const))(
     "%s accepts audio/video and so declares modality rates",
     (_, model) => {
@@ -124,8 +105,6 @@ describe("deprecation is resolvable", () => {
   });
 
   it("resolves every id in the enum to a live model", () => {
-    // Because replacedBy always targets a live model, this terminates in one hop — but assert
-    // on the outcome rather than the hop count so a future chain stays covered.
     for (const id of Object.values(LLMModels)) {
       const resolved = resolveModelId(id);
       expect(resolved, `${id} did not resolve`).toBeDefined();
@@ -134,8 +113,6 @@ describe("deprecation is resolvable", () => {
   });
 
   it("keeps a deprecated model dispatchable, substituting only retired ones", () => {
-    // A chat already pinned to a deprecated model keeps running on it until the user
-    // switches; only a retired id is rewritten. This is the decision recorded in the plan.
     const deprecated = MODEL_REGISTRY.find((m) => m.status === "deprecated")!;
     const retired = MODEL_REGISTRY.find((m) => m.status === "retired")!;
     expect(resolveModelId(deprecated.id)).toBe(deprecated.id);
@@ -148,8 +125,6 @@ describe("deprecation is resolvable", () => {
       const target = getModel(model.replacedBy!)!;
       for (const [capability, had] of Object.entries(model.capabilities)) {
         const kept = target.capabilities[capability as keyof typeof target.capabilities];
-        // customTemperature is deliberately lost on the GPT-5 family: reasoning models reject
-        // a custom temperature, and every live OpenAI model is one.
         if (capability === "customTemperature") continue;
         if (had && !kept) regressions.push(`${model.id} -> ${target.id} loses ${capability}`);
       }
@@ -197,8 +172,6 @@ describe("status and visibility agree", () => {
 });
 
 describe("every default points at a live model", () => {
-  // The invariant that would have caught the stale client fallback on its own: a default
-  // left pointing at a model dropped from the catalog is silently unreachable.
   it.each(Object.entries(DEFAULT_MODELS))("%s is live", (_, modelId) => {
     const model = getModel(modelId);
     expect(model, `${modelId} is not in the registry`).toBeDefined();
@@ -222,9 +195,6 @@ describe("every default points at a live model", () => {
 });
 
 describe("routing identity is declared, not inferred from the id", () => {
-  // The bug this prevents: Grok and GLM carry a vendor prefix rather than a family one, so
-  // every `startsWith` chain fell through to the OpenAI default. A workspace that picked Grok
-  // silently ran GPT.
   it("routes OpenRouter-served models by provider while keeping the vendor family", () => {
     expect(getModel(LLMModels.GROK_4_5)!.provider).toBe(LLMProvider.OPENROUTER);
     expect(getModel(LLMModels.GROK_4_5)!.family).toBe("grok");
@@ -250,8 +220,6 @@ describe("routing identity is declared, not inferred from the id", () => {
   });
 
   it("only gives an OpenRouter slug to a model OpenRouter can actually be asked for", () => {
-    // A slug is how OpenRouter addresses a model we can ALSO reach directly, so the models
-    // OpenRouter itself serves natively never carry one.
     const wrong = MODEL_REGISTRY.filter(
       (m) => m.openRouterSlug && m.provider === LLMProvider.OPENROUTER,
     ).map(label);
@@ -268,8 +236,6 @@ describe("routing identity is declared, not inferred from the id", () => {
 
 describe("media routing", () => {
   it("does not re-route an images-only turn", () => {
-    // Images are universal; only audio and video force a media-capable model. An images-only
-    // carousel must stay on whatever the chat picked.
     expect(requiresMediaCapableModel(LLMModels.CLAUDE_SONNET_5, new Set(["image"]))).toBe(false);
   });
 
