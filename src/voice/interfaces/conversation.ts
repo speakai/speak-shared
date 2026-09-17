@@ -9,6 +9,7 @@ import {
   RecordingStatus,
   ConversationStatus,
 } from "../enums/billing.js";
+import { ConversationEventType } from "../enums/conversation.js";
 import { PhoneCallMetadata, HandoffMetadata } from "./telephony.js";
 import { StructuredOutputsMap } from "./structuredOutput.js";
 import { CanonicalEndReason, SentimentType } from "../enums/conversation.js";
@@ -103,7 +104,7 @@ export interface ConversationEvent {
   conversationId: string;
   agentId?: string;
   userId?: string;
-  eventType: string; // ConversationEventType value
+  eventType: ConversationEventType;
   timestamp: string;
   cost?: number;
   platformCost?: number;
