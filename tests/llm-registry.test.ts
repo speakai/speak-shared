@@ -20,6 +20,9 @@ import {
   offeredChatModels,
   resolveModelId,
   requiresMediaCapableModel,
+  DEFAULT_MODELS,
+  FREE_TIER_MODEL,
+  MEDIA_ROUTED_MODEL,
   type ModelDefinition,
 } from "../src/llm/registry.js";
 import { MODEL_PRICING, getModelPricing } from "../src/pricing/modelPricing.js";
@@ -190,6 +193,31 @@ describe("status and visibility agree", () => {
 
   it("offers at least one non-premium model for the free tier to land on", () => {
     expect(offeredChatModels().some((m) => !m.premium)).toBe(true);
+  });
+});
+
+describe("every default points at a live model", () => {
+  // The invariant that would have caught the stale client fallback on its own: a default
+  // left pointing at a model dropped from the catalog is silently unreachable.
+  it.each(Object.entries(DEFAULT_MODELS))("%s is live", (_, modelId) => {
+    const model = getModel(modelId);
+    expect(model, `${modelId} is not in the registry`).toBeDefined();
+    expect(model!.status).toBe("live");
+  });
+
+  it("keeps the free-tier default non-premium, or the free tier could not use it", () => {
+    expect(getModel(FREE_TIER_MODEL)!.premium).toBe(false);
+  });
+
+  it("keeps the media-routed default capable of taking media", () => {
+    expect(getModel(MEDIA_ROUTED_MODEL)!.capabilities.nativeAudioVideo).toBe(true);
+    expect(getModel(MEDIA_ROUTED_MODEL)!.modality).toBeDefined();
+  });
+
+  it("offers every default in the picker, so a user can see what they are on", () => {
+    for (const modelId of Object.values(DEFAULT_MODELS)) {
+      expect(getModel(modelId)!.offeredInChat).toBe(true);
+    }
   });
 });
 

@@ -1024,6 +1024,42 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
 ] as const;
 
 /**
+ * Default model per provider surface, and the two special-purpose defaults.
+ *
+ * Declared here, with the models, so the invariants test can prove each one points at a
+ * model that is actually `live`. A default left pointing at a model that had been dropped
+ * from the catalog is how the client came to hold a stale hardcoded `claude-sonnet-4-6`
+ * after the server default moved to Sonnet 5.
+ *
+ * They also need to be importable cheaply: the speak-server drivers that used to own these
+ * constants pull in a tool chain that the test parser cannot load, so every module wanting a
+ * default had to either drag that in or redeclare the value.
+ */
+export const OPENAI_DEFAULT_MODEL = LLMModels.GPT_5_5;
+export const CLAUDE_DEFAULT_MODEL = LLMModels.CLAUDE_SONNET_5;
+export const GEMINI_DEFAULT_MODEL = LLMModels.GEMINI_3_7_FLASH;
+export const OPENROUTER_DEFAULT_MODEL = LLMModels.GROK_4_5;
+
+/**
+ * The model an audio/video turn is routed to when the chosen one cannot accept media.
+ * Currently the Gemini default, but named separately because it answers a different question.
+ */
+export const MEDIA_ROUTED_MODEL = GEMINI_DEFAULT_MODEL;
+
+/** The model a free-trial company runs on when its choice is premium. */
+export const FREE_TIER_MODEL = LLMModels.GEMINI_3_7_FLASH;
+
+/** Every default, for the invariant that each points at a live model. */
+export const DEFAULT_MODELS = {
+  OPENAI_DEFAULT_MODEL,
+  CLAUDE_DEFAULT_MODEL,
+  GEMINI_DEFAULT_MODEL,
+  OPENROUTER_DEFAULT_MODEL,
+  MEDIA_ROUTED_MODEL,
+  FREE_TIER_MODEL,
+} as const;
+
+/**
  * Indexed by lower-cased id for O(1) lookup.
  *
  * Case-insensitive because the prefix helpers this registry replaces all lower-cased the id
