@@ -8,6 +8,7 @@ export * from './interfaces/index.js';
 export * from './voice/index.js';
 
 // Utils
+export * from './utils/ids.js';
 export * from './utils/transcript.js';
 export * from './utils/dashboard-spec.js';
 
