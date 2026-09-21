@@ -52,9 +52,11 @@ export interface PronunciationSuggestionInput {
 export interface PronunciationData {
   rules: PronunciationRule[];
   syncStatus: PronunciationSyncStatus;
-  syncedAt?: string;
-  elevenLabsDictId?: string;
-  elevenLabsVersionId?: string;
+  syncedAt: string | null;
+  elevenLabsDictId: string | null;
+  elevenLabsVersionId: string | null;
+  /** Present on the read response only; write responses omit it. */
+  lexiconTerms?: string[];
 }
 
 /**
