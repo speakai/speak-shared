@@ -12,3 +12,4 @@ export * from "./interfaces/index.js";
 export * from "./templates/index.js";
 export * from "./responsePace.js";
 export * from "./pronunciation.js";
+export * from "./llm.js";
