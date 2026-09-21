@@ -10,3 +10,4 @@
 export * from "./enums/index.js";
 export * from "./interfaces/index.js";
 export * from "./templates/index.js";
+export * from "./responsePace.js";

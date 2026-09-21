@@ -17,6 +17,7 @@ export * from "./livekit.js";
 export * from "./notification.js";
 export * from "./organization.js";
 export * from "./providers.js";
+export * from "./responsePace.js";
 export * from "./structuredOutput.js";
 export * from "./telephony.js";
 export * from "./voice.js";
