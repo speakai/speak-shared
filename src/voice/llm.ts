@@ -22,7 +22,7 @@ export const VOICE_AGENT_LLM_MODELS: readonly LLMModels[] =
     VOICE_AGENT_LLM_PROVIDERS.includes(model.provider),
   ).map((model) => model.id);
 
-/** Live models a voice agent can be set to, in registry order, for model pickers. */
+/** Models offered in voice agent model pickers (`offeredInVoice`), in registry order. */
 export const VOICE_AGENT_LLM_CHOICES: readonly ModelDefinition[] = MODEL_REGISTRY.filter(
-  (model) => model.status === "live" && VOICE_AGENT_LLM_PROVIDERS.includes(model.provider),
+  (model) => model.offeredInVoice,
 );

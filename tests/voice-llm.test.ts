@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   LLMModels,
   LLMProvider,
+  MODEL_REGISTRY,
   OPENAI_DEFAULT_MODEL,
   VOICE_AGENT_LLM_CHOICES,
   VOICE_AGENT_LLM_MODELS,
@@ -39,9 +40,48 @@ describe("voice agent LLMs", () => {
     },
   );
 
-  it("offers only live models for pickers, the default included", () => {
-    expect(VOICE_AGENT_LLM_CHOICES.every((m) => m.status === "live")).toBe(true);
-    expect(VOICE_AGENT_LLM_CHOICES.map((m) => m.id)).toContain(OPENAI_DEFAULT_MODEL);
-    expect(VOICE_AGENT_LLM_CHOICES.map((m) => m.id)).not.toContain(LLMModels.GPT_5_4);
+  it("offers only live voice-provider models with a voice reasoning setting", () => {
+    const offered = MODEL_REGISTRY.filter((m) => m.offeredInVoice);
+    expect(offered.length).toBeGreaterThan(0);
+    for (const model of offered) {
+      expect(model.status).toBe("live");
+      expect(VOICE_AGENT_LLM_PROVIDERS).toContain(model.provider);
+      expect(model.voiceReasoning).toBeDefined();
+    }
+  });
+
+  it("gives a voice reasoning setting only to models offered in voice", () => {
+    const stray = MODEL_REGISTRY.filter((m) => !m.offeredInVoice && m.voiceReasoning !== undefined);
+    expect(stray.map((m) => m.id)).toEqual([]);
+  });
+
+  it("offers exactly the fast-starting models in voice pickers, the default included", () => {
+    const ids = VOICE_AGENT_LLM_CHOICES.map((m) => m.id);
+    expect([...ids].sort()).toEqual(
+      [
+        LLMModels.GPT_5_4_MINI_2026_03_17,
+        LLMModels.GPT_5_5,
+        LLMModels.GPT_5_6_SOL,
+        LLMModels.GPT_5_6_TERRA,
+        LLMModels.GEMINI_3_5_FLASH,
+      ].sort(),
+    );
+    expect(ids).toContain(OPENAI_DEFAULT_MODEL);
+  });
+
+  it.each([
+    LLMModels.GEMINI_3_7_FLASH,
+    LLMModels.GEMINI_3_8_FLASH,
+    LLMModels.GEMINI_3_FLASH_PREVIEW,
+    LLMModels.GPT_5_4,
+  ])("does not offer %s in voice pickers", (id) => {
+    expect(VOICE_AGENT_LLM_CHOICES.map((m) => m.id)).not.toContain(id);
+  });
+
+  it.each([
+    [LLMModels.GPT_5_5, "none"],
+    [LLMModels.GEMINI_3_5_FLASH, "minimal"],
+  ] as const)("sends %s the %s reasoning setting", (id, reasoning) => {
+    expect(getModel(id)?.voiceReasoning).toBe(reasoning);
   });
 });

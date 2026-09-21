@@ -7,6 +7,9 @@ export type ModelFamily = "gpt" | "claude" | "gemini" | "grok" | "glm";
 
 export type ByokProvider = "anthropic" | "openai" | "openrouter";
 
+/** Reasoning settings the voice worker can send to keep replies fast. */
+export type VoiceReasoning = "none" | "minimal";
+
 export interface ModelCapabilities {
   thinking: boolean;
   adaptiveThinking: boolean;
@@ -24,6 +27,10 @@ export interface ModelDefinition {
   replacedBy?: LLMModels;
   offeredInChat: boolean;
   chatOrder?: number;
+  /** Whether voice agent model pickers offer this model. */
+  offeredInVoice: boolean;
+  /** Lowest reasoning setting the voice worker sends for this model, so replies start fast. */
+  voiceReasoning?: VoiceReasoning;
   premium: boolean;
   pricing: ModelPricing;
   modality?: ModalityRates;
@@ -63,6 +70,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "retired",
     replacedBy: LLMModels.GPT_5_4_MINI_2026_03_17,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: { inputPerMillion: 0.5, outputPerMillion: 1.5, provider: LLMProvider.OPENAI },
     maxOutputTokens: MAX_OUTPUT_TOKENS,
@@ -77,6 +85,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "retired",
     replacedBy: LLMModels.GPT_5_4_MINI_2026_03_17,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: { inputPerMillion: 3, outputPerMillion: 4, provider: LLMProvider.OPENAI },
     maxOutputTokens: MAX_OUTPUT_TOKENS,
@@ -91,6 +100,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "retired",
     replacedBy: LLMModels.GPT_5_4_MINI_2026_03_17,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: { inputPerMillion: 0.5, outputPerMillion: 1.5, provider: LLMProvider.OPENAI },
     maxOutputTokens: MAX_OUTPUT_TOKENS,
@@ -105,6 +115,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "retired",
     replacedBy: LLMModels.GPT_5_5,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: { inputPerMillion: 30, outputPerMillion: 60, provider: LLMProvider.OPENAI },
     maxOutputTokens: MAX_OUTPUT_TOKENS,
@@ -119,6 +130,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "retired",
     replacedBy: LLMModels.GPT_5_5,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: { inputPerMillion: 10, outputPerMillion: 30, provider: LLMProvider.OPENAI },
     maxOutputTokens: MAX_OUTPUT_TOKENS,
@@ -133,6 +145,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "retired",
     replacedBy: LLMModels.GPT_5_5,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: { inputPerMillion: 10, outputPerMillion: 30, provider: LLMProvider.OPENAI },
     maxOutputTokens: MAX_OUTPUT_TOKENS,
@@ -147,6 +160,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "retired",
     replacedBy: LLMModels.GPT_5_5,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: { inputPerMillion: 5, outputPerMillion: 15, provider: LLMProvider.OPENAI },
     maxOutputTokens: MAX_OUTPUT_TOKENS,
@@ -161,6 +175,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GPT_5_5,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 2.5,
@@ -180,6 +195,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GPT_5_4_MINI_2026_03_17,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: {
       inputPerMillion: 0.15,
@@ -199,6 +215,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GPT_5_5,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 2.5,
@@ -218,6 +235,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GPT_5_4_MINI_2026_03_17,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: {
       inputPerMillion: 0.15,
@@ -237,6 +255,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GPT_5_5,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 2,
@@ -256,6 +275,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GPT_5_5,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 1.25,
@@ -275,6 +295,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GPT_5_5,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 1.75,
@@ -294,6 +315,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GPT_5_5,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 2.5,
@@ -317,6 +339,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GPT_5_4_MINI_2026_03_17,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 0.75,
@@ -336,6 +359,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GPT_5_4_MINI_2026_03_17,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: {
       inputPerMillion: 0.2,
@@ -355,6 +379,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GPT_5_5,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 5,
@@ -378,6 +403,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GPT_5_4_MINI_2026_03_17,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 1,
@@ -397,6 +423,8 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "live",
     offeredInChat: true,
     chatOrder: 7,
+    offeredInVoice: true,
+    voiceReasoning: "none",
     premium: true,
     pricing: {
       inputPerMillion: 0.75,
@@ -417,6 +445,8 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "live",
     offeredInChat: true,
     chatOrder: 6,
+    offeredInVoice: true,
+    voiceReasoning: "none",
     premium: true,
     pricing: {
       inputPerMillion: 5,
@@ -441,6 +471,8 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "live",
     offeredInChat: true,
     chatOrder: 5,
+    offeredInVoice: true,
+    voiceReasoning: "none",
     premium: true,
     pricing: {
       inputPerMillion: 5,
@@ -461,6 +493,8 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "live",
     offeredInChat: true,
     chatOrder: 4,
+    offeredInVoice: true,
+    voiceReasoning: "none",
     premium: true,
     pricing: {
       inputPerMillion: 2.5,
@@ -482,6 +516,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "retired",
     replacedBy: LLMModels.CLAUDE_SONNET_5,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: { inputPerMillion: 8, outputPerMillion: 24, provider: LLMProvider.ANTHROPIC },
     maxOutputTokens: MAX_OUTPUT_TOKENS,
@@ -496,6 +531,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "retired",
     replacedBy: LLMModels.CLAUDE_SONNET_5,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: {
       inputPerMillion: 3,
@@ -515,6 +551,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "retired",
     replacedBy: LLMModels.CLAUDE_SONNET_5,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: {
       inputPerMillion: 3,
@@ -534,6 +571,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "retired",
     replacedBy: LLMModels.CLAUDE_SONNET_5,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: {
       inputPerMillion: 3,
@@ -553,6 +591,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.CLAUDE_SONNET_5,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 1,
@@ -572,6 +611,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "live",
     offeredInChat: true,
     chatOrder: 10,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 3,
@@ -592,6 +632,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "live",
     offeredInChat: true,
     chatOrder: 8,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 3,
@@ -612,6 +653,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "live",
     offeredInChat: true,
     chatOrder: 9,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 5,
@@ -633,6 +675,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "retired",
     replacedBy: LLMModels.GEMINI_3_8_FLASH,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: { inputPerMillion: 1.25, outputPerMillion: 5, provider: LLMProvider.GOOGLE },
     maxOutputTokens: MAX_OUTPUT_TOKENS,
@@ -646,6 +689,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "retired",
     replacedBy: LLMModels.GEMINI_3_7_FLASH,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: {
       inputPerMillion: 0.075,
@@ -664,6 +708,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "retired",
     replacedBy: LLMModels.GEMINI_3_7_FLASH,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: {
       inputPerMillion: 0.1,
@@ -682,6 +727,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GEMINI_3_7_FLASH,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: {
       inputPerMillion: 0.3,
@@ -701,6 +747,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GEMINI_3_8_FLASH,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 1.25,
@@ -722,6 +769,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GEMINI_3_7_FLASH,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: {
       inputPerMillion: 0.1,
@@ -741,6 +789,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GEMINI_3_7_FLASH,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: false,
     pricing: { inputPerMillion: 0.25, outputPerMillion: 1.5, provider: LLMProvider.GOOGLE },
     modality: { audioPerMillion: 0.5, videoPerMillion: 0.25 },
@@ -755,6 +804,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "deprecated",
     replacedBy: LLMModels.GEMINI_3_8_FLASH,
     offeredInChat: false,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 2,
@@ -775,6 +825,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "live",
     offeredInChat: true,
     chatOrder: 1,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 0.5,
@@ -795,6 +846,8 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "live",
     offeredInChat: true,
     chatOrder: 2,
+    offeredInVoice: true,
+    voiceReasoning: "minimal",
     premium: true,
     pricing: {
       inputPerMillion: 1.5,
@@ -815,6 +868,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "live",
     offeredInChat: true,
     chatOrder: 0,
+    offeredInVoice: false,
     premium: false,
     pricing: {
       inputPerMillion: 0.75,
@@ -835,6 +889,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "live",
     offeredInChat: true,
     chatOrder: 3,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 0.75,
@@ -856,6 +911,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "live",
     offeredInChat: true,
     chatOrder: 11,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 2.2,
@@ -875,6 +931,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     status: "live",
     offeredInChat: true,
     chatOrder: 12,
+    offeredInVoice: false,
     premium: true,
     pricing: {
       inputPerMillion: 1.023,
