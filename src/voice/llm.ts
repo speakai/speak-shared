@@ -5,6 +5,7 @@
 
 import { LLMProvider, type LLMModels } from "../enums/llm.js";
 import { MODEL_REGISTRY } from "../llm/registry.js";
+import type { ModelDefinition } from "../llm/registry.js";
 
 /** Providers the voice worker has an LLM engine for. */
 export const VOICE_AGENT_LLM_PROVIDERS: readonly LLMProvider[] = [
@@ -20,3 +21,8 @@ export const VOICE_AGENT_LLM_MODELS: readonly LLMModels[] =
   MODEL_REGISTRY.filter((model) =>
     VOICE_AGENT_LLM_PROVIDERS.includes(model.provider),
   ).map((model) => model.id);
+
+/** Live models a voice agent can be set to, in registry order, for model pickers. */
+export const VOICE_AGENT_LLM_CHOICES: readonly ModelDefinition[] = MODEL_REGISTRY.filter(
+  (model) => model.status === "live" && VOICE_AGENT_LLM_PROVIDERS.includes(model.provider),
+);

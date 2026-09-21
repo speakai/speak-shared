@@ -3,6 +3,7 @@ import {
   LLMModels,
   LLMProvider,
   OPENAI_DEFAULT_MODEL,
+  VOICE_AGENT_LLM_CHOICES,
   VOICE_AGENT_LLM_MODELS,
   VOICE_AGENT_LLM_PROVIDERS,
   getModel,
@@ -37,4 +38,10 @@ describe("voice agent LLMs", () => {
       expect(VOICE_AGENT_LLM_MODELS).not.toContain(id);
     },
   );
+
+  it("offers only live models for pickers, the default included", () => {
+    expect(VOICE_AGENT_LLM_CHOICES.every((m) => m.status === "live")).toBe(true);
+    expect(VOICE_AGENT_LLM_CHOICES.map((m) => m.id)).toContain(OPENAI_DEFAULT_MODEL);
+    expect(VOICE_AGENT_LLM_CHOICES.map((m) => m.id)).not.toContain(LLMModels.GPT_5_4);
+  });
 });
