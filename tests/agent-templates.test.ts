@@ -21,6 +21,8 @@ describe("agent template ids", () => {
       "sales-rep-jordan",
       "executive-coach-sarah",
       "healthcare-receptionist-megan",
+      "technical-interviewer-marcus",
+      "concierge-ava",
     ]);
   });
 
@@ -54,12 +56,28 @@ describe("catalog shape", () => {
       expect(TEMPLATE_CATEGORIES, tpl.id).toContain(tpl.category);
     }
   });
+
+  // An offered category with no template renders as a chip that filters to nothing.
+  it("offers no category without at least one template", () => {
+    for (const category of TEMPLATE_CATEGORIES) {
+      if (category === "All") continue;
+      expect(
+        AGENT_TEMPLATES.some((tpl) => tpl.category === category),
+        category,
+      ).toBe(true);
+    }
+  });
 });
 
 describe("getAgentTemplateById", () => {
   it("resolves a known id", () => {
     expect(getAgentTemplateById("sales-rep-jordan")?.id).toBe("sales-rep-jordan");
     expect(getAgentTemplateName("sales-rep-jordan")).toBeTruthy();
+  });
+
+  it("resolves the restored HR/Tech and Hospitality templates", () => {
+    expect(getAgentTemplateById("technical-interviewer-marcus")?.category).toBe("HR/Tech");
+    expect(getAgentTemplateById("concierge-ava")?.category).toBe("Hospitality");
   });
 
   it("returns undefined rather than throwing on untrusted input", () => {
