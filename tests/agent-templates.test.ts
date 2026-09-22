@@ -5,7 +5,9 @@ import {
   AGENT_TEMPLATE_IDS,
   ALL_AGENT_TEMPLATES,
   BLANK_TEMPLATE,
+  MODEL_REGISTRY,
   TEMPLATE_CATEGORIES,
+  VOICE_AGENT_LLM_PROVIDERS,
   getAgentTemplateById,
   getAgentTemplateName,
   isAgentTemplateId,
@@ -22,6 +24,8 @@ describe("agent template ids", () => {
       "executive-coach-sarah",
       "healthcare-receptionist-megan",
       "technical-interviewer-marcus",
+      "language-tutor-luna",
+      "real-estate-agent-sam",
       "concierge-ava",
     ]);
   });
@@ -75,9 +79,11 @@ describe("getAgentTemplateById", () => {
     expect(getAgentTemplateName("sales-rep-jordan")).toBeTruthy();
   });
 
-  it("resolves the restored HR/Tech and Hospitality templates", () => {
-    expect(getAgentTemplateById("technical-interviewer-marcus")?.category).toBe("HR/Tech");
-    expect(getAgentTemplateById("concierge-ava")?.category).toBe("Hospitality");
+  it("resolves every restored template on its goal-aligned category", () => {
+    expect(getAgentTemplateById("technical-interviewer-marcus")?.category).toBe("Research");
+    expect(getAgentTemplateById("concierge-ava")?.category).toBe("Support");
+    expect(getAgentTemplateById("language-tutor-luna")?.category).toBe("Research");
+    expect(getAgentTemplateById("real-estate-agent-sam")?.category).toBe("Sales");
   });
 
   it("returns undefined rather than throwing on untrusted input", () => {
@@ -86,6 +92,28 @@ describe("getAgentTemplateById", () => {
     expect(getAgentTemplateById(undefined)).toBeUndefined();
     expect(getAgentTemplateById("")).toBeUndefined();
     expect(getAgentTemplateName("nope")).toBeUndefined();
+  });
+});
+
+describe("template models", () => {
+  // A template pinned to a deprecated or retired id deploys an agent the voice worker
+  // has to silently re-route, so the catalog may only name live registry models.
+  it("name only models the registry still serves", () => {
+    const byId = new Map(MODEL_REGISTRY.map((model) => [model.id as string, model]));
+    for (const tpl of ALL_AGENT_TEMPLATES) {
+      if (!tpl.llm) continue;
+      const model = byId.get(tpl.llm.model);
+      expect(model, `${tpl.id}: ${tpl.llm.model}`).toBeDefined();
+      expect(model?.status, tpl.id).toBe("live");
+      expect(model?.provider, tpl.id).toBe(tpl.llm.provider);
+    }
+  });
+
+  it("only run on providers the voice worker has an engine for", () => {
+    for (const tpl of ALL_AGENT_TEMPLATES) {
+      if (!tpl.llm) continue;
+      expect(VOICE_AGENT_LLM_PROVIDERS as readonly string[], tpl.id).toContain(tpl.llm.provider);
+    }
   });
 });
 
