@@ -39,11 +39,14 @@ describe("VOICE_LIVE_MODELS", () => {
     expect(VOICE_LIVE_CHOICES.map((m) => m.id)).toContain("gpt-live-1");
   });
 
-  it("offers only the GPT-Live voices our key can open a session with", () => {
+  it("offers the 13 confirmed GPT-Live voices with the default first", () => {
     const gptLive = getVoiceLiveModel("gpt-live-1");
     const voiceIds = gptLive?.voices.map((voice) => voice.id);
-    expect(voiceIds).toEqual(["marin", "beacon", "cinder", "stone", "vesper"]);
-    expect(voiceIds).toContain(gptLive?.defaultVoice);
+    expect(voiceIds).toEqual([
+      "marin", "quartz", "ripple", "vesper", "willow", "stone", "gleam", "meridian", "bossa", "tempo", "beacon",
+      "delta", "cinder",
+    ]);
+    expect(voiceIds?.[0]).toBe(gptLive?.defaultVoice);
   });
 });
 

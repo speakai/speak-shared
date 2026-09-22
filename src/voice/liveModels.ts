@@ -40,7 +40,10 @@ export const VOICE_LIVE_MODELS: readonly VoiceLiveModel[] = [
     label: "GPT-Live",
     provider: LLMProvider.OPENAI,
     fullDuplex: true,
-    voices: liveVoices(["marin", "beacon", "cinder", "stone", "vesper"]),
+    voices: liveVoices([
+      "marin", "quartz", "ripple", "vesper", "willow", "stone", "gleam", "meridian", "bossa", "tempo", "beacon",
+      "delta", "cinder",
+    ]),
     defaultVoice: "marin",
     perMinute: 0.05,
     offeredInVoice: true,
