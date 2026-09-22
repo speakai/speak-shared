@@ -38,6 +38,13 @@ describe("VOICE_LIVE_MODELS", () => {
     expect(getVoiceLiveModel("gpt-live-1")).toMatchObject({ fullDuplex: true, defaultVoice: "marin" });
     expect(VOICE_LIVE_CHOICES.map((m) => m.id)).toContain("gpt-live-1");
   });
+
+  it("offers only the GPT-Live voices our key can open a session with", () => {
+    const gptLive = getVoiceLiveModel("gpt-live-1");
+    const voiceIds = gptLive?.voices.map((voice) => voice.id);
+    expect(voiceIds).toEqual(["marin", "beacon", "cinder", "stone", "vesper"]);
+    expect(voiceIds).toContain(gptLive?.defaultVoice);
+  });
 });
 
 describe("Gemini Live", () => {
