@@ -192,6 +192,8 @@ export interface Agent {
     provider: LLMProvider;
     model?: string;
   };
+  /** Voice of a Live model (one of its `voices`); `voice` keeps the TTS voice for the pipeline. */
+  liveVoice?: string;
   personality: string;
   instructions: string;
 
@@ -245,6 +247,7 @@ export interface CreateAgentRequest {
     provider: LLMProvider;
     model?: string;
   };
+  liveVoice?: string;
   personality: string;
   instructions: string;
   chatSettings: {

@@ -4,7 +4,6 @@
  */
 
 import { LLMModels, LLMProvider } from "../enums/llm.js";
-import { OPENAI_DEFAULT_MODEL } from "../llm/registry.js";
 
 export interface VoiceLiveModel {
   /** Provider model id the worker passes to the realtime plugin. */
@@ -13,7 +12,7 @@ export interface VoiceLiveModel {
   provider: LLMProvider;
   /** Listens and speaks at the same time, and owns turn-taking. */
   fullDuplex: boolean;
-  /** The model's own voice names; a Live agent's `voice.voiceId` is one of these. */
+  /** The model's own voice names; a Live agent's `liveVoice` is one of these. */
   voices: readonly string[];
   defaultVoice: string;
   /** Voice-layer rate in USD per minute, billed per second. */
@@ -34,7 +33,7 @@ export const VOICE_LIVE_MODELS: readonly VoiceLiveModel[] = [
     defaultVoice: "marin",
     perMinute: 0.05,
     offeredInVoice: true,
-    textModel: OPENAI_DEFAULT_MODEL,
+    textModel: LLMModels.GPT_5_6_TERRA,
   },
 ];
 

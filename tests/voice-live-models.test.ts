@@ -50,3 +50,9 @@ describe("VOICE_AGENT_MODEL_IDS", () => {
     expect(VOICE_AGENT_LLM_CHOICES.filter((m) => liveIds.has(m.id))).toEqual([]);
   });
 });
+
+describe("GPT-Live backend model", () => {
+  it("runs tools on gpt-5.6 Terra", () => {
+    expect(getVoiceLiveModel("gpt-live-1")?.textModel).toBe(LLMModels.GPT_5_6_TERRA);
+  });
+});
