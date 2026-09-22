@@ -3,8 +3,8 @@
  * and the registry models from those providers.
  */
 
-import { LLMProvider, type LLMModels } from "../enums/llm.js";
-import { MODEL_REGISTRY } from "../llm/registry.js";
+import { LLMModels, LLMProvider } from "../enums/llm.js";
+import { MODEL_REGISTRY, OPENAI_DEFAULT_MODEL } from "../llm/registry.js";
 import type { ModelDefinition } from "../llm/registry.js";
 
 /** Providers the voice worker has an LLM engine for. */
@@ -26,3 +26,12 @@ export const VOICE_AGENT_LLM_MODELS: readonly LLMModels[] =
 export const VOICE_AGENT_LLM_CHOICES: readonly ModelDefinition[] = MODEL_REGISTRY.filter(
   (model) => model.offeredInVoice,
 );
+
+/**
+ * The model a voice agent runs when it names only a provider, or when its model is retired and the
+ * registry replacement is not offered in voice. Each is the fastest-starting choice for its provider.
+ */
+export const VOICE_DEFAULT_MODELS: Readonly<Record<string, LLMModels>> = {
+  [LLMProvider.OPENAI]: OPENAI_DEFAULT_MODEL,
+  [LLMProvider.GOOGLE]: LLMModels.GEMINI_3_5_FLASH,
+};

@@ -7,6 +7,7 @@ import {
   VOICE_AGENT_LLM_CHOICES,
   VOICE_AGENT_LLM_MODELS,
   VOICE_AGENT_LLM_PROVIDERS,
+  VOICE_DEFAULT_MODELS,
   getModel,
 } from "../src/index.js";
 
@@ -83,5 +84,12 @@ describe("voice agent LLMs", () => {
     [LLMModels.GEMINI_3_5_FLASH, "minimal"],
   ] as const)("sends %s the %s reasoning setting", (id, reasoning) => {
     expect(getModel(id)?.voiceReasoning).toBe(reasoning);
+  });
+
+  it("gives every voice provider a default that is offered in voice", () => {
+    for (const provider of VOICE_AGENT_LLM_PROVIDERS) {
+      expect(getModel(VOICE_DEFAULT_MODELS[provider])?.offeredInVoice).toBe(true);
+      expect(getModel(VOICE_DEFAULT_MODELS[provider])?.provider).toBe(provider);
+    }
   });
 });
