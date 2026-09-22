@@ -55,6 +55,12 @@ export interface UsageMetrics {
     duration?: number; // Call duration in seconds
     billedMinutes?: number; // Rounded up for billing
   };
+  /** Seconds a Live (speech-to-speech) model spent in session; replaces the STT and TTS lines. */
+  live?: {
+    provider: string;
+    model: string;
+    duration: number;
+  };
 }
 
 /**

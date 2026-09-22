@@ -6,6 +6,7 @@
 import { LLMModels, LLMProvider } from "../enums/llm.js";
 import { MODEL_REGISTRY, OPENAI_DEFAULT_MODEL } from "../llm/registry.js";
 import type { ModelDefinition } from "../llm/registry.js";
+import { VOICE_LIVE_MODELS } from "./liveModels.js";
 
 /** Providers the voice worker has an LLM engine for. */
 export const VOICE_AGENT_LLM_PROVIDERS: readonly LLMProvider[] = [
@@ -35,3 +36,9 @@ export const VOICE_DEFAULT_MODELS: Readonly<Record<string, LLMModels>> = {
   [LLMProvider.OPENAI]: OPENAI_DEFAULT_MODEL,
   [LLMProvider.GOOGLE]: LLMModels.GEMINI_3_5_FLASH,
 };
+
+/** Every model id a voice agent may be saved with: pipeline models and Live models. */
+export const VOICE_AGENT_MODEL_IDS: readonly string[] = [
+  ...VOICE_AGENT_LLM_MODELS,
+  ...VOICE_LIVE_MODELS.map((model) => model.id),
+];
