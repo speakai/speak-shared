@@ -81,6 +81,14 @@ describe("every live model is fully specified", () => {
     },
   );
 
+  it("never offers a custom temperature on an Anthropic adaptive-thinking model", () => {
+    const accepting = live
+      .filter((m) => m.provider === LLMProvider.ANTHROPIC && m.capabilities.adaptiveThinking)
+      .filter((m) => m.capabilities.customTemperature)
+      .map(label);
+    expect(accepting).toEqual([]);
+  });
+
   it("has a non-empty label for anything shown in the picker", () => {
     const unlabelled = offeredChatModels().filter((m) => !m.label.trim()).map(label);
     expect(unlabelled).toEqual([]);
