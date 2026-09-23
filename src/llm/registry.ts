@@ -57,7 +57,7 @@ const GPT_LEGACY: ModelCapabilities = { ...NO_CAPS };
 const GPT_5: ModelCapabilities = { ...NO_CAPS, thinking: true, customTemperature: false };
 const CLAUDE_LEGACY: ModelCapabilities = { ...NO_CAPS };
 const CLAUDE_4: ModelCapabilities = { ...NO_CAPS, thinking: true };
-const CLAUDE_ADAPTIVE: ModelCapabilities = { ...NO_CAPS, thinking: true, adaptiveThinking: true };
+const CLAUDE_ADAPTIVE: ModelCapabilities = { ...NO_CAPS, thinking: true, adaptiveThinking: true, customTemperature: false };
 const GEMINI_LEGACY: ModelCapabilities = { ...NO_CAPS, nativeAudioVideo: true };
 const GEMINI_THINKING: ModelCapabilities = { ...NO_CAPS, thinking: true, nativeAudioVideo: true };
 
