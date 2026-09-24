@@ -10,7 +10,7 @@ export * from "./avatar.js";
 export * from "./voice.js";
 export * from "./livekit.js";
 export * from "./conversation.js";
-export * from "./dataCollection.js";
+export * from "./questions.js";
 export * from "./structuredOutput.js";
 export * from "./telephony.js";
 export * from "./billing.js";
