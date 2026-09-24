@@ -1,6 +1,6 @@
 /**
- * Data Collection Interfaces
- * Shared types for data collection templates and fields
+ * Voice Agent Question Interfaces
+ * Shared types for the questions a voice agent asks during a call
  */
 
 import {
@@ -27,21 +27,17 @@ export interface ValidationConfig {
  * Field configuration (template defaults or agent overrides)
  */
 export interface FieldConfig {
-  displayLabel: string; // Display name (e.g., "Email Address")
-  promptText: string; // What agent says (e.g., "What's your email?")
+  displayLabel: string; // Short name spoken/logged in confirmations (e.g., "Email Address")
+  question: string; // What the agent asks (e.g., "What's your email?")
   confirmationText?: string; // Confirmation message (e.g., "Got it, ${value}")
   validationPrompt?: string; // What to say if validation fails
-  inputPlaceholder?: string; // Placeholder for input field
   validation?: ValidationConfig; // Validation rules
-  allowTextInput: boolean; // Show text input option
-  allowSkip: boolean; // User can skip this field
-  showInlineInput: boolean; // Show input inline in chat
 }
 
 /**
- * Data Collection Template (global, reusable)
+ * Question Template (global, reusable)
  */
-export interface DataCollectionTemplate {
+export interface QuestionTemplate {
   templateId: string;
   userId?: string; // null for system templates
   name: string; // Template name
@@ -62,42 +58,40 @@ export interface DataCollectionTemplate {
  */
 export interface CustomFieldConfig {
   displayLabel?: string;
-  promptText?: string;
+  question?: string;
   confirmationText?: string;
   validationPrompt?: string;
-  inputPlaceholder?: string;
   validation?: Partial<ValidationConfig>;
-  allowTextInput?: boolean;
-  allowSkip?: boolean;
-  showInlineInput?: boolean;
 }
 
 /**
- * Agent Data Collection Field (mapping template to agent)
+ * Agent Question (mapping a template to an agent)
  */
-export interface AgentDataCollectionField {
+export interface AgentQuestion {
   fieldId: string;
   agentId: string;
   templateId: string;
   customConfig?: CustomFieldConfig; // Overrides template defaults
-  required: boolean; // Is this field required?
+  required: boolean; // Is this question required?
   maxPromptAttempts: number; // Maximum number of times the agent should ask
   noResponseBehavior: NoResponseBehavior; // What to do if user does not answer
-  triggerCondition?: string; // For conditional fields
+  triggerCondition?: string; // For conditional questions
   order: number; // Display order
-  enabled: boolean; // Is field active?
+  enabled: boolean; // Is question active?
+  /** Points at a general company Field this question's answer maps to; undefined until mapped or backfilled. */
+  mappedFieldId?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 /**
- * Resolved Data Collection Field (template + agent config merged)
+ * Resolved Agent Question (template + agent config merged)
  */
-export interface ResolvedDataCollectionField {
+export interface ResolvedAgentQuestion {
   fieldId: string;
   agentId: string;
   templateId: string;
-  template: DataCollectionTemplate;
+  template: QuestionTemplate;
   resolvedConfig: FieldConfig; // Merged config
   required: boolean;
   maxPromptAttempts: number;
@@ -138,7 +132,7 @@ export interface CollectionState {
 }
 
 /**
- * Request to add field to agent
+ * Request to add a question to an agent
  */
 export interface AddFieldToAgentRequest {
   templateId: string;
@@ -148,10 +142,11 @@ export interface AddFieldToAgentRequest {
   noResponseBehavior?: NoResponseBehavior;
   triggerCondition?: string;
   order?: number;
+  mappedFieldId?: string;
 }
 
 /**
- * Request to update agent field
+ * Request to update an agent question
  */
 export interface UpdateAgentFieldRequest {
   customConfig?: CustomFieldConfig;
@@ -161,10 +156,11 @@ export interface UpdateAgentFieldRequest {
   triggerCondition?: string;
   order?: number;
   enabled?: boolean;
+  mappedFieldId?: string;
 }
 
 /**
- * Request to reorder fields
+ * Request to reorder questions
  */
 export interface ReorderFieldsRequest {
   fieldOrders: Array<{
