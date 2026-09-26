@@ -501,6 +501,78 @@ describe('aggregator / field-type compatibility', () => {
   });
 });
 
+/* ── metric-chart yMin/yMax — fixed y-axis bounds ────────────────────────── */
+
+describe('metric-chart yMin/yMax', () => {
+  it('accepts yMin/yMax together, e.g. a score out of 10', () => {
+    const result = dashboardSpecSchema.safeParse(specWith([chart({ metric: MEDIA_COUNT, yMin: 0, yMax: 10 })]));
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts yMin or yMax alone', () => {
+    expect(dashboardSpecSchema.safeParse(specWith([chart({ metric: MEDIA_COUNT, yMin: 0 })])).success).toBe(true);
+    expect(dashboardSpecSchema.safeParse(specWith([chart({ metric: MEDIA_COUNT, yMax: 100 })])).success).toBe(true);
+  });
+
+  it('accepts a chart with neither bound set', () => {
+    const result = dashboardSpecSchema.safeParse(specWith([chart({ metric: MEDIA_COUNT })]));
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects yMin >= yMax', () => {
+    const result = dashboardSpecSchema.safeParse(specWith([chart({ metric: MEDIA_COUNT, yMin: 10, yMax: 10 })]));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      path: ['widgets', 0, 'config', 'yMin'],
+    }));
+  });
+
+  it('rejects yMin > yMax', () => {
+    const result = dashboardSpecSchema.safeParse(specWith([chart({ metric: MEDIA_COUNT, yMin: 100, yMax: 0 })]));
+    expect(result.success).toBe(false);
+  });
+
+  it.each([Infinity, -Infinity, NaN])('rejects a non-finite yMin (%s)', (value) => {
+    const result = dashboardSpecSchema.safeParse(specWith([chart({ metric: MEDIA_COUNT, yMin: value })]));
+    expect(result.success).toBe(false);
+  });
+
+  it.each([Infinity, -Infinity, NaN])('rejects a non-finite yMax (%s)', (value) => {
+    const result = dashboardSpecSchema.safeParse(specWith([chart({ metric: MEDIA_COUNT, yMax: value })]));
+    expect(result.success).toBe(false);
+  });
+});
+
+/* ── time groupBy granularity 'auto' ──────────────────────────────────────── */
+
+describe('time groupBy granularity "auto"', () => {
+  const schema = buildDashboardSpecSchema(FIELD_TYPES);
+
+  it('accepts granularity "auto" on groupBy', () => {
+    const result = schema.safeParse(specWith([
+      chart({ metric: MEDIA_COUNT, groupBy: { kind: 'time', fieldName: 'Recorded On', granularity: 'auto' } }),
+    ]));
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts granularity "auto" on series', () => {
+    const result = schema.safeParse(specWith([
+      chart({ metric: MEDIA_COUNT, series: { kind: 'time', fieldName: 'Recorded On', granularity: 'auto' } }),
+    ]));
+    expect(result.success).toBe(true);
+  });
+
+  it('still rejects granularity "auto" on a non-temporal field, same as any other granularity', () => {
+    const result = schema.safeParse(specWith([
+      chart({ metric: MEDIA_COUNT, groupBy: { kind: 'time', fieldName: 'Status', granularity: 'auto' } }),
+    ]));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      path: ['widgets', 0, 'config', 'groupBy', 'fieldName'],
+    }));
+  });
+});
+
 /* ── superRefine 3 — unknown field, at every one of the five sites ───────── */
 
 describe('unknown field name — all five sites', () => {

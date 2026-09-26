@@ -258,7 +258,7 @@ const metricSchemaRaw = z.discriminatedUnion('kind', [
 
 /* ── GroupBy ─────────────────────────────────────────────────────────────── */
 
-export const granularitySchema = z.enum(['record', 'day', 'week', 'month', 'quarter']);
+export const granularitySchema = z.enum(['auto', 'record', 'day', 'week', 'month', 'quarter']);
 
 export const groupBySchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('field'), fieldName: z.string().min(1).max(120), ref: fieldReferenceSchema.optional() }),
@@ -425,15 +425,24 @@ const widgetSchemaRaw = z.discriminatedUnion('type', [
   z.strictObject({
     ...widgetBase,
     type: z.literal('metric-chart'),
-    config: z.strictObject({
-      mark: z.enum(['line', 'bar', 'area', 'donut', 'stacked-bar']),
-      metric: metricSchemaRaw,
-      groupBy: groupBySchema.optional(),
-      series: groupBySchema.optional(),
-      sort: z.enum(['value-desc', 'value-asc', 'label']).optional(),
-      limit: z.number().int().min(1).max(100).optional(),
-      thresholds: thresholdsSchema.optional(),
-    }),
+    config: z
+      .strictObject({
+        mark: z.enum(['line', 'bar', 'area', 'donut', 'stacked-bar']),
+        metric: metricSchemaRaw,
+        groupBy: groupBySchema.optional(),
+        series: groupBySchema.optional(),
+        sort: z.enum(['value-desc', 'value-asc', 'label']).optional(),
+        limit: z.number().int().min(1).max(100).optional(),
+        thresholds: thresholdsSchema.optional(),
+        // Fixed y-axis bounds; both optional, and yMin must be < yMax when both are set.
+        yMin: z.number().finite().optional(),
+        yMax: z.number().finite().optional(),
+      })
+      .superRefine((config, ctx) => {
+        if (config.yMin !== undefined && config.yMax !== undefined && !(config.yMin < config.yMax)) {
+          ctx.addIssue({ code: 'custom', path: ['yMin'], message: 'yMin must be less than yMax' });
+        }
+      }),
   }),
 
   z.strictObject({ ...widgetBase, type: z.literal('table'), config: tableConfigSchema }),
