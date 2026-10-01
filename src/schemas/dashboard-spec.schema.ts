@@ -215,7 +215,12 @@ export const aggSchema = z.enum([
   'sum', 'avg', 'min', 'max', 'median', 'count', 'countDistinct',
 ]);
 export const builtinMetricSchema = z.enum([
-  'mediaCount', 'totalDuration', 'avgSentiment', 'speakerCount', 'wordCount',
+  'mediaCount', 'totalDuration', 'avgSentiment', 'speakerCount', 'wordCount', 'genesysCallCount',
+]);
+
+/** speak-server's Genesys ledger category enum; no "IVR or hold only" value exists — that case falls under `No answer`. */
+export const genesysCallCategorySchema = z.enum([
+  'Two-way conversation', 'Voicemail', 'No answer',
 ]);
 
 /** A LEAF metric. `Expr` operands are always base metrics — never other exprs. */
@@ -224,6 +229,8 @@ const baseMetricSchemaRaw = z.discriminatedUnion('kind', [
     kind: z.literal('builtin'),
     name: builtinMetricSchema,
     filter: filterSchemaRaw.optional(),
+    // `genesysCallCount` only — a dedicated option, not `filter`, because `filter.field` goes through the Media field-existence check and the Genesys ledger isn't a Media field.
+    category: z.array(genesysCallCategorySchema).min(1).max(3).optional(),
   }),
   z.strictObject({
     kind: z.literal('field'),
@@ -549,6 +556,7 @@ export type Filter = z.infer<typeof filterSchemaRaw>;
 export type FilterOp = z.infer<typeof filterOpSchema>;
 export type Agg = z.infer<typeof aggSchema>;
 export type BuiltinMetric = z.infer<typeof builtinMetricSchema>;
+export type GenesysCallCategory = z.infer<typeof genesysCallCategorySchema>;
 export type BaseMetric = z.infer<typeof baseMetricSchemaRaw>;
 export type Expr = z.infer<typeof exprSchemaRaw>;
 export type Metric = z.infer<typeof metricSchemaRaw>;
