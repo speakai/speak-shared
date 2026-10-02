@@ -27,6 +27,7 @@ import {
   fieldRef,
   fieldReferenceSchema,
   filterSchema,
+  genesysCallCategorySchema,
   metricSchema,
   widgetSchema,
   widgetTypeSchema,
@@ -800,7 +801,7 @@ describe('no unguarded schema in the public surface', () => {
     const filterContaining = new Set(guarded.map(([name]) => name));
     // Filter-FREE exported schemas — safe without a depth guard.
     const filterFree = [
-      'filterOpSchema', 'aggSchema', 'builtinMetricSchema', 'granularitySchema',
+      'filterOpSchema', 'aggSchema', 'builtinMetricSchema', 'genesysCallCategorySchema', 'granularitySchema',
       'groupBySchema', 'thresholdStatusSchema', 'thresholdSchema', 'sourceSchema',
       'dateRangePresetSchema', 'dateRangeSchema', 'layoutSchema', 'widgetTypeSchema',
       'sectionSchema', 'fieldReferenceSchema',
@@ -1641,5 +1642,62 @@ describe('field reference — resolving through the id map', () => {
       chart({ metric: { kind: 'field', fieldName: 'Nope', ref: { fieldId: 'bbbbbbbbbbbb' }, agg: 'avg' } }),
     ]));
     expect(message).toContain('unknown field "Nope"');
+  });
+});
+
+describe('genesysCallCount builtin metric', () => {
+  const GENESYS_CALL_COUNT = { kind: 'builtin', name: 'genesysCallCount' } as const;
+
+  it('accepts the bare builtin with no category filter', () => {
+    expect(dashboardSpecSchema.safeParse(specWith([
+      chart({ metric: GENESYS_CALL_COUNT }),
+    ])).success).toBe(true);
+  });
+
+  it('accepts every real call category, individually and combined', () => {
+    for (const category of genesysCallCategorySchema.options) {
+      expect(dashboardSpecSchema.safeParse(specWith([
+        chart({ metric: { ...GENESYS_CALL_COUNT, category: [category] } }),
+      ])).success).toBe(true);
+    }
+    expect(dashboardSpecSchema.safeParse(specWith([
+      chart({ metric: { ...GENESYS_CALL_COUNT, category: ['Voicemail', 'No answer'] } }),
+    ])).success).toBe(true);
+  });
+
+  it('rejects a category value outside the ledger enum, including the nonexistent "IVR or hold only"', () => {
+    expect(dashboardSpecSchema.safeParse(specWith([
+      chart({ metric: { ...GENESYS_CALL_COUNT, category: ['IVR or hold only'] } }),
+    ])).success).toBe(false);
+    expect(dashboardSpecSchema.safeParse(specWith([
+      chart({ metric: { ...GENESYS_CALL_COUNT, category: ['Bogus'] } }),
+    ])).success).toBe(false);
+  });
+
+  it('rejects an empty category array rather than silently matching nothing', () => {
+    expect(dashboardSpecSchema.safeParse(specWith([
+      chart({ metric: { ...GENESYS_CALL_COUNT, category: [] } }),
+    ])).success).toBe(false);
+  });
+
+  it('still composes with the generic filter, expr, and stat-cards sites like any other builtin', () => {
+    expect(dashboardSpecSchema.safeParse(specWith([
+      {
+        id: 'tiles-1', type: 'stat-cards', title: 'Tiles', layout: LAYOUT,
+        config: { tiles: [{ metric: { ...GENESYS_CALL_COUNT, category: ['No answer'] }, label: 'No answer' }] },
+      },
+    ])).success).toBe(true);
+    expect(dashboardSpecSchema.safeParse(specWith([
+      chart({
+        metric: {
+          kind: 'expr',
+          expr: {
+            op: 'ratio',
+            numerator: { ...GENESYS_CALL_COUNT, category: ['Voicemail'] },
+            denominator: GENESYS_CALL_COUNT,
+          },
+        },
+      }),
+    ])).success).toBe(true);
   });
 });
