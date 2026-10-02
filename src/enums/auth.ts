@@ -10,5 +10,6 @@ export enum DevicePlatform {
   ANDROID = 'android',
   WEB = 'web',
   ELECTRON = 'electron',
+  DESKTOP = 'desktop',
   API = 'api',
 }
