@@ -532,7 +532,8 @@ describe("Enum values — auth", () => {
     expect(DevicePlatform.IOS).toBe("ios");
     expect(DevicePlatform.WEB).toBe("web");
     expect(DevicePlatform.API).toBe("api");
-    expect(Object.values(DevicePlatform)).toHaveLength(5);
+    expect(DevicePlatform.DESKTOP).toBe("desktop");
+    expect(Object.values(DevicePlatform)).toHaveLength(6);
   });
 });
 
