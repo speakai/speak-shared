@@ -11,6 +11,7 @@ export * from './filter.js';
 export * from './genesys.js';
 export * from './integration.js';
 export * from './knowledgeBase.js';
+export * from './label.js';
 export * from './media.js';
 export * from './menu.js';
 export * from './meeting.js';

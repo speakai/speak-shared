@@ -12,6 +12,8 @@ export interface IEmbedSettings {
   isDescription: boolean;
   isSEOIndexing: boolean;
   isRemarks: boolean;
+  isLabels?: boolean;
+  isComments?: boolean;
   isPromptAsk: boolean;
   isPromptHistory: boolean;
   chatWelcomeMessage: string;
