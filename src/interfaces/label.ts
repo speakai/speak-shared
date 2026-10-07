@@ -1,4 +1,4 @@
-import { LabelSource, AnchorStatus } from '../enums/index.js';
+import { LabelSource, AnchorStatus, DashboardLabelsMode, DashboardCommentsMode } from '../enums/index.js';
 
 // ── Anchor — a span of transcript words, shared by labels and comments ──
 
@@ -107,4 +107,113 @@ export interface IMediaComment {
   dashboardId?: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+// ── Dashboard settings — labels and comments on a shared dashboard (stored under dashboard.settings) ──
+
+/** Labels on a shared dashboard's media pages; off and view-only unless the owner saved otherwise */
+export interface IDashboardLabelsSettings {
+  isEnabled: boolean;
+  mode: DashboardLabelsMode;
+  /** Label groups the dashboard shows and offers; empty means every active label */
+  labelGroupIds: string[];
+}
+
+/** Comments on a shared dashboard's media pages */
+export interface IDashboardCommentsSettings {
+  isEnabled: boolean;
+  mode: DashboardCommentsMode;
+}
+
+/** The labels and comments keys of dashboard.settings, saved with POST/PUT /v1/dashboards */
+export interface IDashboardAnnotationSettings {
+  /** Team members a viewer may write labels and comments as; active members of the company */
+  reviewerUserIds: string[];
+  labels: IDashboardLabelsSettings;
+  comments: IDashboardCommentsSettings;
+}
+
+// ── Shared links — what a dashboard or embed viewer receives (no signed-in user) ──
+
+/** An applicable label as a shared link shows it */
+export interface ILinkLabel {
+  labelId: string;
+  name: string;
+  color?: string;
+  description?: string;
+  parentId: string | null;
+}
+
+/** A reviewer a dashboard viewer may write as; names only, never emails */
+export interface ILinkMember {
+  userId: string;
+  name: string;
+}
+
+/** annotationSettings on GET /v1/embed/insight for dashboard links */
+export interface IPublicAnnotationSettings {
+  labels: {
+    isEnabled: boolean;
+    mode: DashboardLabelsMode;
+    /** The allowed label groups */
+    groups: Array<{ labelId: string; name: string }>;
+    /** Active labels of the allowed groups; empty while labels are off */
+    labels: ILinkLabel[];
+  };
+  comments: { isEnabled: boolean; mode: DashboardCommentsMode };
+  /** Empty unless a write mode is on */
+  reviewers: ILinkMember[];
+}
+
+/** A labelled span on GET /v1/embed/media/:mediaId/labels, narrowed to the labels the link shows */
+export type ILinkMediaLabel = Pick<
+  IMediaLabel,
+  | 'mediaLabelId'
+  | 'mediaId'
+  | 'labelIds'
+  | 'anchor'
+  | 'status'
+  | 'lastResolved'
+  | 'userId'
+  | 'dashboardId'
+  | 'createdAt'
+  | 'updatedAt'
+>;
+
+/** GET /v1/embed/media/:mediaId/labels */
+export interface ILinkMediaLabelsResponse {
+  transcriptRevision: number;
+  /** Name, colour and description of the labels used on this media */
+  labels: ILinkLabel[];
+  mediaLabels: ILinkMediaLabel[];
+}
+
+/** A comment as a link viewer sees it: the author's name, no resolver or span link */
+export type ILinkComment = Pick<
+  IMediaComment,
+  | 'commentId'
+  | 'mediaId'
+  | 'anchor'
+  | 'body'
+  | 'status'
+  | 'isResolved'
+  | 'isDeleted'
+  | 'userId'
+  | 'dashboardId'
+  | 'createdAt'
+  | 'updatedAt'
+> & {
+  parentId: string | null;
+  authorName: string;
+};
+
+/** A thread starter with its replies, oldest first */
+export interface ILinkCommentThread extends ILinkComment {
+  replies: ILinkComment[];
+}
+
+/** GET /v1/embed/media/:mediaId/comments */
+export interface ILinkMediaCommentsResponse {
+  transcriptRevision: number;
+  threads: ILinkCommentThread[];
 }

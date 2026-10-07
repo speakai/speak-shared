@@ -76,6 +76,8 @@ describe("Package exports — main entry", () => {
     expect(pkg.KnowledgeBaseOwnerType).toBeDefined();
     expect(pkg.LabelSource).toBeDefined();
     expect(pkg.AnchorStatus).toBeDefined();
+    expect(pkg.DashboardLabelsMode).toBeDefined();
+    expect(pkg.DashboardCommentsMode).toBeDefined();
 
     // Anchor utils
     expect(pkg.normalizeWord).toBeTypeOf("function");
@@ -513,6 +515,16 @@ describe("Enum values — label", () => {
     expect(AnchorStatus.SHIFTED).toBe("shifted");
     expect(AnchorStatus.NEEDS_REVIEW).toBe("needs_review");
     expect(Object.values(AnchorStatus)).toHaveLength(3);
+  });
+
+  it("dashboard labels and comments modes match the server's stored values", async () => {
+    const { DashboardLabelsMode, DashboardCommentsMode } = await import("../src/enums/label.js");
+    expect(DashboardLabelsMode.VIEW).toBe("view");
+    expect(DashboardLabelsMode.APPLY).toBe("apply");
+    expect(Object.values(DashboardLabelsMode)).toHaveLength(2);
+    expect(DashboardCommentsMode.VIEW).toBe("view");
+    expect(DashboardCommentsMode.REPLY).toBe("reply");
+    expect(Object.values(DashboardCommentsMode)).toHaveLength(2);
   });
 });
 
