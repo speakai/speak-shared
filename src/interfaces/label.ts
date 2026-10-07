@@ -166,6 +166,8 @@ export interface IDashboardCommentsSettings {
 
 /** The labels and comments keys of dashboard.settings, saved with POST/PUT /v1/dashboards */
 export interface IDashboardAnnotationSettings {
+  /** Optional subset of the feedback submitters who may write labels and comments from the link; empty or absent means every submitter */
+  reviewerNames?: string[];
   labels: IDashboardLabelsSettings;
   comments: IDashboardCommentsSettings;
 }
@@ -188,9 +190,9 @@ export interface IPublicAnnotationSettings {
     labels: ILinkLabel[];
   };
   comments: { isEnabled: boolean; mode: DashboardCommentsMode };
-  /** Names a viewer may write as: the dashboard's feedback submitters; empty unless a write mode is on */
+  /** Names a viewer may write as: reviewerNames, else the dashboard's feedback submitters; empty unless a write mode is on */
   reviewers: string[];
-  /** The viewer may type a name that is not listed, as with feedback; false unless a write mode is on */
+  /** The viewer may type any name, as with feedback (allowOtherSubmitter or an empty list); never with reviewerNames set */
   allowOtherReviewer: boolean;
 }
 
@@ -203,13 +205,11 @@ export type ILinkMediaLabel = Pick<
   | 'anchor'
   | 'status'
   | 'lastResolved'
-  | 'userId'
   | 'dashboardId'
-  | 'reviewerName'
   | 'createdAt'
   | 'updatedAt'
 > & {
-  /** The author's display name, the reviewerName of a link entry, or "Team member" when a member has none or left the company */
+  /** The author's display name, the reviewerName of a link entry, or "Team member" when a member has none or left the company; link holders never get userIds */
   authorName: string;
 };
 
@@ -232,13 +232,11 @@ export type ILinkComment = Pick<
   | 'lastResolved'
   | 'isResolved'
   | 'isDeleted'
-  | 'userId'
   | 'dashboardId'
-  | 'reviewerName'
   | 'createdAt'
   | 'updatedAt'
 > & {
-  /** The author's display name, the reviewerName of a link entry, or "Team member" when a member has none or left the company */
+  /** The author's display name, the reviewerName of a link entry, or "Team member" when a member has none or left the company; link holders never get userIds */
   authorName: string;
 };
 
