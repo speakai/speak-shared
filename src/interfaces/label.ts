@@ -54,6 +54,8 @@ export interface ILabel {
   isActive: boolean;
   mergedInto?: string;
   sortOrder: number;
+  /** The creator's display name; absent when they are no longer a member of the company */
+  authorName?: string;
   createdAt: Date;
   updatedAt: Date;
 }
