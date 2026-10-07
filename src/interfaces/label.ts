@@ -43,10 +43,9 @@ export interface IWordRange {
 
 // ── Label — company-wide list entry (model Label, collection labels) ──
 
+/** A label or group as the API returns it; internal _id and companyId are never sent */
 export interface ILabel {
-  _id: string;
   labelId: string;
-  companyId: string;
   /** Creator */
   userId: string;
   /** A group holds labels and cannot be applied */
@@ -55,24 +54,37 @@ export interface ILabel {
   description?: string;
   /** #rrggbb; groups have none */
   color?: string;
-  /** labelId of the parent group, one level only */
-  parentId?: string;
+  /** labelId of the parent group, one level only; null at the top level */
+  parentId: string | null;
   source: LabelSource;
   /** False when archived */
   isActive: boolean;
   /** labelId this label was merged into */
   mergedInto?: string;
+  sortOrder: number;
   createdAt: Date;
   updatedAt: Date;
 }
 
+/** An entry of GET /v1/labels: counts cover only media the caller may open */
+export interface ILabelListItem extends ILabel {
+  /** Labelled spans carrying this label; on a group, summed over its labels */
+  usageCount: number;
+  /** Distinct files carrying this label; on a group, files carrying any of its labels */
+  fileCount: number;
+  /** A group's labels that match the list filters; groups only */
+  labels?: ILabelListItem[];
+}
+
 // ── Media Label — labels applied to a transcript span (collection medialabels) ──
 
+/** A labelled span as the API returns it; internal _id and companyId are never sent */
 export interface IMediaLabel {
-  _id: string;
   mediaLabelId: string;
-  companyId: string;
+  /** Who applied it */
   userId: string;
+  /** The author's display name; absent when they are no longer a member of the company */
+  authorName?: string;
   mediaId: string;
   labelIds: string[];
   anchor: IAnchor;
@@ -87,26 +99,49 @@ export interface IMediaLabel {
 
 // ── Media Comment — comment thread on a span or whole file (collection mediacomments) ──
 
+/** A comment as the API returns it; internal _id and companyId are never sent */
 export interface IMediaComment {
-  _id: string;
   commentId: string;
-  companyId: string;
+  /** Author */
   userId: string;
+  /** The author's display name; absent when they are no longer a member of the company */
+  authorName?: string;
   mediaId: string;
   /** Null means the comment is on the whole file */
   anchor: IAnchor | null;
-  /** commentId of the thread starter, one level of replies */
-  parentId?: string;
+  /** commentId of the thread starter, one level of replies; null on a starter */
+  parentId: string | null;
   body: string;
   mediaLabelId?: string;
   /** Present only when anchor is set */
   status?: AnchorStatus;
+  /** Last anchor a person confirmed, kept while status is needs_review */
+  lastResolved?: IAnchor;
   isResolved: boolean;
+  /** userId of whoever resolved the thread */
+  resolvedBy?: string;
   isDeleted: boolean;
   /** Set when a reviewer commented from a dashboard */
   dashboardId?: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+/** A thread starter with its replies, oldest first; a deleted starter with replies has an empty body */
+export interface IMediaCommentThread extends IMediaComment {
+  replies: IMediaComment[];
+}
+
+/** GET /v1/media/:mediaId/labels */
+export interface IMediaLabelsResponse {
+  transcriptRevision: number;
+  mediaLabels: IMediaLabel[];
+}
+
+/** GET /v1/media/:mediaId/comments */
+export interface IMediaCommentsResponse {
+  transcriptRevision: number;
+  threads: IMediaCommentThread[];
 }
 
 // ── Dashboard settings — labels and comments on a shared dashboard (stored under dashboard.settings) ──
@@ -178,7 +213,10 @@ export type ILinkMediaLabel = Pick<
   | 'dashboardId'
   | 'createdAt'
   | 'updatedAt'
->;
+> & {
+  /** The author's display name, or "Team member" when they have none or left the company */
+  authorName: string;
+};
 
 /** GET /v1/embed/media/:mediaId/labels */
 export interface ILinkMediaLabelsResponse {
@@ -194,8 +232,10 @@ export type ILinkComment = Pick<
   | 'commentId'
   | 'mediaId'
   | 'anchor'
+  | 'parentId'
   | 'body'
   | 'status'
+  | 'lastResolved'
   | 'isResolved'
   | 'isDeleted'
   | 'userId'
@@ -203,7 +243,7 @@ export type ILinkComment = Pick<
   | 'createdAt'
   | 'updatedAt'
 > & {
-  parentId: string | null;
+  /** The author's display name, or "Team member" when they have none or left the company */
   authorName: string;
 };
 
