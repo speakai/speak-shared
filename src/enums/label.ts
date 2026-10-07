@@ -20,3 +20,32 @@ export enum DashboardCommentsMode {
   /** Reviewers chosen on the dashboard may also comment and reply */
   REPLY = 'reply',
 }
+
+/** status query of GET /v1/labels */
+export enum LabelListStatus {
+  ACTIVE = 'active',
+  ARCHIVED = 'archived',
+  ALL = 'all',
+}
+
+/** action of PATCH /v1/media/:mediaId/labels/:mediaLabelId when reviewing a moved passage */
+export enum MediaLabelAction {
+  KEEP = 'keep',
+  REPLACE = 'replace',
+}
+
+/** filter query of GET /v1/media/:mediaId/comments */
+export enum CommentListFilter {
+  ALL = 'all',
+  OPEN = 'open',
+  RESOLVED = 'resolved',
+  FILE = 'file',
+}
+
+/** Keys of the ready-made label sets POST /v1/labels/speak-sets accepts */
+export enum SpeakLabelSet {
+  SALES_QA = 'sales_qa',
+  RESEARCH = 'research',
+  MEETINGS = 'meetings',
+  TRANSCRIPT_FEEDBACK = 'transcript_feedback',
+}

@@ -1,4 +1,11 @@
-import { LabelSource, AnchorStatus, DashboardLabelsMode, DashboardCommentsMode } from '../enums/index.js';
+import {
+  LabelSource,
+  AnchorStatus,
+  DashboardLabelsMode,
+  DashboardCommentsMode,
+  MediaLabelAction,
+  SpeakLabelSet,
+} from '../enums/index.js';
 
 export interface IAnchor {
   /** Index of the first word in flattenWords() order at transcriptRevision */
@@ -30,6 +37,8 @@ export interface IFlatWord {
   segmentIndex: number;
   wordIndex: number;
   speakerId: string;
+  /** The entity's confidence, or the segment's when it has no entities; absent when not measured */
+  confidence?: number;
 }
 
 /** Inclusive range of flattenWords() indices */
@@ -236,4 +245,120 @@ export interface ILinkCommentThread extends ILinkComment {
 export interface ILinkMediaCommentsResponse {
   transcriptRevision: number;
   threads: ILinkCommentThread[];
+}
+
+// ── Request bodies and responses of the labels and comments API ──
+
+/** POST /v1/labels */
+export interface ICreateLabelBody {
+  name: string;
+  /** A group holds labels; it takes no color or parentId */
+  isGroup?: boolean;
+  description?: string;
+  color?: string;
+  parentId?: string | null;
+  sortOrder?: number;
+}
+
+/** PUT /v1/labels/:labelId; at least one key */
+export type IUpdateLabelBody = Partial<Omit<ICreateLabelBody, 'isGroup'>>;
+
+/** GET /v1/labels */
+export interface ILabelListResponse {
+  labels: ILabelListItem[];
+}
+
+/** POST /v1/labels/:labelId/archive; a group archives its labels too */
+export interface ILabelArchiveResult {
+  labelId: string;
+  archivedCount: number;
+}
+
+/** POST /v1/labels/:labelId/restore */
+export interface ILabelRestoreResult {
+  labelId: string;
+  restoredCount: number;
+  /** Group labels left archived because an active label already uses the name */
+  skippedCount: number;
+}
+
+/** POST /v1/labels/:labelId/merge */
+export interface IMergeLabelBody {
+  targetLabelId: string;
+}
+
+export interface ILabelMergeResult {
+  labelId: string;
+  mergedInto: string;
+  /** Labelled spans moved to the target */
+  movedCount: number;
+}
+
+/** POST /v1/labels/speak-sets */
+export interface IAddSpeakLabelSetsBody {
+  sets: SpeakLabelSet[];
+}
+
+export interface ISpeakLabelSetsResult {
+  groups: ILabelListItem[];
+  createdCount: number;
+  /** Sets already added, so nothing was created for them */
+  skippedSets: SpeakLabelSet[];
+}
+
+/** POST /v1/media/:mediaId/labels */
+export interface ICreateMediaLabelBody {
+  range: IWordRange;
+  labelIds: string[];
+  expectedTranscriptRevision: number;
+}
+
+/** PATCH /v1/media/:mediaId/labels/:mediaLabelId: change the labels, or review a passage that moved */
+export type IUpdateMediaLabelBody =
+  | { labelIds: string[] }
+  | { action: MediaLabelAction.KEEP }
+  | { action: MediaLabelAction.REPLACE; range: IWordRange; expectedTranscriptRevision: number };
+
+/** DELETE /v1/media/:mediaId/labels/:mediaLabelId */
+export interface IDeleteMediaLabelResult {
+  mediaLabelId: string;
+}
+
+/** POST /v1/media/:mediaId/comments; a reply (parentId) takes no range or mediaLabelId */
+export interface ICreateMediaCommentBody {
+  body: string;
+  range?: IWordRange;
+  /** Required with range */
+  expectedTranscriptRevision?: number;
+  parentId?: string;
+  mediaLabelId?: string;
+}
+
+/** PATCH /v1/media/:mediaId/comments/:commentId: edit the body, or resolve or reopen the thread */
+export type IUpdateMediaCommentBody = { body: string } | { isResolved: boolean };
+
+/** DELETE /v1/media/:mediaId/comments/:commentId */
+export interface IDeleteMediaCommentResult {
+  commentId: string;
+}
+
+/** The team member a dashboard viewer writes as; sent on every dashboard-link write */
+export interface ILinkReviewerBody {
+  reviewerUserId: string;
+}
+
+/** POST /v1/embed/media/:mediaId/labels */
+export type ILinkCreateMediaLabelBody = ICreateMediaLabelBody & ILinkReviewerBody;
+
+/** PATCH /v1/embed/media/:mediaId/labels/:mediaLabelId */
+export interface ILinkUpdateMediaLabelBody extends ILinkReviewerBody {
+  labelIds: string[];
+}
+
+/** POST /v1/embed/media/:mediaId/comments */
+export type ILinkCreateMediaCommentBody = Omit<ICreateMediaCommentBody, 'mediaLabelId'> & ILinkReviewerBody;
+
+/** PATCH /v1/embed/media/:mediaId/comments/:commentId */
+export interface ILinkUpdateMediaCommentBody extends ILinkReviewerBody {
+  body: string;
 }

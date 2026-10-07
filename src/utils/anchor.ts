@@ -21,6 +21,14 @@ export function normalizeWord(word: string): string {
     .replace(EDGE_PUNCTUATION, '');
 }
 
+/** Split text into the words flattenWords() counts, so a quote or search lines up with anchor word positions. */
+export function tokenizeWords(text: string | undefined | null): Array<{ text: string; norm: string }> {
+  return (text ?? '')
+    .split(WHITESPACE)
+    .map((token) => ({ text: token, norm: normalizeWord(token) }))
+    .filter((token) => token.norm !== '');
+}
+
 /**
  * Flatten a transcript into one array of words, in transcript order.
  *
@@ -32,6 +40,8 @@ export function normalizeWord(word: string): string {
  * - Segments without entities split their text on whitespace, with times
  *   spread evenly across the segment.
  * - Tokens that are empty after normalizeWord() (bare punctuation) are skipped.
+ * - confidence comes from the entity when the segment has entities, otherwise
+ *   from the segment; it is left out when not measured.
  * - Segments are identified by array position; segment ids repeat in live and
  *   split transcripts.
  *
@@ -49,11 +59,8 @@ export function flattenWords(transcript: ITranscriptSegment[]): IFlatWord[] {
     const segmentEnd = instanceTime(segment.instances?.[0], 'end') ?? segmentStart;
     let wordIndex = 0;
 
-    const pushTokens = (text: string | undefined, start: number, end: number) => {
-      const tokens = (text ?? '')
-        .split(WHITESPACE)
-        .map((token) => ({ text: token, norm: normalizeWord(token) }))
-        .filter((token) => token.norm !== '');
+    const pushTokens = (text: string | undefined, start: number, end: number, confidence: number | undefined) => {
+      const tokens = tokenizeWords(text);
       tokens.forEach((token, i) => {
         words.push({
           text: token.text,
@@ -63,13 +70,14 @@ export function flattenWords(transcript: ITranscriptSegment[]): IFlatWord[] {
           segmentIndex,
           wordIndex: wordIndex++,
           speakerId,
+          ...(confidence === undefined ? {} : { confidence }),
         });
       });
     };
 
     const entities = segment.entities ?? [];
     if (entities.length === 0) {
-      pushTokens(segment.text, segmentStart, segmentEnd);
+      pushTokens(segment.text, segmentStart, segmentEnd, finiteOrUndefined(segment.confidence));
       return;
     }
 
@@ -78,7 +86,7 @@ export function flattenWords(transcript: ITranscriptSegment[]): IFlatWord[] {
       // Entities without timings continue from the previous word so times never go backwards
       const start = finiteOrUndefined(entity.instances?.startInSec) ?? cursor;
       const end = finiteOrUndefined(entity.instances?.endInSec) ?? start;
-      pushTokens(entity.text, start, end);
+      pushTokens(entity.text, start, end, finiteOrUndefined(entity.confidence));
       cursor = end;
     }
   });
@@ -129,12 +137,34 @@ export function buildAnchorFromWords(
   };
 }
 
+/**
+ * Whether an anchor was taken from this transcript revision, so its word positions still apply.
+ *
+ * @param anchor - The anchor, or anything carrying its transcriptRevision
+ * @param transcriptRevision - Revision of the transcript on screen; undefined while it loads
+ * @param wordCount - flattenWords() length; when given, the anchor's word range must also fit inside it
+ */
+export function isAnchorOnRevision<T extends Pick<IAnchor, 'transcriptRevision'> & Partial<Pick<IAnchor, 'startWord' | 'endWord'>>>(
+  anchor: T | null | undefined,
+  transcriptRevision: number | undefined,
+  wordCount?: number
+): anchor is T {
+  if (!anchor || transcriptRevision === undefined || anchor.transcriptRevision !== transcriptRevision) return false;
+  if (wordCount === undefined) return true;
+  return isRangeInside(wordCount, { start: anchor.startWord as number, end: anchor.endWord as number });
+}
+
+function isRangeInside(wordCount: number, range: IWordRange): boolean {
+  const { start, end } = range;
+  return Number.isInteger(start) && Number.isInteger(end) && start >= 0 && end >= start && end < wordCount;
+}
+
 function assertValidRange(words: IFlatWord[], range: IWordRange): void {
   const { start, end } = range ?? ({} as IWordRange);
   if (!Number.isInteger(start) || !Number.isInteger(end)) {
     throw new RangeError(`Word range must use integer indices, got ${start}..${end}`);
   }
-  if (start < 0 || end < start || end >= words.length) {
+  if (!isRangeInside(words.length, range)) {
     throw new RangeError(`Word range ${start}..${end} is outside 0..${words.length - 1}`);
   }
 }

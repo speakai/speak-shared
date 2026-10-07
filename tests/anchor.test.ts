@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { flattenWords, buildAnchor, buildAnchorFromWords, normalizeWord } from "../src/utils/anchor.js";
+import {
+  flattenWords,
+  buildAnchor,
+  buildAnchorFromWords,
+  normalizeWord,
+  tokenizeWords,
+  isAnchorOnRevision,
+} from "../src/utils/anchor.js";
 import type { ITranscriptSegment, IWordEntity } from "../src/interfaces/transcript.js";
 
 // Synthetic fixtures only
@@ -128,5 +135,46 @@ describe("buildAnchor", () => {
     }
     expect(() => buildAnchor([], { start: 0, end: 0 }, 0)).toThrow(RangeError);
     expect(() => buildAnchor(transcript, { start: 0, end: 1 }, -1)).toThrow(RangeError);
+  });
+});
+
+describe("tokenizeWords and word confidence", () => {
+  it("splits text exactly as flattenWords counts it", () => {
+    expect(tokenizeWords("  “Don’t   stop” — now ")).toEqual([
+      { text: "“Don’t", norm: "don't" },
+      { text: "stop”", norm: "stop" },
+      { text: "now", norm: "now" },
+    ]);
+    expect(tokenizeWords(undefined)).toEqual([]);
+
+    const words = flattenWords(transcript);
+    const fromSegments = transcript.flatMap((s) =>
+      s.entities?.length ? s.entities.flatMap((e) => tokenizeWords(e.text)) : tokenizeWords(s.text)
+    );
+    expect(fromSegments.map((t) => t.norm)).toEqual(words.map((w) => w.norm));
+  });
+
+  it("takes confidence from the entity when there are entities, otherwise from the segment", () => {
+    const words = flattenWords([
+      { ...segment(0, 1, "a b", 0, 1, [{ ...entity("a", 0, 0.5), confidence: 0.4 }, entity("b", 0.5, 1)]) },
+      segment(1, 1, "c d", 1, 2),
+    ]);
+    expect(words.map((w) => w.confidence)).toEqual([0.4, undefined, 0.9, 0.9]);
+    expect("confidence" in words[1]).toBe(false);
+  });
+});
+
+describe("isAnchorOnRevision", () => {
+  const anchor = buildAnchor(transcript, { start: 2, end: 4 }, 3);
+
+  it("matches the revision, and the word range when a word count is given", () => {
+    expect(isAnchorOnRevision(anchor, 3)).toBe(true);
+    expect(isAnchorOnRevision(anchor, 4)).toBe(false);
+    expect(isAnchorOnRevision(anchor, undefined)).toBe(false);
+    expect(isAnchorOnRevision(null, 3)).toBe(false);
+    expect(isAnchorOnRevision({ transcriptRevision: 3 }, 3)).toBe(true);
+    expect(isAnchorOnRevision(anchor, 3, 13)).toBe(true);
+    expect(isAnchorOnRevision(anchor, 3, 4)).toBe(false);
+    expect(isAnchorOnRevision({ transcriptRevision: 3 }, 3, 13)).toBe(false);
   });
 });

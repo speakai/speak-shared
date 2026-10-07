@@ -10,6 +10,7 @@ export * from './voice/index.js';
 // Utils
 export * from './utils/transcript.js';
 export * from './utils/anchor.js';
+export * from './utils/label.js';
 export * from './utils/dashboard-spec.js';
 
 // LLM model registry — one entry per model; every other model table projects from it.

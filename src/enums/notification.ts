@@ -26,6 +26,8 @@ export enum NotificationType {
   FIELDS = 'fields',
   ASSISTANT_TEMPLATE = 'assistant template',
   KNOWLEDGE_BASE = 'knowledge base',
+  LABEL = 'label',
+  COMMENT = 'comment',
 }
 
 export enum NotificationAction {
@@ -42,4 +44,9 @@ export enum NotificationAction {
   FAILED = 'failed',
   CLONED = 'cloned',
   REPLIED = 'replied',
+  ARCHIVED = 'archived',
+  RESTORED = 'restored',
+  MERGED = 'merged',
+  RESOLVED = 'resolved',
+  REOPENED = 'reopened',
 }
