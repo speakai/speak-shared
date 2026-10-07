@@ -102,10 +102,7 @@ export function buildAnchor(
   return buildAnchorFromWords(flattenWords(transcript), range, transcriptRevision);
 }
 
-/**
- * Same as buildAnchor(), for callers that already hold flattenWords() output.
- * Avoids re-flattening when building many anchors on one transcript.
- */
+/** buildAnchor() for callers that already hold flattenWords() output, to avoid re-flattening. */
 export function buildAnchorFromWords(
   words: IFlatWord[],
   range: IWordRange,

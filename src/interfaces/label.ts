@@ -1,7 +1,5 @@
 import { LabelSource, AnchorStatus, DashboardLabelsMode, DashboardCommentsMode } from '../enums/index.js';
 
-// ── Anchor — a span of transcript words, shared by labels and comments ──
-
 export interface IAnchor {
   /** Index of the first word in flattenWords() order at transcriptRevision */
   startWord: number;
@@ -30,7 +28,6 @@ export interface IFlatWord {
   endInSec: number;
   /** Position of the segment in the transcript array (segment ids are not unique) */
   segmentIndex: number;
-  /** Position of the word within its segment */
   wordIndex: number;
   speakerId: string;
 }
@@ -41,12 +38,9 @@ export interface IWordRange {
   end: number;
 }
 
-// ── Label — company-wide list entry (model Label, collection labels) ──
-
 /** A label or group as the API returns it; internal _id and companyId are never sent */
 export interface ILabel {
   labelId: string;
-  /** Creator */
   userId: string;
   /** A group holds labels and cannot be applied */
   isGroup: boolean;
@@ -57,9 +51,7 @@ export interface ILabel {
   /** labelId of the parent group, one level only; null at the top level */
   parentId: string | null;
   source: LabelSource;
-  /** False when archived */
   isActive: boolean;
-  /** labelId this label was merged into */
   mergedInto?: string;
   sortOrder: number;
   createdAt: Date;
@@ -76,12 +68,9 @@ export interface ILabelListItem extends ILabel {
   labels?: ILabelListItem[];
 }
 
-// ── Media Label — labels applied to a transcript span (collection medialabels) ──
-
 /** A labelled span as the API returns it; internal _id and companyId are never sent */
 export interface IMediaLabel {
   mediaLabelId: string;
-  /** Who applied it */
   userId: string;
   /** The author's display name; absent when they are no longer a member of the company */
   authorName?: string;
@@ -97,12 +86,9 @@ export interface IMediaLabel {
   updatedAt: Date;
 }
 
-// ── Media Comment — comment thread on a span or whole file (collection mediacomments) ──
-
 /** A comment as the API returns it; internal _id and companyId are never sent */
 export interface IMediaComment {
   commentId: string;
-  /** Author */
   userId: string;
   /** The author's display name; absent when they are no longer a member of the company */
   authorName?: string;
@@ -118,7 +104,6 @@ export interface IMediaComment {
   /** Last anchor a person confirmed, kept while status is needs_review */
   lastResolved?: IAnchor;
   isResolved: boolean;
-  /** userId of whoever resolved the thread */
   resolvedBy?: string;
   isDeleted: boolean;
   /** Set when a reviewer commented from a dashboard */
@@ -144,9 +129,7 @@ export interface IMediaCommentsResponse {
   threads: IMediaCommentThread[];
 }
 
-// ── Dashboard settings — labels and comments on a shared dashboard (stored under dashboard.settings) ──
-
-/** Labels on a shared dashboard's media pages; off and view-only unless the owner saved otherwise */
+/** Off and view-only unless the owner saved otherwise */
 export interface IDashboardLabelsSettings {
   isEnabled: boolean;
   mode: DashboardLabelsMode;
@@ -154,7 +137,6 @@ export interface IDashboardLabelsSettings {
   labelGroupIds: string[];
 }
 
-/** Comments on a shared dashboard's media pages */
 export interface IDashboardCommentsSettings {
   isEnabled: boolean;
   mode: DashboardCommentsMode;
@@ -168,9 +150,6 @@ export interface IDashboardAnnotationSettings {
   comments: IDashboardCommentsSettings;
 }
 
-// ── Shared links — what a dashboard or embed viewer receives (no signed-in user) ──
-
-/** An applicable label as a shared link shows it */
 export interface ILinkLabel {
   labelId: string;
   name: string;
@@ -190,7 +169,6 @@ export interface IPublicAnnotationSettings {
   labels: {
     isEnabled: boolean;
     mode: DashboardLabelsMode;
-    /** The allowed label groups */
     groups: Array<{ labelId: string; name: string }>;
     /** Active labels of the allowed groups; empty while labels are off */
     labels: ILinkLabel[];
@@ -221,7 +199,7 @@ export type ILinkMediaLabel = Pick<
 /** GET /v1/embed/media/:mediaId/labels */
 export interface ILinkMediaLabelsResponse {
   transcriptRevision: number;
-  /** Name, colour and description of the labels used on this media */
+  /** Only the labels used on this media */
   labels: ILinkLabel[];
   mediaLabels: ILinkMediaLabel[];
 }
