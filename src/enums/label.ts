@@ -11,13 +11,13 @@ export enum AnchorStatus {
 
 export enum DashboardLabelsMode {
   VIEW = 'view',
-  /** Reviewers chosen on the dashboard may also apply and remove labels */
+  /** Link viewers may also apply and remove labels, writing as one of the dashboard's feedback submitters */
   APPLY = 'apply',
 }
 
 export enum DashboardCommentsMode {
   VIEW = 'view',
-  /** Reviewers chosen on the dashboard may also comment and reply */
+  /** Link viewers may also comment and reply, writing as one of the dashboard's feedback submitters */
   REPLY = 'reply',
 }
 

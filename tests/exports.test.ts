@@ -553,13 +553,14 @@ describe("Label constants", () => {
     const { SpeakLabelSet, UserRole } = await import("../src/enums/index.js");
 
     expect([c.LABEL_NAME_MAX, c.LABEL_DESCRIPTION_MAX, c.MAX_LABELS_PER_SPAN, c.MEDIA_COMMENT_BODY_MAX]).toEqual([80, 500, 20, 5000]);
-    expect([c.LABEL_SORT_ORDER_MAX, c.MAX_DASHBOARD_REVIEWERS, c.MAX_DASHBOARD_LABEL_GROUPS]).toEqual([1_000_000, 200, 100]);
+    expect([c.LABEL_SORT_ORDER_MAX, c.MAX_DASHBOARD_LABEL_GROUPS]).toEqual([1_000_000, 100]);
+    // Link reviewers are feedback submitter names now, so nothing validates reviewer user ids any more.
+    expect("MAX_DASHBOARD_REVIEWERS" in c).toBe(false);
+    expect("USER_ID_PATTERN" in c).toBe(false);
     expect(c.PUBLIC_ID_PATTERN.test("Ab_9-x")).toBe(true);
     expect(c.PUBLIC_ID_PATTERN.test("a.b")).toBe(false);
     expect(c.LABEL_COLOR_PATTERN.test("#A1b2C3")).toBe(true);
     expect(c.LABEL_COLOR_PATTERN.test("#abc")).toBe(false);
-    expect(c.USER_ID_PATTERN.test("5f0c2a9b8e4d3c2b1a0f9e8d")).toBe(true);
-    expect(c.USER_ID_PATTERN.test("5f0c2a9b8e4d3c2b1a0f9e8")).toBe(false);
     expect(c.LABEL_COLOR_PATTERN.test(c.DEFAULT_LABEL_COLOR)).toBe(true);
     expect(c.LABEL_COLOR_PRESETS).toHaveLength(12);
     for (const color of c.LABEL_COLOR_PRESETS) expect(c.LABEL_COLOR_PATTERN.test(color)).toBe(true);

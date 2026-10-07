@@ -8,15 +8,12 @@ export const LABEL_DESCRIPTION_MAX = 500;
 export const LABEL_SORT_ORDER_MAX = 1_000_000;
 export const MAX_LABELS_PER_SPAN = 20;
 export const MEDIA_COMMENT_BODY_MAX = 5000;
-export const MAX_DASHBOARD_REVIEWERS = 200;
 export const MAX_DASHBOARD_LABEL_GROUPS = 100;
 
 /** labelId, mediaLabelId and commentId; also keeps the id safe inside a query filter */
 export const PUBLIC_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 /** #rrggbb, any case; stored lowercase */
 export const LABEL_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
-/** A user's 24-character hex ObjectId, such as a dashboard reviewerUserId */
-export const USER_ID_PATTERN = /^[0-9a-f]{24}$/i;
 
 /** Colours the label colour picker offers, in order */
 export const LABEL_COLOR_PRESETS = [
