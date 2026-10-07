@@ -21,12 +21,20 @@ export function normalizeWord(word: string): string {
     .replace(EDGE_PUNCTUATION, '');
 }
 
-/** Split text into the words flattenWords() counts, so a quote or search lines up with anchor word positions. */
-export function tokenizeWords(text: string | undefined | null): Array<{ text: string; norm: string }> {
+/**
+ * Split text into the words flattenWords() counts, so a quote or search lines up with anchor word positions.
+ *
+ * @param options.keepPunctuation - Also return bare punctuation tokens, with an empty norm, for callers that render every token
+ */
+export function tokenizeWords(
+  text: string | undefined | null,
+  options: { keepPunctuation?: boolean } = {}
+): Array<{ text: string; norm: string }> {
   return (text ?? '')
     .split(WHITESPACE)
+    .filter((token) => token !== '')
     .map((token) => ({ text: token, norm: normalizeWord(token) }))
-    .filter((token) => token.norm !== '');
+    .filter((token) => options.keepPunctuation || token.norm !== '');
 }
 
 /**
@@ -152,6 +160,25 @@ export function isAnchorOnRevision<T extends Pick<IAnchor, 'transcriptRevision'>
   if (!anchor || transcriptRevision === undefined || anchor.transcriptRevision !== transcriptRevision) return false;
   if (wordCount === undefined) return true;
   return isRangeInside(wordCount, { start: anchor.startWord as number, end: anchor.endWord as number });
+}
+
+/**
+ * Delays between refetches while labels or comments lag the transcript; re-anchoring runs on the
+ * server after a transcript save, so anchors briefly carry the older revision.
+ */
+export const STALE_ANCHOR_RETRY_DELAYS_MS: readonly number[] = [1000, 2000, 4000, 8000];
+
+/**
+ * Whether any anchor was taken from a transcript revision older than this one, so it is still being re-anchored.
+ *
+ * @param anchors - Anchors of the labels and comments on screen; null for a whole-file comment
+ * @param transcriptRevision - Revision to compare against
+ */
+export function hasAnchorsBehind(
+  anchors: ReadonlyArray<Pick<IAnchor, 'transcriptRevision'> | null | undefined>,
+  transcriptRevision: number
+): boolean {
+  return anchors.some((anchor) => !!anchor && anchor.transcriptRevision < transcriptRevision);
 }
 
 function isRangeInside(wordCount: number, range: IWordRange): boolean {

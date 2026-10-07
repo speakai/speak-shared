@@ -146,6 +146,11 @@ describe("tokenizeWords and word confidence", () => {
       { text: "now", norm: "now" },
     ]);
     expect(tokenizeWords(undefined)).toEqual([]);
+    expect(tokenizeWords("Yes — fine", { keepPunctuation: true })).toEqual([
+      { text: "Yes", norm: "yes" },
+      { text: "—", norm: "" },
+      { text: "fine", norm: "fine" },
+    ]);
 
     const words = flattenWords(transcript);
     const fromSegments = transcript.flatMap((s) =>

@@ -1,4 +1,5 @@
-import { SpeakLabelSet, UserRole } from '../enums/index.js';
+import { CommentListFilter, SpeakLabelSet, UserRole } from '../enums/index.js';
+import type { IMediaComment } from '../interfaces/label.js';
 import type { IUserPermission } from '../interfaces/user.js';
 
 // Limits the server enforces on labels and comments; front ends and the MCP read the same values.
@@ -101,3 +102,24 @@ export const LABEL_PERMISSION_DEFAULTS: Readonly<Record<UserRole, ILabelPermissi
     comments: { create: true, update: true, delete: false },
   },
 };
+
+/** A label name as stored: trimmed, with runs of whitespace collapsed to one space */
+export function normalizeLabelName(name: string): string {
+  return name.trim().replace(/\s+/g, ' ');
+}
+
+/** The key two label names are compared by when checking for a duplicate; the server stores it as nameLower */
+export function labelNameKey(name: string): string {
+  return normalizeLabelName(name).toLowerCase();
+}
+
+/** Whether a comment thread belongs under a comments filter, by its starter; ALL matches every thread */
+export function matchesCommentFilter(
+  thread: Pick<IMediaComment, 'isResolved'> & { anchor?: IMediaComment['anchor'] },
+  filter: CommentListFilter
+): boolean {
+  if (filter === CommentListFilter.OPEN) return !thread.isResolved;
+  if (filter === CommentListFilter.RESOLVED) return thread.isResolved;
+  if (filter === CommentListFilter.FILE) return !thread.anchor;
+  return true;
+}
