@@ -66,6 +66,8 @@ export interface ILabel {
   sortOrder: number;
   /** The creator's display name; absent when they are no longer a member of the company */
   authorName?: string;
+  /** The creator's profile picture as a viewable URL; absent when they have none, are inactive or left the company */
+  authorImage?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -86,6 +88,8 @@ export interface IMediaLabel {
   userId: string;
   /** The author's display name; absent when they are no longer a member of the company */
   authorName?: string;
+  /** The author's profile picture as a viewable URL; absent when they have none, are inactive or left the company */
+  authorImage?: string;
   mediaId: string;
   labelIds: string[];
   anchor: IAnchor;
@@ -104,6 +108,8 @@ export interface IMediaComment {
   userId: string;
   /** The author's display name; absent when they are no longer a member of the company */
   authorName?: string;
+  /** The author's profile picture as a viewable URL; absent when they have none, are inactive or left the company */
+  authorImage?: string;
   mediaId: string;
   /** Null means the comment is on the whole file */
   anchor: IAnchor | null;
