@@ -84,6 +84,17 @@ describe("Package exports — main entry", () => {
     expect(pkg.flattenWords).toBeTypeOf("function");
     expect(pkg.buildAnchor).toBeTypeOf("function");
     expect(pkg.buildAnchorFromWords).toBeTypeOf("function");
+    expect(pkg.tokenizeWords).toBeTypeOf("function");
+    expect(pkg.isAnchorOnRevision).toBeTypeOf("function");
+
+    // Label enums and constants
+    expect(pkg.LabelListStatus).toBeDefined();
+    expect(pkg.MediaLabelAction).toBeDefined();
+    expect(pkg.CommentListFilter).toBeDefined();
+    expect(pkg.SpeakLabelSet).toBeDefined();
+    expect(pkg.SPEAK_LABEL_SETS).toBeDefined();
+    expect(pkg.LABEL_PERMISSION_DEFAULTS).toBeDefined();
+    expect(pkg.LABEL_COLOR_PRESETS).toBeDefined();
   });
 });
 
@@ -526,6 +537,46 @@ describe("Enum values — label", () => {
     expect(DashboardCommentsMode.REPLY).toBe("reply");
     expect(Object.values(DashboardCommentsMode)).toHaveLength(2);
   });
+
+  it("list, review and filter enums match the server's query and body values", async () => {
+    const { LabelListStatus, MediaLabelAction, CommentListFilter, SpeakLabelSet } = await import("../src/enums/label.js");
+    expect(Object.values(LabelListStatus)).toEqual(["active", "archived", "all"]);
+    expect(Object.values(MediaLabelAction)).toEqual(["keep", "replace"]);
+    expect(Object.values(CommentListFilter)).toEqual(["all", "open", "resolved", "file"]);
+    expect(Object.values(SpeakLabelSet)).toEqual(["sales_qa", "research", "meetings", "transcript_feedback"]);
+  });
+});
+
+describe("Label constants", () => {
+  it("keep the limits, patterns and defaults the server enforces", async () => {
+    const c = await import("../src/utils/label.js");
+    const { SpeakLabelSet, UserRole } = await import("../src/enums/index.js");
+
+    expect([c.LABEL_NAME_MAX, c.LABEL_DESCRIPTION_MAX, c.MAX_LABELS_PER_SPAN, c.MEDIA_COMMENT_BODY_MAX]).toEqual([80, 500, 20, 5000]);
+    expect([c.LABEL_SORT_ORDER_MAX, c.MAX_DASHBOARD_REVIEWERS, c.MAX_DASHBOARD_LABEL_GROUPS]).toEqual([1_000_000, 200, 100]);
+    expect(c.PUBLIC_ID_PATTERN.test("Ab_9-x")).toBe(true);
+    expect(c.PUBLIC_ID_PATTERN.test("a.b")).toBe(false);
+    expect(c.LABEL_COLOR_PATTERN.test("#A1b2C3")).toBe(true);
+    expect(c.LABEL_COLOR_PATTERN.test("#abc")).toBe(false);
+    expect(c.USER_ID_PATTERN.test("5f0c2a9b8e4d3c2b1a0f9e8d")).toBe(true);
+    expect(c.USER_ID_PATTERN.test("5f0c2a9b8e4d3c2b1a0f9e8")).toBe(false);
+    expect(c.LABEL_COLOR_PATTERN.test(c.DEFAULT_LABEL_COLOR)).toBe(true);
+    expect(c.LABEL_COLOR_PRESETS).toHaveLength(12);
+    for (const color of c.LABEL_COLOR_PRESETS) expect(c.LABEL_COLOR_PATTERN.test(color)).toBe(true);
+
+    expect(Object.keys(c.SPEAK_LABEL_SETS).sort()).toEqual(Object.values(SpeakLabelSet).sort());
+    for (const set of Object.values(c.SPEAK_LABEL_SETS)) {
+      for (const label of set.labels) expect(c.LABEL_COLOR_PATTERN.test(label.color)).toBe(true);
+    }
+
+    expect(Object.keys(c.LABEL_PERMISSION_DEFAULTS).sort()).toEqual(Object.values(UserRole).sort());
+    expect(c.LABEL_PERMISSION_DEFAULTS[UserRole.OWNER].labels).toEqual({ create: true, update: true, delete: true, assign: true });
+    expect(c.LABEL_PERMISSION_DEFAULTS[UserRole.MEMBER]).toEqual({
+      labels: { create: false, update: false, delete: false, assign: true },
+      comments: { create: true, update: true, delete: false },
+    });
+    expect(Object.isFrozen(c.LABEL_PERMISSION_DEFAULTS[UserRole.ADMIN].labels)).toBe(true);
+  });
 });
 
 describe("Enum values — knowledge base", () => {
@@ -686,7 +737,10 @@ describe("Enum values — notification", () => {
     expect(NotificationType.TEAM).toBe("team");
     expect(NotificationType.MEETING_ASSISTANT).toBe("meeting assistant");
     expect(NotificationType.KNOWLEDGE_BASE).toBe("knowledge base");
-    expect(Object.values(NotificationType)).toHaveLength(27);
+    expect(NotificationType.LABEL).toBe("label");
+    expect(NotificationType.COMMENT).toBe("comment");
+    expect(NotificationType.DASHBOARD).toBe("dashboard");
+    expect(Object.values(NotificationType)).toHaveLength(30);
   });
 
   it("NotificationAction has expected values", async () => {
@@ -696,7 +750,12 @@ describe("Enum values — notification", () => {
     expect(NotificationAction.DELETED).toBe("deleted");
     expect(NotificationAction.FAILED).toBe("failed");
     expect(NotificationAction.REPLIED).toBe("replied");
-    expect(Object.values(NotificationAction)).toHaveLength(13);
+    expect(NotificationAction.ARCHIVED).toBe("archived");
+    expect(NotificationAction.RESTORED).toBe("restored");
+    expect(NotificationAction.MERGED).toBe("merged");
+    expect(NotificationAction.RESOLVED).toBe("resolved");
+    expect(NotificationAction.REOPENED).toBe("reopened");
+    expect(Object.values(NotificationAction)).toHaveLength(18);
   });
 });
 

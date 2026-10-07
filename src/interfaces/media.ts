@@ -41,6 +41,11 @@ export interface ISentenceSentiment {
   }[];
 }
 
+/** Revision of the transcript a payload was read at; it increases on every transcript write and is 0 for media saved before revisions existed */
+export interface IMediaTranscriptMeta {
+  transcriptRevision: number;
+}
+
 export interface IMedia {
   _id: string;
   mediaId: string;

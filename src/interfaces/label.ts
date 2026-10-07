@@ -1,4 +1,12 @@
-import { LabelSource, AnchorStatus, DashboardLabelsMode, DashboardCommentsMode } from '../enums/index.js';
+import {
+  LabelSource,
+  AnchorStatus,
+  DashboardLabelsMode,
+  DashboardCommentsMode,
+  MediaLabelAction,
+  SpeakLabelSet,
+} from '../enums/index.js';
+import type { IMediaTranscriptMeta } from './media.js';
 
 export interface IAnchor {
   /** Index of the first word in flattenWords() order at transcriptRevision */
@@ -30,6 +38,8 @@ export interface IFlatWord {
   segmentIndex: number;
   wordIndex: number;
   speakerId: string;
+  /** The entity's confidence, or the segment's when it has no entities; absent when not measured */
+  confidence?: number;
 }
 
 /** Inclusive range of flattenWords() indices */
@@ -56,6 +66,8 @@ export interface ILabel {
   sortOrder: number;
   /** The creator's display name; absent when they are no longer a member of the company */
   authorName?: string;
+  /** The creator's profile picture as a viewable URL; absent when they have none, are inactive or left the company */
+  authorImage?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -76,6 +88,8 @@ export interface IMediaLabel {
   userId: string;
   /** The author's display name; absent when they are no longer a member of the company */
   authorName?: string;
+  /** The author's profile picture as a viewable URL; absent when they have none, are inactive or left the company */
+  authorImage?: string;
   mediaId: string;
   labelIds: string[];
   anchor: IAnchor;
@@ -94,6 +108,8 @@ export interface IMediaComment {
   userId: string;
   /** The author's display name; absent when they are no longer a member of the company */
   authorName?: string;
+  /** The author's profile picture as a viewable URL; absent when they have none, are inactive or left the company */
+  authorImage?: string;
   mediaId: string;
   /** Null means the comment is on the whole file */
   anchor: IAnchor | null;
@@ -120,14 +136,12 @@ export interface IMediaCommentThread extends IMediaComment {
 }
 
 /** GET /v1/media/:mediaId/labels */
-export interface IMediaLabelsResponse {
-  transcriptRevision: number;
+export interface IMediaLabelsResponse extends IMediaTranscriptMeta {
   mediaLabels: IMediaLabel[];
 }
 
 /** GET /v1/media/:mediaId/comments */
-export interface IMediaCommentsResponse {
-  transcriptRevision: number;
+export interface IMediaCommentsResponse extends IMediaTranscriptMeta {
   threads: IMediaCommentThread[];
 }
 
@@ -199,8 +213,7 @@ export type ILinkMediaLabel = Pick<
 };
 
 /** GET /v1/embed/media/:mediaId/labels */
-export interface ILinkMediaLabelsResponse {
-  transcriptRevision: number;
+export interface ILinkMediaLabelsResponse extends IMediaTranscriptMeta {
   /** Only the labels used on this media */
   labels: ILinkLabel[];
   mediaLabels: ILinkMediaLabel[];
@@ -233,7 +246,122 @@ export interface ILinkCommentThread extends ILinkComment {
 }
 
 /** GET /v1/embed/media/:mediaId/comments */
-export interface ILinkMediaCommentsResponse {
-  transcriptRevision: number;
+export interface ILinkMediaCommentsResponse extends IMediaTranscriptMeta {
   threads: ILinkCommentThread[];
+}
+
+// ── Request bodies and responses of the labels and comments API ──
+
+/** POST /v1/labels */
+export interface ICreateLabelBody {
+  name: string;
+  /** A group holds labels; it takes no color or parentId */
+  isGroup?: boolean;
+  description?: string;
+  color?: string;
+  parentId?: string | null;
+  sortOrder?: number;
+}
+
+/** PUT /v1/labels/:labelId; at least one key */
+export type IUpdateLabelBody = Partial<Omit<ICreateLabelBody, 'isGroup'>>;
+
+/** GET /v1/labels */
+export interface ILabelListResponse {
+  labels: ILabelListItem[];
+}
+
+/** POST /v1/labels/:labelId/archive; a group archives its labels too */
+export interface ILabelArchiveResult {
+  labelId: string;
+  archivedCount: number;
+}
+
+/** POST /v1/labels/:labelId/restore */
+export interface ILabelRestoreResult {
+  labelId: string;
+  restoredCount: number;
+  /** Group labels left archived because an active label already uses the name */
+  skippedCount: number;
+}
+
+/** POST /v1/labels/:labelId/merge */
+export interface IMergeLabelBody {
+  targetLabelId: string;
+}
+
+export interface ILabelMergeResult {
+  labelId: string;
+  mergedInto: string;
+  /** Labelled spans moved to the target */
+  movedCount: number;
+}
+
+/** POST /v1/labels/speak-sets */
+export interface IAddSpeakLabelSetsBody {
+  sets: SpeakLabelSet[];
+}
+
+export interface ISpeakLabelSetsResult {
+  groups: ILabelListItem[];
+  createdCount: number;
+  /** Sets already added, so nothing was created for them */
+  skippedSets: SpeakLabelSet[];
+}
+
+/** POST /v1/media/:mediaId/labels */
+export interface ICreateMediaLabelBody {
+  range: IWordRange;
+  labelIds: string[];
+  expectedTranscriptRevision: number;
+}
+
+/** PATCH /v1/media/:mediaId/labels/:mediaLabelId: change the labels, or review a passage that moved */
+export type IUpdateMediaLabelBody =
+  | { labelIds: string[] }
+  | { action: MediaLabelAction.KEEP }
+  | { action: MediaLabelAction.REPLACE; range: IWordRange; expectedTranscriptRevision: number };
+
+/** DELETE /v1/media/:mediaId/labels/:mediaLabelId */
+export interface IDeleteMediaLabelResult {
+  mediaLabelId: string;
+}
+
+/** POST /v1/media/:mediaId/comments; a reply (parentId) takes no range or mediaLabelId */
+export interface ICreateMediaCommentBody {
+  body: string;
+  range?: IWordRange;
+  /** Required with range */
+  expectedTranscriptRevision?: number;
+  parentId?: string;
+  mediaLabelId?: string;
+}
+
+/** PATCH /v1/media/:mediaId/comments/:commentId: edit the body, or resolve or reopen the thread */
+export type IUpdateMediaCommentBody = { body: string } | { isResolved: boolean };
+
+/** DELETE /v1/media/:mediaId/comments/:commentId */
+export interface IDeleteMediaCommentResult {
+  commentId: string;
+}
+
+/** The team member a dashboard viewer writes as; sent on every dashboard-link write */
+export interface ILinkReviewerBody {
+  reviewerUserId: string;
+}
+
+/** POST /v1/embed/media/:mediaId/labels */
+export type ILinkCreateMediaLabelBody = ICreateMediaLabelBody & ILinkReviewerBody;
+
+/** PATCH /v1/embed/media/:mediaId/labels/:mediaLabelId */
+export interface ILinkUpdateMediaLabelBody extends ILinkReviewerBody {
+  labelIds: string[];
+}
+
+/** POST /v1/embed/media/:mediaId/comments */
+export type ILinkCreateMediaCommentBody = Omit<ICreateMediaCommentBody, 'mediaLabelId'> & ILinkReviewerBody;
+
+/** PATCH /v1/embed/media/:mediaId/comments/:commentId */
+export interface ILinkUpdateMediaCommentBody extends ILinkReviewerBody {
+  body: string;
 }
