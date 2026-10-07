@@ -7,7 +7,7 @@
  * is what has to be asserted.
  */
 import { describe, it, expect } from 'vitest';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const DIST = '../dist/schemas/index.js';
 
@@ -40,5 +40,18 @@ describe('built schemas subpath', () => {
     expect(fieldRef({ fieldId: '3fdf29434505' })).toStrictEqual({ fieldId: '3fdf29434505' });
     expect(fieldRef({ reserved: 'createdAt' })).toStrictEqual({ reserved: 'createdAt' });
     expect(() => fieldRef({ fieldId: 'nope' })).toThrow();
+  });
+});
+
+describe('built type declarations', () => {
+  // Interfaces leave no runtime trace, so the declaration file is the only place an export can be checked.
+  it('publishes IMediaTranscriptMeta from the root entry for transcript payload consumers', () => {
+    const mediaDts = readFileSync(new URL('../dist/interfaces/media.d.ts', import.meta.url), 'utf8');
+    const labelDts = readFileSync(new URL('../dist/interfaces/label.d.ts', import.meta.url), 'utf8');
+    const rootDts = readFileSync(new URL('../dist/index.d.ts', import.meta.url), 'utf8');
+
+    expect(mediaDts).toMatch(/export interface IMediaTranscriptMeta \{\s*transcriptRevision: number;/);
+    expect(labelDts).toMatch(/interface IMediaLabelsResponse extends IMediaTranscriptMeta/);
+    expect(rootDts).toMatch(/from '\.\/interfaces\/index\.js'|from "\.\/interfaces\/index\.js"/);
   });
 });

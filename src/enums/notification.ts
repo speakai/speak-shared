@@ -28,6 +28,8 @@ export enum NotificationType {
   KNOWLEDGE_BASE = 'knowledge base',
   LABEL = 'label',
   COMMENT = 'comment',
+  /** A dashboard's shared-link settings changed; mediaId is the dashboardId */
+  DASHBOARD = 'dashboard',
 }
 
 export enum NotificationAction {

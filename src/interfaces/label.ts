@@ -6,6 +6,7 @@ import {
   MediaLabelAction,
   SpeakLabelSet,
 } from '../enums/index.js';
+import type { IMediaTranscriptMeta } from './media.js';
 
 export interface IAnchor {
   /** Index of the first word in flattenWords() order at transcriptRevision */
@@ -129,14 +130,12 @@ export interface IMediaCommentThread extends IMediaComment {
 }
 
 /** GET /v1/media/:mediaId/labels */
-export interface IMediaLabelsResponse {
-  transcriptRevision: number;
+export interface IMediaLabelsResponse extends IMediaTranscriptMeta {
   mediaLabels: IMediaLabel[];
 }
 
 /** GET /v1/media/:mediaId/comments */
-export interface IMediaCommentsResponse {
-  transcriptRevision: number;
+export interface IMediaCommentsResponse extends IMediaTranscriptMeta {
   threads: IMediaCommentThread[];
 }
 
@@ -208,8 +207,7 @@ export type ILinkMediaLabel = Pick<
 };
 
 /** GET /v1/embed/media/:mediaId/labels */
-export interface ILinkMediaLabelsResponse {
-  transcriptRevision: number;
+export interface ILinkMediaLabelsResponse extends IMediaTranscriptMeta {
   /** Only the labels used on this media */
   labels: ILinkLabel[];
   mediaLabels: ILinkMediaLabel[];
@@ -242,8 +240,7 @@ export interface ILinkCommentThread extends ILinkComment {
 }
 
 /** GET /v1/embed/media/:mediaId/comments */
-export interface ILinkMediaCommentsResponse {
-  transcriptRevision: number;
+export interface ILinkMediaCommentsResponse extends IMediaTranscriptMeta {
   threads: ILinkCommentThread[];
 }
 
