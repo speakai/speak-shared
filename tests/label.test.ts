@@ -1,6 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { CommentListFilter } from "../src/enums/index.js";
-import { labelNameKey, matchesCommentFilter, normalizeLabelName } from "../src/utils/label.js";
+import {
+  DEFAULT_LABEL_COLOR,
+  LABEL_COLOR_PRESETS,
+  SPEAK_LABEL_SETS,
+  labelNameKey,
+  matchesCommentFilter,
+  normalizeLabelName,
+} from "../src/utils/label.js";
 import { hasAnchorsBehind } from "../src/utils/anchor.js";
 
 describe("label name key", () => {
@@ -28,5 +35,17 @@ describe("hasAnchorsBehind", () => {
     expect(hasAnchorsBehind([{ transcriptRevision: 3 }, null], 3)).toBe(false);
     expect(hasAnchorsBehind([{ transcriptRevision: 2 }, null], 3)).toBe(true);
     expect(hasAnchorsBehind([], 3)).toBe(false);
+  });
+});
+
+describe("label palette", () => {
+  it("gives new labels and every Speak label set a colour the picker offers, distinct within each set", () => {
+    const presets: readonly string[] = LABEL_COLOR_PRESETS;
+    expect(DEFAULT_LABEL_COLOR).toBe(LABEL_COLOR_PRESETS[0]);
+    for (const set of Object.values(SPEAK_LABEL_SETS)) {
+      const colors = set.labels.map((label) => label.color);
+      for (const color of colors) expect(presets).toContain(color);
+      expect(new Set(colors).size).toBe(colors.length);
+    }
   });
 });

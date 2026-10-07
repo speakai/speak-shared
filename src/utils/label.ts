@@ -18,9 +18,6 @@ export const LABEL_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 /** A user's 24-character hex ObjectId, such as a dashboard reviewerUserId */
 export const USER_ID_PATTERN = /^[0-9a-f]{24}$/i;
 
-/** Colour a label gets when it is created without one */
-export const DEFAULT_LABEL_COLOR = '#6366f1';
-
 /** Colours the label colour picker offers, in order */
 export const LABEL_COLOR_PRESETS = [
   '#0d9488',
@@ -37,50 +34,53 @@ export const LABEL_COLOR_PRESETS = [
   '#92400e',
 ] as const;
 
+/** Colour a label gets when it is created without one */
+export const DEFAULT_LABEL_COLOR = LABEL_COLOR_PRESETS[0];
+
 export interface ISpeakLabelSetDefinition {
   /** Name of the label group the set creates */
   name: string;
   labels: ReadonlyArray<{ name: string; color: string }>;
 }
 
-/** Ready-made label groups POST /v1/labels/speak-sets creates */
+/** Ready-made label groups POST /v1/labels/speak-sets creates; colours are presets so the picker shows them as selected */
 export const SPEAK_LABEL_SETS: Readonly<Record<SpeakLabelSet, ISpeakLabelSetDefinition>> = {
   [SpeakLabelSet.SALES_QA]: {
     name: 'Sales QA',
     labels: [
-      { name: 'Unprofessional', color: '#f97316' },
-      { name: 'Slang', color: '#eab308' },
-      { name: 'Objection', color: '#8b5cf6' },
-      { name: 'Great moment', color: '#22c55e' },
-      { name: 'Compliance risk', color: '#ef4444' },
+      { name: 'Unprofessional', color: '#ea580c' },
+      { name: 'Slang', color: '#d97706' },
+      { name: 'Objection', color: '#7c3aed' },
+      { name: 'Great moment', color: '#65a30d' },
+      { name: 'Compliance risk', color: '#e11d48' },
     ],
   },
   [SpeakLabelSet.RESEARCH]: {
     name: 'Research',
     labels: [
-      { name: 'Pain point', color: '#ef4444' },
-      { name: 'Motivation', color: '#22c55e' },
-      { name: 'Quote for report', color: '#6366f1' },
-      { name: 'Surprise', color: '#ec4899' },
-      { name: 'Follow-up', color: '#0ea5e9' },
+      { name: 'Pain point', color: '#e11d48' },
+      { name: 'Motivation', color: '#65a30d' },
+      { name: 'Quote for report', color: '#4f46e5' },
+      { name: 'Surprise', color: '#db2777' },
+      { name: 'Follow-up', color: '#0284c7' },
     ],
   },
   [SpeakLabelSet.MEETINGS]: {
     name: 'Meetings',
     labels: [
-      { name: 'Decision', color: '#22c55e' },
-      { name: 'Action item', color: '#6366f1' },
-      { name: 'Risk', color: '#ef4444' },
-      { name: 'Open question', color: '#eab308' },
+      { name: 'Decision', color: '#65a30d' },
+      { name: 'Action item', color: '#4f46e5' },
+      { name: 'Risk', color: '#e11d48' },
+      { name: 'Open question', color: '#d97706' },
     ],
   },
   [SpeakLabelSet.TRANSCRIPT_FEEDBACK]: {
     name: 'Transcript feedback',
     labels: [
-      { name: 'Wrong split', color: '#f97316' },
-      { name: 'Misheard word', color: '#ef4444' },
-      { name: 'Wrong speaker', color: '#8b5cf6' },
-      { name: 'Bad translation', color: '#0ea5e9' },
+      { name: 'Wrong split', color: '#ea580c' },
+      { name: 'Misheard word', color: '#e11d48' },
+      { name: 'Wrong speaker', color: '#7c3aed' },
+      { name: 'Bad translation', color: '#0284c7' },
     ],
   },
 };
