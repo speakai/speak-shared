@@ -110,6 +110,15 @@ export function labelNameKey(name: string): string {
   return normalizeLabelName(name).toLowerCase();
 }
 
+/**
+ * The key two dashboard reviewer names are compared by: compatibility forms folded (NFKC), so a
+ * look-alike width or space cannot pass for another name, then trimmed, spaces collapsed, lowercased.
+ * The server stores it as reviewerKey and matches own entries on it.
+ */
+export function reviewerNameKey(name: string): string {
+  return labelNameKey(name.normalize("NFKC"));
+}
+
 /** Whether a comment thread belongs under a comments filter, by its starter; ALL matches every thread */
 export function matchesCommentFilter(
   thread: Pick<IMediaComment, 'isResolved'> & { anchor?: IMediaComment['anchor'] },
