@@ -166,8 +166,6 @@ export interface IDashboardCommentsSettings {
 
 /** The labels and comments keys of dashboard.settings, saved with POST/PUT /v1/dashboards */
 export interface IDashboardAnnotationSettings {
-  /** Optional subset of the feedback submitters who may write labels and comments from the link; empty or absent means every submitter */
-  reviewerNames?: string[];
   labels: IDashboardLabelsSettings;
   comments: IDashboardCommentsSettings;
 }
@@ -190,9 +188,9 @@ export interface IPublicAnnotationSettings {
     labels: ILinkLabel[];
   };
   comments: { isEnabled: boolean; mode: DashboardCommentsMode };
-  /** Names a viewer may write as: reviewerNames, else the dashboard's feedback submitters; empty unless a write mode is on */
+  /** Names a viewer may write as: the dashboard's feedback submitters; empty unless a write mode is on */
   reviewers: string[];
-  /** The viewer may type any name, as with feedback (allowOtherSubmitter or an empty list); never with reviewerNames set */
+  /** The viewer may type any name: exactly when feedback allows other submitters and lists at least one name */
   allowOtherReviewer: boolean;
 }
 
