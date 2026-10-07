@@ -41,4 +41,5 @@ export enum NotificationAction {
   ERROR = 'error',
   FAILED = 'failed',
   CLONED = 'cloned',
+  REPLIED = 'replied',
 }

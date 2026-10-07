@@ -695,7 +695,8 @@ describe("Enum values — notification", () => {
     expect(NotificationAction.CREATED).toBe("created");
     expect(NotificationAction.DELETED).toBe("deleted");
     expect(NotificationAction.FAILED).toBe("failed");
-    expect(Object.values(NotificationAction)).toHaveLength(12);
+    expect(NotificationAction.REPLIED).toBe("replied");
+    expect(Object.values(NotificationAction)).toHaveLength(13);
   });
 });
 
