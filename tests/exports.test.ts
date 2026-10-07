@@ -74,6 +74,16 @@ describe("Package exports — main entry", () => {
     expect(pkg.CalendarType).toBeDefined();
     expect(pkg.TeamInviteStatus).toBeDefined();
     expect(pkg.KnowledgeBaseOwnerType).toBeDefined();
+    expect(pkg.LabelSource).toBeDefined();
+    expect(pkg.AnchorStatus).toBeDefined();
+    expect(pkg.DashboardLabelsMode).toBeDefined();
+    expect(pkg.DashboardCommentsMode).toBeDefined();
+
+    // Anchor utils
+    expect(pkg.normalizeWord).toBeTypeOf("function");
+    expect(pkg.flattenWords).toBeTypeOf("function");
+    expect(pkg.buildAnchor).toBeTypeOf("function");
+    expect(pkg.buildAnchorFromWords).toBeTypeOf("function");
   });
 });
 
@@ -494,6 +504,30 @@ describe("Enum values — clip", () => {
   });
 });
 
+describe("Enum values — label", () => {
+  it("LabelSource and AnchorStatus have expected values", async () => {
+    const { LabelSource, AnchorStatus } = await import("../src/enums/label.js");
+
+    expect(LabelSource.USER).toBe("user");
+    expect(LabelSource.SPEAK).toBe("speak");
+    expect(Object.values(LabelSource)).toHaveLength(2);
+    expect(AnchorStatus.ACTIVE).toBe("active");
+    expect(AnchorStatus.SHIFTED).toBe("shifted");
+    expect(AnchorStatus.NEEDS_REVIEW).toBe("needs_review");
+    expect(Object.values(AnchorStatus)).toHaveLength(3);
+  });
+
+  it("dashboard labels and comments modes match the server's stored values", async () => {
+    const { DashboardLabelsMode, DashboardCommentsMode } = await import("../src/enums/label.js");
+    expect(DashboardLabelsMode.VIEW).toBe("view");
+    expect(DashboardLabelsMode.APPLY).toBe("apply");
+    expect(Object.values(DashboardLabelsMode)).toHaveLength(2);
+    expect(DashboardCommentsMode.VIEW).toBe("view");
+    expect(DashboardCommentsMode.REPLY).toBe("reply");
+    expect(Object.values(DashboardCommentsMode)).toHaveLength(2);
+  });
+});
+
 describe("Enum values — knowledge base", () => {
   it("KnowledgeBaseOwnerType has expected owner surfaces", async () => {
     const { KnowledgeBaseOwnerType } = await import("../src/enums/knowledgeBase.js");
@@ -808,7 +842,9 @@ describe("Enum values — user", () => {
     expect(UserPermissionType.FOLDER).toBe("folder");
     expect(UserPermissionType.MEDIA).toBe("media");
     expect(UserPermissionType.MEETING_ASSISTANT).toBe("meetingAssistant");
-    expect(Object.values(UserPermissionType)).toHaveLength(8);
+    expect(UserPermissionType.LABELS).toBe("labels");
+    expect(UserPermissionType.COMMENTS).toBe("comments");
+    expect(Object.values(UserPermissionType)).toHaveLength(10);
   });
 
   it("UserActionType has expected values", async () => {

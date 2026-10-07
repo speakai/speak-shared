@@ -18,6 +18,8 @@ export enum UserPermissionType {
   DEVELOPER = 'developer',
   PROFILE_SETTINGS = 'profileSettings',
   MEETING_ASSISTANT = 'meetingAssistant',
+  LABELS = 'labels',
+  COMMENTS = 'comments',
 }
 
 export enum UserActionType {

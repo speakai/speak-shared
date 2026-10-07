@@ -69,6 +69,18 @@ export interface IUserPermission {
     excludeMeetings: boolean;
     globalSettings: boolean;
   };
+  // Optional until every user and invite is backfilled
+  labels?: {
+    create: boolean;
+    update: boolean;
+    delete: boolean;
+    assign: boolean;
+  };
+  comments?: {
+    create: boolean;
+    update: boolean;
+    delete: boolean;
+  };
 }
 
 export interface IUserProfileUpdate {
