@@ -7,6 +7,8 @@ import {
 import type {
   AndroidPushData,
   AndroidPushFields,
+  EntityPushFields,
+  EntityPushNotificationPayload,
   PushNotificationPayload,
   PushNotificationRegistryEntry,
   PushPayloadFields,
@@ -52,6 +54,25 @@ export const buildPushPayload = (
     category: config.categoryId,
     actions: serializePushNotificationActions(config.actions),
   };
+};
+
+export const buildEntityPushPayload = (
+  type: PushNotificationType,
+  fields: EntityPushFields,
+): EntityPushNotificationPayload => {
+  const config = requirePushNotificationConfig(type);
+  const missing = config.requiredDataKeys.filter((key) => !fields[key]);
+  if (missing.length > 0) {
+    throw new Error(`Push notification ${type} is missing data keys: ${missing.join(', ')}`);
+  }
+  const data = Object.fromEntries(config.requiredDataKeys.map((key) => [key, fields[key]]));
+  return {
+    ...data,
+    type,
+    tapTarget: config.tapTarget,
+    category: config.categoryId,
+    actions: serializePushNotificationActions(config.actions),
+  } as EntityPushNotificationPayload;
 };
 
 export const buildAndroidPushData = (

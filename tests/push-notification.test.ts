@@ -9,6 +9,13 @@ import {
   buildAndroidPushData,
   WebPushDataKey,
   buildPushPayload,
+  buildEntityPushPayload,
+  DevicePlatform,
+  NOTIFICATION_EVENTS,
+  NOTIFICATION_SETTINGS_GROUP_ORDER,
+  NotificationChannel,
+  NotificationEventKey,
+  getNotificationChannelForPlatform,
   buildWebPushData,
   isPushForUser,
   getMeetingPlatformLabel,
@@ -27,6 +34,8 @@ describe("push notification registry", () => {
       categoryId: "MEETING_REMINDER",
       androidChannelId: "meeting-reminders",
       actions: ["join", "record"],
+      requiredDataKeys: ["eventId", "uid", "title", "platform", "meetingURL", "startTime"],
+      tapTarget: "meeting",
     });
     expect(getPushNotificationConfig("constructor")).toBeUndefined();
     expect(Object.keys(PUSH_NOTIFICATION_REGISTRY)).toEqual(Object.values(PushNotificationType));
@@ -95,5 +104,52 @@ describe("isPushForUser", () => {
     expect(isPushForUser({ uid: "" }, "")).toBe(false);
     expect(isPushForUser({ uid: 1 }, "1")).toBe(false);
     expect(isPushForUser(undefined, "u1")).toBe(false);
+  });
+});
+
+describe("notification event catalog", () => {
+  it("keeps the preference paths, channels and push types in step with the registry", () => {
+    expect(NOTIFICATION_SETTINGS_GROUP_ORDER).toEqual([
+      "meetings", "media", "recorder", "transcription", "usage", "magicPrompt",
+    ]);
+    expect(Object.values(NOTIFICATION_EVENTS).map((e) => [e.preferencePath, e.channels.join("+")])).toEqual([
+      ["meetings.reminders", "web+mobile"],
+      ["media.failed", "email+web+mobile"],
+      ["media.analyzed", "email+web+mobile"],
+      ["recorder.submission", "email+web+mobile"],
+      ["recorder.disabled", "email+web+mobile"],
+      ["transcription.approved", "email+web+mobile"],
+      ["transcription.completed", "email+web+mobile"],
+      ["usage.balance", "email"],
+      ["magicPrompt.completed", "email"],
+    ]);
+    for (const event of Object.values(NOTIFICATION_EVENTS)) {
+      expect(event.pushType === undefined).toBe(!event.channels.includes(NotificationChannel.MOBILE));
+      expect(event.preferencePath.startsWith(`${event.group}.`)).toBe(true);
+      if (event.pushType) {
+        expect(event.key).toBe(event.pushType);
+        expect(getPushNotificationConfig(event.pushType)).toBeDefined();
+      }
+    }
+    expect(NOTIFICATION_EVENTS[NotificationEventKey.USAGE_BALANCE].pushType).toBeUndefined();
+    expect(getNotificationChannelForPlatform(DevicePlatform.IOS)).toBe("mobile");
+    expect(getNotificationChannelForPlatform(DevicePlatform.ANDROID)).toBe("mobile");
+    expect(getNotificationChannelForPlatform(DevicePlatform.WEB)).toBe("web");
+    expect(getNotificationChannelForPlatform(DevicePlatform.DESKTOP)).toBeUndefined();
+  });
+});
+
+describe("entity push payloads", () => {
+  it("require the recipient uid and entity id and carry the tap target", () => {
+    expect(buildEntityPushPayload(PushNotificationType.MEDIA_FAILED, { uid: "u1", mediaId: "m1" })).toEqual({
+      type: "media-failed", uid: "u1", mediaId: "m1", tapTarget: "media", category: "MEDIA_FAILED", actions: "",
+    });
+    expect(buildEntityPushPayload(PushNotificationType.RECORDER_DISABLED, { uid: "u1", recorderId: "r1" })).toMatchObject({
+      recorderId: "r1", tapTarget: "recorder",
+    });
+    expect(() => buildEntityPushPayload(PushNotificationType.MEDIA_ANALYZED, { mediaId: "m1" })).toThrow("uid");
+    expect(() => buildEntityPushPayload(PushNotificationType.RECORDER_SUBMISSION, { uid: "u1" })).toThrow("recorderId");
+    expect(buildAndroidPushData(PushNotificationType.TRANSCRIPTION_COMPLETED, { title: "t", message: "m", tag: "x" }).channelId)
+      .toBe("transcription-updates");
   });
 });

@@ -14,6 +14,7 @@ export * from './utils/label.js';
 export * from './utils/dashboard-spec.js';
 export * from './utils/meetingLink.js';
 export * from './utils/pushNotification.js';
+export * from './utils/notificationEvent.js';
 
 // LLM model registry — one entry per model; every other model table projects from it.
 export * from './llm/registry.js';
