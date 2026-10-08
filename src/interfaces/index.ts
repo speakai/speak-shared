@@ -19,3 +19,4 @@ export * from './category.js';
 export * from './clip.js';
 export * from './label.js';
 export * from './dashboard.js';
+export * from './pushNotification.js';
