@@ -1,9 +1,22 @@
+export const MEETING_LINK_MAX_LENGTH = 2048;
+
+export const MEETING_LINK_HOST_DOMAINS = ['zoom.us', 'zoomgov.com', 'webex.com', 'teams.microsoft.us'] as const;
+
+export const MEETING_LINK_EXACT_HOSTS = ['meet.google.com', 'teams.microsoft.com', 'teams.live.com'] as const;
+
 export enum MeetingPlatform {
   GOOGLE_MEET = 'googleMeet',
   ZOOM = 'zoom',
   MICROSOFT_TEAMS = 'microsoftTeams',
   WEBEX = 'webex',
 }
+
+export const MEETING_PLATFORM_LABELS: Readonly<Record<MeetingPlatform, string>> = {
+  [MeetingPlatform.ZOOM]: 'Zoom',
+  [MeetingPlatform.GOOGLE_MEET]: 'Google Meet',
+  [MeetingPlatform.MICROSOFT_TEAMS]: 'Microsoft Teams',
+  [MeetingPlatform.WEBEX]: 'Webex',
+};
 
 export enum MeetingStatus {
   WILL_JOIN = 'willJoin',

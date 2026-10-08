@@ -1,5 +1,7 @@
 import type { PushNotificationRegistryEntry } from '../interfaces/pushNotification.js';
 
+export const MEETING_REMINDER_LEAD_MINUTES = 2;
+
 export enum PushNotificationAction {
   JOIN = 'join',
   RECORD = 'record',
@@ -19,6 +21,12 @@ export enum AndroidPushDataKey {
 }
 
 export const PUSH_NOTIFICATION_ACTIONS_DELIMITER = ',';
+
+export const PUSH_NOTIFICATION_ACTION_LABELS: Readonly<Record<PushNotificationAction, string>> = {
+  [PushNotificationAction.JOIN]: 'Join',
+  [PushNotificationAction.RECORD]: 'Record',
+  [PushNotificationAction.OPEN_MEDIA]: 'Open',
+};
 
 export const PUSH_NOTIFICATION_REGISTRY: Readonly<
   Record<PushNotificationType, PushNotificationRegistryEntry>

@@ -28,3 +28,21 @@ export interface AndroidPushData {
   channelId: string;
   tag: string;
 }
+
+export interface PushNotificationPreferences {
+  meetingReminders: boolean;
+}
+
+export interface PushPayloadFields {
+  eventId: string;
+  title: string;
+  platform: MeetingPlatform;
+  meetingURL: string;
+  startTime: string;
+}
+
+export interface AndroidPushFields {
+  title: string;
+  message: string;
+  tag: string;
+}
