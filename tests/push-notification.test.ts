@@ -10,6 +10,7 @@ import {
   WebPushDataKey,
   buildPushPayload,
   buildWebPushData,
+  isPushForUser,
   getMeetingPlatformLabel,
   PushNotificationAction,
   PushNotificationType,
@@ -47,6 +48,7 @@ describe("push payload builders", () => {
   it("derives category, actions and Android keys from the registry", () => {
     const fields = {
       eventId: "e1",
+      uid: "u1",
       title: "Standup",
       platform: MeetingPlatform.ZOOM,
       meetingURL: "https://zoom.us/j/1",
@@ -82,5 +84,16 @@ describe("web push data", () => {
     const unknown = "nope" as PushNotificationType;
     expect(() => buildWebPushData(unknown, fields)).toThrow("Unknown push notification type");
     expect(() => buildAndroidPushData(unknown, fields)).toThrow("Unknown push notification type");
+  });
+});
+
+describe("isPushForUser", () => {
+  it("matches only an equal non-empty uid", () => {
+    expect(isPushForUser({ uid: "u1" }, "u1")).toBe(true);
+    expect(isPushForUser({ uid: "u2" }, "u1")).toBe(false);
+    expect(isPushForUser({}, "u1")).toBe(false);
+    expect(isPushForUser({ uid: "" }, "")).toBe(false);
+    expect(isPushForUser({ uid: 1 }, "1")).toBe(false);
+    expect(isPushForUser(undefined, "u1")).toBe(false);
   });
 });

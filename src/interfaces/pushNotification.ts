@@ -13,6 +13,7 @@ export interface PushNotificationRegistryEntry {
 export interface PushNotificationPayload {
   type: `${PushNotificationType}`;
   eventId: string;
+  uid: string;
   title: string;
   platform: `${MeetingPlatform}`;
   meetingURL: string;
@@ -35,6 +36,7 @@ export interface PushNotificationPreferences {
 
 export interface PushPayloadFields {
   eventId: string;
+  uid: string;
   title: string;
   platform: MeetingPlatform;
   meetingURL: string;
