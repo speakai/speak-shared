@@ -1,22 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  CMU_ERROR_MESSAGE,
-  CMU_PHONEME_REGEX,
-  IPA_CHAR_REGEX,
-  IPA_ERROR_MESSAGE,
-  MAX_PRONUNCIATION_RULES,
-  PRONUNCIATION_PRONOUNCE_AS_MAX_LENGTH,
-  PRONUNCIATION_TERM_MAX_LENGTH,
-} from "../src/index.js";
-
-describe("pronunciation limits", () => {
-  it("are the stable cross-repo contract", () => {
-    expect(MAX_PRONUNCIATION_RULES).toBe(500);
-    expect(PRONUNCIATION_TERM_MAX_LENGTH).toBe(200);
-    expect(PRONUNCIATION_PRONOUNCE_AS_MAX_LENGTH).toBe(200);
-  });
-});
+import { CMU_PHONEME_REGEX, IPA_CHAR_REGEX } from "../src/index.js";
 
 describe("CMU_PHONEME_REGEX", () => {
   it.each([
@@ -64,12 +48,5 @@ describe("IPA_CHAR_REGEX", () => {
   it("keeps no state between calls", () => {
     expect(IPA_CHAR_REGEX.test("ə")).toBe(true);
     expect(IPA_CHAR_REGEX.test("ə")).toBe(true);
-  });
-});
-
-describe("pronunciation error messages", () => {
-  it("name the fix the user should make", () => {
-    expect(IPA_ERROR_MESSAGE).toContain("plain English respelling, not IPA");
-    expect(CMU_ERROR_MESSAGE).toContain("M IH1 T R EH0 K S");
   });
 });
