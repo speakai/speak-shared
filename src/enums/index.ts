@@ -16,6 +16,7 @@ export * from './media.js';
 export * from './menu.js';
 export * from './meeting.js';
 export * from './notification.js';
+export * from './notificationEvent.js';
 export * from './pushNotification.js';
 export * from './prompt.js';
 export * from './recorder.js';

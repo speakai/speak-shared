@@ -1,14 +1,30 @@
 import type { MeetingPlatform } from '../enums/meeting.js';
 import type {
+  PushDataKey,
   PushNotificationAction,
   PushNotificationType,
+  PushTapTarget,
 } from '../enums/pushNotification.js';
 
 export interface PushNotificationRegistryEntry {
   categoryId: string;
   androidChannelId: string;
   actions: readonly PushNotificationAction[];
+  requiredDataKeys: readonly PushDataKey[];
+  tapTarget: PushTapTarget;
 }
+
+export interface EntityPushNotificationPayload {
+  type: `${PushNotificationType}`;
+  uid: string;
+  tapTarget: `${PushTapTarget}`;
+  category: string;
+  actions: string;
+  mediaId?: string;
+  recorderId?: string;
+}
+
+export type EntityPushFields = Partial<Record<`${PushDataKey}`, string>>;
 
 export interface PushNotificationPayload {
   type: `${PushNotificationType}`;
