@@ -85,8 +85,9 @@ export interface ILabelListItem extends ILabel {
 /** A labelled span as the API returns it; internal _id and companyId are never sent */
 export interface IMediaLabel {
   mediaLabelId: string;
-  userId: string;
-  /** The author's display name; absent when they are no longer a member of the company */
+  /** The author's userId; absent on entries written from a dashboard link, which carry reviewerName instead */
+  userId?: string;
+  /** The author's display name: reviewerName for entries written from a dashboard link; absent when a member left the company */
   authorName?: string;
   /** The author's profile picture as a viewable URL; absent when they have none, are inactive or left the company */
   authorImage?: string;
@@ -96,8 +97,10 @@ export interface IMediaLabel {
   status: AnchorStatus;
   /** Last anchor a person confirmed, kept while status is needs_review */
   lastResolved?: IAnchor;
-  /** Set when a reviewer applied the label from a dashboard */
+  /** Set when a link viewer applied the label from a dashboard */
   dashboardId?: string;
+  /** The name a link viewer wrote as; set with dashboardId */
+  reviewerName?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -105,8 +108,9 @@ export interface IMediaLabel {
 /** A comment as the API returns it; internal _id and companyId are never sent */
 export interface IMediaComment {
   commentId: string;
-  userId: string;
-  /** The author's display name; absent when they are no longer a member of the company */
+  /** The author's userId; absent on entries written from a dashboard link, which carry reviewerName instead */
+  userId?: string;
+  /** The author's display name: reviewerName for entries written from a dashboard link; absent when a member left the company */
   authorName?: string;
   /** The author's profile picture as a viewable URL; absent when they have none, are inactive or left the company */
   authorImage?: string;
@@ -124,8 +128,10 @@ export interface IMediaComment {
   isResolved: boolean;
   resolvedBy?: string;
   isDeleted: boolean;
-  /** Set when a reviewer commented from a dashboard */
+  /** Set when a link viewer commented from a dashboard */
   dashboardId?: string;
+  /** The name a link viewer wrote as; set with dashboardId */
+  reviewerName?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -160,8 +166,6 @@ export interface IDashboardCommentsSettings {
 
 /** The labels and comments keys of dashboard.settings, saved with POST/PUT /v1/dashboards */
 export interface IDashboardAnnotationSettings {
-  /** Team members a viewer may write labels and comments as; active members of the company */
-  reviewerUserIds: string[];
   labels: IDashboardLabelsSettings;
   comments: IDashboardCommentsSettings;
 }
@@ -174,12 +178,6 @@ export interface ILinkLabel {
   parentId: string | null;
 }
 
-/** A reviewer a dashboard viewer may write as; names only, never emails */
-export interface ILinkMember {
-  userId: string;
-  name: string;
-}
-
 /** annotationSettings on GET /v1/embed/insight for dashboard links */
 export interface IPublicAnnotationSettings {
   labels: {
@@ -190,8 +188,10 @@ export interface IPublicAnnotationSettings {
     labels: ILinkLabel[];
   };
   comments: { isEnabled: boolean; mode: DashboardCommentsMode };
-  /** Empty unless a write mode is on */
-  reviewers: ILinkMember[];
+  /** Names a viewer may write as: the dashboard's feedback submitters; empty unless a write mode is on */
+  reviewers: string[];
+  /** The viewer may type any name: exactly when feedback allows other submitters and lists at least one name */
+  allowOtherReviewer: boolean;
 }
 
 /** A labelled span on GET /v1/embed/media/:mediaId/labels, narrowed to the labels the link shows */
@@ -203,12 +203,11 @@ export type ILinkMediaLabel = Pick<
   | 'anchor'
   | 'status'
   | 'lastResolved'
-  | 'userId'
   | 'dashboardId'
   | 'createdAt'
   | 'updatedAt'
 > & {
-  /** The author's display name, or "Team member" when they have none or left the company */
+  /** The author's display name, the reviewerName of a link entry, or "Team member" when a member has none or left the company; link holders never get userIds */
   authorName: string;
 };
 
@@ -231,12 +230,11 @@ export type ILinkComment = Pick<
   | 'lastResolved'
   | 'isResolved'
   | 'isDeleted'
-  | 'userId'
   | 'dashboardId'
   | 'createdAt'
   | 'updatedAt'
 > & {
-  /** The author's display name, or "Team member" when they have none or left the company */
+  /** The author's display name, the reviewerName of a link entry, or "Team member" when a member has none or left the company; link holders never get userIds */
   authorName: string;
 };
 
@@ -345,9 +343,9 @@ export interface IDeleteMediaCommentResult {
   commentId: string;
 }
 
-/** The team member a dashboard viewer writes as; sent on every dashboard-link write */
+/** The name a dashboard viewer writes as, one of IPublicAnnotationSettings.reviewers unless allowOtherReviewer; sent on every dashboard-link write */
 export interface ILinkReviewerBody {
-  reviewerUserId: string;
+  reviewerName: string;
 }
 
 /** POST /v1/embed/media/:mediaId/labels */

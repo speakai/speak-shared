@@ -7,6 +7,7 @@ import {
   labelNameKey,
   matchesCommentFilter,
   normalizeLabelName,
+  reviewerNameKey,
 } from "../src/utils/label.js";
 import { hasAnchorsBehind } from "../src/utils/anchor.js";
 
@@ -15,6 +16,14 @@ describe("label name key", () => {
     expect(normalizeLabelName("  Great   moment ")).toBe("Great moment");
     expect(labelNameKey("  Great \t moment ")).toBe(labelNameKey("great moment"));
     expect(labelNameKey("Great moment")).not.toBe(labelNameKey("Greatmoment"));
+  });
+});
+
+describe("reviewer name key", () => {
+  it("matches a dashboard reviewer name in any case, spacing or compatibility form, and nothing else", () => {
+    expect(reviewerNameKey("  Ana \u00a0 REVIEWER ")).toBe(reviewerNameKey("ana reviewer"));
+    expect(reviewerNameKey("\uff21na Reviewer")).toBe(reviewerNameKey("Ana Reviewer"));
+    expect(reviewerNameKey("Ana Reviewer")).not.toBe(reviewerNameKey("Ana Reviewers"));
   });
 });
 

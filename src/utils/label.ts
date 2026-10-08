@@ -8,15 +8,12 @@ export const LABEL_DESCRIPTION_MAX = 500;
 export const LABEL_SORT_ORDER_MAX = 1_000_000;
 export const MAX_LABELS_PER_SPAN = 20;
 export const MEDIA_COMMENT_BODY_MAX = 5000;
-export const MAX_DASHBOARD_REVIEWERS = 200;
 export const MAX_DASHBOARD_LABEL_GROUPS = 100;
 
 /** labelId, mediaLabelId and commentId; also keeps the id safe inside a query filter */
 export const PUBLIC_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 /** #rrggbb, any case; stored lowercase */
 export const LABEL_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
-/** A user's 24-character hex ObjectId, such as a dashboard reviewerUserId */
-export const USER_ID_PATTERN = /^[0-9a-f]{24}$/i;
 
 /** Colours the label colour picker offers, in order */
 export const LABEL_COLOR_PRESETS = [
@@ -111,6 +108,15 @@ export function normalizeLabelName(name: string): string {
 /** The key two label names are compared by when checking for a duplicate; the server stores it as nameLower */
 export function labelNameKey(name: string): string {
   return normalizeLabelName(name).toLowerCase();
+}
+
+/**
+ * The key two dashboard reviewer names are compared by: compatibility forms folded (NFKC), so a
+ * look-alike width or space cannot pass for another name, then trimmed, spaces collapsed, lowercased.
+ * The server stores it as reviewerKey and matches own entries on it.
+ */
+export function reviewerNameKey(name: string): string {
+  return labelNameKey(name.normalize("NFKC"));
 }
 
 /** Whether a comment thread belongs under a comments filter, by its starter; ALL matches every thread */
