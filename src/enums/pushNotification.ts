@@ -20,6 +20,12 @@ export enum AndroidPushDataKey {
   TAG = 'tag',
 }
 
+export enum WebPushDataKey {
+  TITLE = 'title',
+  MESSAGE = 'message',
+  TAG = 'tag',
+}
+
 export const PUSH_NOTIFICATION_ACTIONS_DELIMITER = ',';
 
 export const PUSH_NOTIFICATION_ACTION_LABELS: Readonly<Record<PushNotificationAction, string>> = {
