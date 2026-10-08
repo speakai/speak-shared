@@ -35,3 +35,11 @@ export interface ICalendarSync {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export type UpcomingCalendarEventResponse = Pick<
+  ICalendarEvent,
+  'eventId' | 'calendarType' | 'title' | 'platform' | 'meetingURL' | 'meetingStatus'
+> & {
+  startTime: string;
+  endTime: string;
+};

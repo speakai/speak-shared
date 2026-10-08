@@ -13,3 +13,7 @@ export enum DevicePlatform {
   DESKTOP = 'desktop',
   API = 'api',
 }
+
+export enum AuthErrorCode {
+  INVALID_REFRESH_TOKEN = 'INVALID_REFRESH_TOKEN',
+}
