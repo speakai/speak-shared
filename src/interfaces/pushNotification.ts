@@ -46,3 +46,11 @@ export interface AndroidPushFields {
   message: string;
   tag: string;
 }
+
+export interface WebPushFields {
+  title: string;
+  message: string;
+  tag: string;
+}
+
+export type WebPushData = WebPushFields;

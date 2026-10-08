@@ -7,7 +7,9 @@ import {
   PUSH_NOTIFICATION_ACTION_LABELS,
   PUSH_NOTIFICATION_REGISTRY,
   buildAndroidPushData,
+  WebPushDataKey,
   buildPushPayload,
+  buildWebPushData,
   getMeetingPlatformLabel,
   PushNotificationAction,
   PushNotificationType,
@@ -68,5 +70,17 @@ describe("push payload builders", () => {
     expect(getMeetingPlatformLabel(undefined)).toBeUndefined();
     expect(AuthErrorCode.INVALID_REFRESH_TOKEN).toBe("INVALID_REFRESH_TOKEN");
     expect(MEETING_REMINDER_LEAD_MINUTES).toBe(2);
+  });
+});
+
+describe("web push data", () => {
+  it("carries only the web keys and rejects unknown types like the Android builder", () => {
+    const fields = { title: "Standup", message: "Starts in 2 min", tag: "e1" };
+    const data = buildWebPushData(PushNotificationType.MEETING_REMINDER, fields);
+    expect(data).toEqual(fields);
+    expect(Object.keys(data).sort()).toEqual(Object.values(WebPushDataKey).sort());
+    const unknown = "nope" as PushNotificationType;
+    expect(() => buildWebPushData(unknown, fields)).toThrow("Unknown push notification type");
+    expect(() => buildAndroidPushData(unknown, fields)).toThrow("Unknown push notification type");
   });
 });

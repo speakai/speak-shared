@@ -10,6 +10,8 @@ import type {
   PushNotificationPayload,
   PushNotificationRegistryEntry,
   PushPayloadFields,
+  WebPushData,
+  WebPushFields,
 } from '../interfaces/pushNotification.js';
 
 const KNOWN_ACTIONS: ReadonlySet<string> = new Set(Object.values(PushNotificationAction));
@@ -20,6 +22,12 @@ export const getPushNotificationConfig = (
   Object.prototype.hasOwnProperty.call(PUSH_NOTIFICATION_REGISTRY, type)
     ? PUSH_NOTIFICATION_REGISTRY[type as PushNotificationType]
     : undefined;
+
+const requirePushNotificationConfig = (type: PushNotificationType): PushNotificationRegistryEntry => {
+  const config = getPushNotificationConfig(type);
+  if (!config) throw new Error(`Unknown push notification type: ${type}`);
+  return config;
+};
 
 export const serializePushNotificationActions = (
   actions: readonly PushNotificationAction[],
@@ -37,7 +45,7 @@ export const buildPushPayload = (
   type: PushNotificationType,
   fields: PushPayloadFields,
 ): PushNotificationPayload => {
-  const config = PUSH_NOTIFICATION_REGISTRY[type];
+  const config = requirePushNotificationConfig(type);
   return {
     type,
     ...fields,
@@ -50,6 +58,11 @@ export const buildAndroidPushData = (
   type: PushNotificationType,
   fields: AndroidPushFields,
 ): AndroidPushData => {
-  const config = PUSH_NOTIFICATION_REGISTRY[type];
+  const config = requirePushNotificationConfig(type);
   return { ...fields, categoryId: config.categoryId, channelId: config.androidChannelId };
+};
+
+export const buildWebPushData = (type: PushNotificationType, fields: WebPushFields): WebPushData => {
+  requirePushNotificationConfig(type);
+  return { ...fields };
 };
