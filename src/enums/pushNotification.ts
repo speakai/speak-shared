@@ -16,12 +16,14 @@ export enum PushNotificationType {
   TRANSCRIPTION_COMPLETED = 'transcription-completed',
   RECORDER_SUBMISSION = 'recorder-submission',
   RECORDER_DISABLED = 'recorder-disabled',
+  MAGIC_PROMPT_COMPLETED = 'magic-prompt-completed',
 }
 
 export enum PushTapTarget {
   MEETING = 'meeting',
   MEDIA = 'media',
   RECORDER = 'recorder',
+  MAGIC_PROMPT = 'magic-prompt',
 }
 
 export enum PushDataKey {
@@ -33,6 +35,8 @@ export enum PushDataKey {
   START_TIME = 'startTime',
   MEDIA_ID = 'mediaId',
   RECORDER_ID = 'recorderId',
+  FOLDER_ID = 'folderId',
+  PROMPT_ID = 'promptId',
 }
 
 export enum AndroidPushDataKey {
@@ -59,6 +63,11 @@ export const PUSH_NOTIFICATION_ACTION_LABELS: Readonly<Record<PushNotificationAc
 
 const MEDIA_PUSH_DATA_KEYS = [PushDataKey.UID, PushDataKey.MEDIA_ID] as const;
 const RECORDER_PUSH_DATA_KEYS = [PushDataKey.UID, PushDataKey.RECORDER_ID] as const;
+const MAGIC_PROMPT_PUSH_DATA_KEYS = [
+  PushDataKey.UID,
+  PushDataKey.FOLDER_ID,
+  PushDataKey.PROMPT_ID,
+] as const;
 
 export const PUSH_NOTIFICATION_REGISTRY: Readonly<
   Record<PushNotificationType, PushNotificationRegistryEntry>
@@ -118,5 +127,12 @@ export const PUSH_NOTIFICATION_REGISTRY: Readonly<
     actions: [],
     requiredDataKeys: RECORDER_PUSH_DATA_KEYS,
     tapTarget: PushTapTarget.RECORDER,
+  },
+  [PushNotificationType.MAGIC_PROMPT_COMPLETED]: {
+    categoryId: 'MAGIC_PROMPT_COMPLETED',
+    androidChannelId: 'magic-prompt-updates',
+    actions: [],
+    requiredDataKeys: MAGIC_PROMPT_PUSH_DATA_KEYS,
+    tapTarget: PushTapTarget.MAGIC_PROMPT,
   },
 };

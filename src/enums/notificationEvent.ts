@@ -105,6 +105,7 @@ export const NOTIFICATION_EVENTS: Readonly<Record<NotificationEventKey, Notifica
     key: NotificationEventKey.MAGIC_PROMPT_COMPLETED,
     group: NotificationSettingsGroup.MAGIC_PROMPT,
     preferencePath: 'magicPrompt.completed',
-    channels: EMAIL_ONLY,
+    channels: ALL_CHANNELS,
+    pushType: PushNotificationType.MAGIC_PROMPT_COMPLETED,
   },
 };

@@ -126,6 +126,11 @@ describe("notification event catalog", () => {
       }
     }
     expect(NOTIFICATION_EVENTS[NotificationEventKey.USAGE_BALANCE].pushType).toBeUndefined();
+    expect(NOTIFICATION_EVENTS[NotificationEventKey.USAGE_BALANCE].channels).toEqual([NotificationChannel.EMAIL]);
+    expect(NOTIFICATION_EVENTS[NotificationEventKey.MAGIC_PROMPT_COMPLETED]).toMatchObject({
+      channels: [NotificationChannel.EMAIL, NotificationChannel.WEB, NotificationChannel.MOBILE],
+      pushType: PushNotificationType.MAGIC_PROMPT_COMPLETED,
+    });
     expect(getNotificationChannelForPlatform(DevicePlatform.IOS)).toBe("mobile");
     expect(getNotificationChannelForPlatform(DevicePlatform.ANDROID)).toBe("mobile");
     expect(getNotificationChannelForPlatform(DevicePlatform.WEB)).toBe("web");
@@ -141,6 +146,10 @@ describe("entity push payloads", () => {
     expect(buildEntityPushPayload(PushNotificationType.RECORDER_DISABLED, { uid: "u1", recorderId: "r1" })).toMatchObject({
       recorderId: "r1", tapTarget: "recorder",
     });
+    expect(buildEntityPushPayload(PushNotificationType.MAGIC_PROMPT_COMPLETED, { uid: "u1", folderId: "f1", promptId: "p1" })).toEqual({
+      type: "magic-prompt-completed", uid: "u1", folderId: "f1", promptId: "p1", tapTarget: "magic-prompt", category: "MAGIC_PROMPT_COMPLETED", actions: "",
+    });
+    expect(() => buildEntityPushPayload(PushNotificationType.MAGIC_PROMPT_COMPLETED, { uid: "u1", folderId: "f1" })).toThrow("promptId");
     expect(() => buildEntityPushPayload(PushNotificationType.MEDIA_ANALYZED, { mediaId: "m1" })).toThrow("uid");
     expect(() => buildEntityPushPayload(PushNotificationType.RECORDER_SUBMISSION, { uid: "u1" })).toThrow("recorderId");
     expect(buildAndroidPushData(PushNotificationType.TRANSCRIPTION_COMPLETED, { title: "t", message: "m", tag: "x" }).channelId)

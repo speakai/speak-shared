@@ -22,6 +22,8 @@ export interface EntityPushNotificationPayload {
   actions: string;
   mediaId?: string;
   recorderId?: string;
+  folderId?: string;
+  promptId?: string;
 }
 
 export type EntityPushFields = Partial<Record<`${PushDataKey}`, string>>;
