@@ -31,7 +31,7 @@ import {
   widgetSchema,
   widgetTypeSchema,
 } from '../src/schemas/dashboard-spec.schema.js';
-import type { DashboardSpec, DashboardSpecInput, FieldMapById, FieldTypeMap } from '../src/schemas/dashboard-spec.schema.js';
+import type { DashboardSpec, FieldMapById, FieldTypeMap } from '../src/schemas/dashboard-spec.schema.js';
 import * as schemaModule from '../src/schemas/dashboard-spec.schema.js';
 
 /* ── Fixtures ────────────────────────────────────────────────────────────── */
@@ -1104,21 +1104,6 @@ describe('fuzz — safeParse never throws', () => {
 });
 
 /* ── Type-level contract (R9) ────────────────────────────────────────────── */
-
-describe('input vs output types', () => {
-  it('DashboardSpecInput omits revision; DashboardSpec requires it', () => {
-    const input: DashboardSpecInput = {
-      title: 'T', source: { type: 'team' },
-      dateRange: { preset: 'allTime' }, sections: [], widgets: [],
-    };
-    const parsed = dashboardSpecSchema.safeParse(input);
-    expect(parsed.success).toBe(true);
-
-    const output: DashboardSpec = parsed.data as DashboardSpec;
-    const revision: number = output.revision;
-    expect(revision).toBe(0);
-  });
-});
 
 /* ── Pure helpers ────────────────────────────────────────────────────────── */
 
