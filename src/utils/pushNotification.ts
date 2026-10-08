@@ -66,3 +66,6 @@ export const buildWebPushData = (type: PushNotificationType, fields: WebPushFiel
   requirePushNotificationConfig(type);
   return { ...fields };
 };
+
+export const isPushForUser = (data: { uid?: unknown } | null | undefined, userId: string): boolean =>
+  typeof data?.uid === 'string' && data.uid !== '' && data.uid === userId;
