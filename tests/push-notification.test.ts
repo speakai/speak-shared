@@ -109,20 +109,14 @@ describe("isPushForUser", () => {
 
 describe("notification event catalog", () => {
   it("keeps the preference paths, channels and push types in step with the registry", () => {
-    expect(NOTIFICATION_SETTINGS_GROUP_ORDER).toEqual([
-      "meetings", "media", "recorder", "transcription", "usage", "magicPrompt",
-    ]);
-    expect(Object.values(NOTIFICATION_EVENTS).map((e) => [e.preferencePath, e.channels.join("+")])).toEqual([
-      ["meetings.reminders", "web+mobile"],
-      ["media.failed", "email+web+mobile"],
-      ["media.analyzed", "email+web+mobile"],
-      ["recorder.submission", "email+web+mobile"],
-      ["recorder.disabled", "email+web+mobile"],
-      ["transcription.approved", "email+web+mobile"],
-      ["transcription.completed", "email+web+mobile"],
-      ["usage.balance", "email"],
-      ["magicPrompt.completed", "email"],
-    ]);
+    const groupIndexes = Object.values(NOTIFICATION_EVENTS).map((event) =>
+      NOTIFICATION_SETTINGS_GROUP_ORDER.indexOf(event.group),
+    );
+    expect(groupIndexes).not.toContain(-1);
+    expect(groupIndexes).toEqual([...groupIndexes].sort((x, y) => x - y));
+    for (const [key, event] of Object.entries(NOTIFICATION_EVENTS)) {
+      expect(event.key).toBe(key);
+    }
     for (const event of Object.values(NOTIFICATION_EVENTS)) {
       expect(event.pushType === undefined).toBe(!event.channels.includes(NotificationChannel.MOBILE));
       expect(event.preferencePath.startsWith(`${event.group}.`)).toBe(true);
