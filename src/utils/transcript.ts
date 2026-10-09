@@ -1,4 +1,7 @@
-import type { ITranscriptSegment, IWordEntity, IParagraph, ISpeaker } from '../interfaces/transcript.js';
+import type { ITranscriptSegment, IWordEntity, IParagraph, ISpeaker, ConfidenceBand } from '../interfaces/transcript.js';
+
+export const LOW_CONFIDENCE = 0.75;
+export const VERY_LOW_CONFIDENCE = 0.55;
 
 /**
  * Group flat transcript segments into paragraphs by speaker.
@@ -113,4 +116,12 @@ export function parseTranscriptTime(timeStr: string): number {
     return parts[0] * 60 + parts[1];
   }
   return numeric || 0;
+}
+
+export function confidenceBand(confidence: unknown): ConfidenceBand {
+  if (typeof confidence !== 'number' || !Number.isFinite(confidence)) return 'ok';
+  if (confidence <= 0 || confidence > 1) return 'ok';
+  if (confidence < VERY_LOW_CONFIDENCE) return 'very-low';
+  if (confidence < LOW_CONFIDENCE) return 'low';
+  return 'ok';
 }

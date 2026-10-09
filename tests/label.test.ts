@@ -7,6 +7,7 @@ import {
   labelNameKey,
   matchesCommentFilter,
   normalizeLabelName,
+  rangeConfidence,
   reviewerNameKey,
 } from "../src/utils/label.js";
 import { hasAnchorsBehind } from "../src/utils/anchor.js";
@@ -56,5 +57,15 @@ describe("label palette", () => {
       for (const color of colors) expect(presets).toContain(color);
       expect(new Set(colors).size).toBe(colors.length);
     }
+  });
+});
+
+describe("rangeConfidence", () => {
+  it("averages measured words in the inclusive range, takes the worst band, and is null when nothing is measured", () => {
+    const confidences = [0.2, 0.9, undefined, 0.6, 0, 0.5, 1];
+    expect(rangeConfidence(confidences, 1, 3)).toEqual({ average: 0.75, band: "low", lowWords: 1 });
+    expect(rangeConfidence(confidences, 3, 6)).toEqual({ average: expect.closeTo(0.7), band: "very-low", lowWords: 2 });
+    expect(rangeConfidence(confidences, 2, 2)).toBeNull();
+    expect(rangeConfidence([], 0, 4)).toBeNull();
   });
 });

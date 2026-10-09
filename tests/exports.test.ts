@@ -697,7 +697,8 @@ describe("Enum values — export", () => {
     expect(ExportFormatType.SRT).toBe("srt");
     expect(ExportFormatType.VTT).toBe("vtt");
     expect(ExportFormatType.MD).toBe("md");
-    expect(Object.values(ExportFormatType)).toHaveLength(16);
+    expect(ExportFormatType.CSV_LABELS).toBe("csv-labels");
+    expect(Object.values(ExportFormatType)).toHaveLength(17);
   });
 });
 
