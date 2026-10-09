@@ -1,27 +1,10 @@
-/**
- * CI guard — the root barrel's module graph must never reach `zod`.
- *
- * speak-media-library imports RUNTIME values (MediaType, MediaState,
- * MediaPrivacyMode, FieldType, AssistantType, PromptState, MessageRole) from
- * `@speakai/shared`'s ROOT across six files, while pinning zod v3. Its bundler
- * therefore loads `dist/index.js`. A single `export * from './schemas/index.js'`
- * in `src/index.ts` would make `dist/index.js → dist/schemas/index.js →
- * import { z } from 'zod'`, putting zod v4 in media-library's bundle beside its
- * own zod v3.
- *
- * The schemas are reachable ONLY through the `@speakai/shared/schemas` subpath.
- * This test is the only thing stopping that invariant from rotting the first
- * time someone adds a convenience re-export to the root barrel.
- *
- * It walks actual ESM import specifiers — NOT a text grep. The word "zod"
- * appears in comments throughout the built output; only a real import matters.
- */
 import { execSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, expect, it } from 'vitest';
 
+const DIST_SCHEMAS = '../dist/schemas/index.js';
 const DIST = resolve(dirname(fileURLToPath(import.meta.url)), '../dist');
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), '../src');
 
@@ -81,21 +64,14 @@ function reachableBareSpecifiers(entry: string): Set<string> {
 
 const isZod = (spec: string) => spec === 'zod' || spec.startsWith('zod/');
 
+beforeAll(() => {
+  const indexJs = resolve(DIST, 'index.js');
+  if (!existsSync(indexJs) || statSync(indexJs).mtimeMs < newestSrcMtimeMs()) {
+    execSync('npm run build', { cwd: resolve(DIST, '..'), stdio: 'inherit' });
+  }
+});
+
 describe('root barrel is zod-free', () => {
-  beforeAll(() => {
-    // Rebuild when dist is MISSING or STALE. A missing-only check walks a stale
-    // dist on local runs — a developer who edits src/index.ts without rebuilding
-    // gets a false green, so the barrel regression escapes until CI.
-    const indexJs = resolve(DIST, 'index.js');
-    if (!existsSync(indexJs) || statSync(indexJs).mtimeMs < newestSrcMtimeMs()) {
-      execSync('npm run build', { cwd: resolve(DIST, '..'), stdio: 'inherit' });
-    }
-  });
-
-  it('dist/index.js has been built', () => {
-    expect(existsSync(resolve(DIST, 'index.js'))).toBe(true);
-  });
-
   it('dist is not stale relative to src — the walk ran against current output', () => {
     const indexMtime = statSync(resolve(DIST, 'index.js')).mtimeMs;
     expect(indexMtime).toBeGreaterThanOrEqual(newestSrcMtimeMs());
@@ -141,5 +117,45 @@ describe('importSpecifiers — statement-bounded parsing', () => {
     ].join('\n');
     const specs = importSpecifiers(src);
     expect(specs).toEqual(expect.arrayContaining(['zod', './schemas/index.js', './polyfill.js', './lazy.js']));
+  });
+});
+
+describe('built schemas subpath', () => {
+  it('exports the dashboard field reference surface consumers import', async () => {
+    const dist = await import(DIST_SCHEMAS);
+
+    for (const symbol of [
+      'fieldReferenceSchema',
+      'fieldRef',
+      'collectWidgetRefs',
+      'refPath',
+      'buildDashboardSpecSchema',
+      'widgetSchema',
+      'columnSchema',
+      'metricSchema',
+      'filterSchema',
+    ]) {
+      expect(dist[symbol], `dist/schemas is missing ${symbol}`).toBeDefined();
+    }
+  });
+
+  it('builds a reference through the built entry', async () => {
+    const { fieldRef } = await import(DIST_SCHEMAS);
+
+    expect(fieldRef({ fieldId: '3fdf29434505' })).toStrictEqual({ fieldId: '3fdf29434505' });
+    expect(fieldRef({ reserved: 'createdAt' })).toStrictEqual({ reserved: 'createdAt' });
+    expect(() => fieldRef({ fieldId: 'nope' })).toThrow();
+  });
+});
+
+describe('built type declarations', () => {
+  it('publishes IMediaTranscriptMeta from the root entry for transcript payload consumers', () => {
+    const mediaDts = readFileSync(new URL('../dist/interfaces/media.d.ts', import.meta.url), 'utf8');
+    const labelDts = readFileSync(new URL('../dist/interfaces/label.d.ts', import.meta.url), 'utf8');
+    const rootDts = readFileSync(new URL('../dist/index.d.ts', import.meta.url), 'utf8');
+
+    expect(mediaDts).toMatch(/export interface IMediaTranscriptMeta \{\s*transcriptRevision: number;/);
+    expect(labelDts).toMatch(/interface IMediaLabelsResponse extends IMediaTranscriptMeta/);
+    expect(rootDts).toMatch(/from '\.\/interfaces\/index\.js'|from "\.\/interfaces\/index\.js"/);
   });
 });

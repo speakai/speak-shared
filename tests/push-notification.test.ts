@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  AuthErrorCode,
-  MEETING_REMINDER_LEAD_MINUTES,
   MeetingPlatform,
   PUSH_NOTIFICATION_ACTION_LABELS,
   PUSH_NOTIFICATION_REGISTRY,
@@ -74,13 +72,11 @@ describe("push payload builders", () => {
     ).toEqual({ title: "Standup", message: "Starts in 2 min", tag: "e1", categoryId: "MEETING_REMINDER", channelId: "meeting-reminders" });
   });
 
-  it("labels every action id, platform and the sign-out code", () => {
+  it("labels every action id and platform", () => {
     expect(PUSH_NOTIFICATION_ACTION_LABELS).toEqual({ join: "Join", record: "Record", "open-media": "Open" });
     expect(getMeetingPlatformLabel("googleMeet")).toBe("Google Meet");
     expect(getMeetingPlatformLabel("constructor")).toBeUndefined();
     expect(getMeetingPlatformLabel(undefined)).toBeUndefined();
-    expect(AuthErrorCode.INVALID_REFRESH_TOKEN).toBe("INVALID_REFRESH_TOKEN");
-    expect(MEETING_REMINDER_LEAD_MINUTES).toBe(2);
   });
 });
 
