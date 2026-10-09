@@ -88,17 +88,9 @@ decide the next version number.
 
 ## Instructions for AI coding agents
 
-Agent instructions live in `AGENTS.md`, and Claude Code, Codex, Cursor and GitHub Copilot all use
-it. Codex reads `AGENTS.md` directly. Claude Code reads `CLAUDE.md`, which only imports
-`AGENTS.md`, so edit `AGENTS.md`. The guard hooks in `.claude/hooks/ai-skills/` run in Claude Code
-(wired in `.claude/settings.json`) and in Codex (wired in `.codex/hooks.json`, with
-`.codex/rules/` as a backstop). They block a pull request that is not a draft, block merges, block
-writes that contain a credential, flag multi-line code comments and flag weak new tests. In Codex
-(version 0.142 or newer), trust the project once and approve its hooks in `/hooks`. `AGENTS.md`
-also holds the shared team rules; to propose a new one, run `/add-rule` in Claude Code or
-`$add-rule` in Codex. The hooks, the rules and the `add-rule` skill are copied from Speak's shared
-ai-skills repo, and `.claude/ai-skills.config` lists the plugins in use and this repo's id. This
-repo has no agent skills of its own.
+Agent instructions live in `AGENTS.md`; `CLAUDE.md` only imports it. Guard hooks in
+`.claude/hooks/ai-skills/` run in Claude Code and Codex: they keep pull requests as drafts, block
+merges and committed credentials, and flag weak or duplicated tests.
 
 ## Related
 

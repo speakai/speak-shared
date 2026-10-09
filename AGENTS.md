@@ -31,7 +31,7 @@ Windows for every PR to `main` and every push to another branch (`.github/workfl
 - `npm run build`: `tsc`, from `src/` into `dist/`. There is no separate type-check script; the
   build is the type check.
 - `npm test`: Vitest, single run. Run `npm run build` first, because
-  `tests/dist-exports.test.ts` checks the built `dist/` that consumers actually load.
+  `tests/dist-contract.test.ts` checks the built `dist/` that consumers actually load.
 - `npm run watch`: `tsc --watch`. `npm run clean`: deletes `dist/`.
 - `npx vitest run --coverage`: coverage with the thresholds in `vitest.config.ts`
   (`src/interfaces/` is excluded because it has no runtime code).
@@ -46,7 +46,7 @@ Run `npm run build && npm test` before you say a change is done.
 - Nothing reachable from `src/index.ts` may import `zod`. At least one consumer imports runtime
   enums from the package root while pinning zod v3, and a zod v4 import in the root graph would
   put both versions in its bundle. Import schemas from `@speakai/shared/schemas`.
-  `tests/no-zod-in-root-barrel.test.ts` enforces this by walking the built import graph.
+  `tests/dist-contract.test.ts` enforces this by walking the built import graph.
 - Everything in `src/voice/` shares the root namespace with the platform types. When a voice type
   overlaps a platform concept, give it a `Voice` prefix (`VoiceIntegrationAuthType`) so both can
   be exported side by side.
@@ -54,14 +54,14 @@ Run `npm run build && npm test` before you say a change is done.
   add model data to `MODEL_PRICING` or the voice agent LLM lists directly, because they are
   derived from the registry. `tests/llm-registry.test.ts` fails when an enum value has no registry entry.
 - Some values are contracts other repos store or deep-link: agent template ids, response pace
-  names and pronunciation limits. Tests pin them exactly (`tests/agent-templates.test.ts`,
-  `tests/response-pace.test.ts`, `tests/pronunciation.test.ts`). Do not rename or renumber them
-  to make a test pass; add new values instead.
+  names and pronunciation limits. `tests/agent-templates.test.ts` pins the template ids exactly.
+  Do not rename or renumber any of them to make a test pass; add new values instead.
 - Removing or renaming an export, an enum value or an interface field breaks consuming apps at
   compile time or, for enum values stored in a database, at run time. Prefer adding over
   changing, and call out any removal in the PR description.
-- When you add an export, assert it in `tests/exports.test.ts` (or in `tests/dist-exports.test.ts`
-  for a sub-path), because a missing re-export otherwise reaches npm unnoticed.
+- A consumer's type check catches a missing re-export, so do not add a test that only asserts an
+  export exists. `tests/exports.test.ts` keeps the two entry-point contracts (no zod and no raw schemas
+  in the main entry).
 - Tests also run on Windows, so build file paths with `node:path` and `fileURLToPath`, not by
   joining strings with `/`.
 
@@ -115,12 +115,14 @@ them with `npm run build && npm test` (see Commands for why the build comes firs
 - Try the simplest fix first and add a helper, constant, option or layer only when a second real caller exists today.
 - Before starting or resuming work in a worktree or branch, fetch and merge the latest base branch (dev, main or master per this repo) so the work starts from current code.
 **Code**
-- Comments explain why in one line, never what; change history, plan names and old-behavior notes go in the commit or PR.
+- Comments explain why in one line, never what: keep only reasons, invariants, units and bounds, never restate a name or type or add decorative section banners; change history, plan names and old-behavior notes go in the commit or PR.
 - Match and join records by ID, never by name or label.
 - Put types, enums, interfaces and constants where this repo keeps them (shared package first, then the feature's own file) and never create a file for one value.
 - Release shared packages in the order shared, ui, server, client, and after publishing bump and typecheck every consumer.
 **Tests**
-- Every bug fix gets a test that fails without the fix, placed where this repo's AGENTS.md says tests live (full rules: the testing-policy skill, where installed).
+- Every bug fix gets a test that fails without the fix, added as a case in the existing test file for that module where this repo's AGENTS.md says tests live; create a new test file only when the module has none (full rules: the testing-policy skill, where installed).
+- Keep one test file per source module and add at most 3 new test files in a PR; when a PR needs more, say why in its body and ask a human for the test-budget-ok label.
+- Write a test only for behavior a caller or user would notice breaking, and assert on outputs, stored data or rendered text; constants, copy, class names, enum values, export lists, source text, bare mock calls and timings are not behavior.
 **Pull requests**
 - Open every PR as a draft (gh pr create --draft); the developer marks it Ready and a human merges.
 - Add follow-up work for a task to that task's open PR in this repo instead of opening a new one.
@@ -137,10 +139,7 @@ them with `npm run build && npm test` (see Commands for why the build comes firs
 
 ## Claude Code and Codex
 
-Codex reads this file and skills in `.agents/skills/`. Claude Code reads `CLAUDE.md`, which only
-imports this file, and skills in `.claude/skills/`. The guardrail hooks, the `add-rule` skill
-(`/add-rule` in Claude Code, `$add-rule` in Codex) and the team rules block above are vendored
-from Speak's shared ai-skills repo, so change them there rather than here. Re-vendor with that
-repo's `scripts/install.sh --target <this repo> --plugins eng-safety`; the plugin list and this
-repo's id are in `.claude/ai-skills.config`. After pulling, Codex users trust the project once and
-approve its hooks in `/hooks` (Codex 0.142 or newer); Codex asks again whenever a hook changes.
+Codex reads this file. Claude Code reads `CLAUDE.md`, which only imports this file. The guardrail
+hooks in `.claude/hooks/ai-skills/` and the team rules block above are vendored from Speak's shared
+ai-skills repo, so change them there rather than here; `.claude/ai-skills.config` names the plugin
+and this repo's id. Codex users trust the project once and approve its hooks in `/hooks`.
