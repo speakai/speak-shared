@@ -11,6 +11,7 @@ import {
   reviewerNameKey,
 } from "../src/utils/label.js";
 import { hasAnchorsBehind } from "../src/utils/anchor.js";
+import { confidenceBand, LOW_CONFIDENCE, VERY_LOW_CONFIDENCE } from "../src/utils/transcript.js";
 
 describe("label name key", () => {
   it("treats names that differ only in case or spacing as the same label", () => {
@@ -67,5 +68,16 @@ describe("rangeConfidence", () => {
     expect(rangeConfidence(confidences, 3, 6)).toEqual({ average: expect.closeTo(0.7), band: "very-low", lowWords: 2 });
     expect(rangeConfidence(confidences, 2, 2)).toBeNull();
     expect(rangeConfidence([], 0, 4)).toBeNull();
+  });
+});
+
+describe("confidenceBand", () => {
+  it("bands real word confidences and treats missing or out-of-range values as ok", () => {
+    expect(confidenceBand(0.9)).toBe("ok");
+    expect(confidenceBand(LOW_CONFIDENCE)).toBe("ok");
+    expect(confidenceBand(0.74)).toBe("low");
+    expect(confidenceBand(VERY_LOW_CONFIDENCE)).toBe("low");
+    expect(confidenceBand(0.54)).toBe("very-low");
+    for (const value of [undefined, null, NaN, 0, -0.2, 1.5, "0.3"]) expect(confidenceBand(value)).toBe("ok");
   });
 });
