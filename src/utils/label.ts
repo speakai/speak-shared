@@ -1,6 +1,8 @@
 import { CommentListFilter, SpeakLabelSet, UserRole } from '../enums/index.js';
-import type { IMediaComment } from '../interfaces/label.js';
+import type { IMediaComment, IRangeConfidence } from '../interfaces/label.js';
+import type { ConfidenceBand } from '../interfaces/transcript.js';
 import type { IUserPermission } from '../interfaces/user.js';
+import { confidenceBand } from './transcript.js';
 
 // Limits the server enforces on labels and comments; front ends and the MCP read the same values.
 export const LABEL_NAME_MAX = 80;
@@ -128,4 +130,20 @@ export function matchesCommentFilter(
   if (filter === CommentListFilter.RESOLVED) return thread.isResolved;
   if (filter === CommentListFilter.FILE) return !thread.anchor;
   return true;
+}
+
+export function rangeConfidence(confidences: (number | undefined)[], start: number, end: number): IRangeConfidence | null {
+  const measured: number[] = [];
+  for (let i = Math.max(0, start); i <= end && i < confidences.length; i++) {
+    const value = confidences[i];
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= 1) measured.push(value);
+  }
+  if (measured.length === 0) return null;
+  const bands = measured.map(confidenceBand);
+  const band: ConfidenceBand = bands.includes('very-low') ? 'very-low' : bands.includes('low') ? 'low' : 'ok';
+  return {
+    average: measured.reduce((sum, value) => sum + value, 0) / measured.length,
+    band,
+    lowWords: bands.filter((b) => b !== 'ok').length,
+  };
 }

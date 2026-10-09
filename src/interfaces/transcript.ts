@@ -147,3 +147,5 @@ export interface ITranscriptState {
   isConnectionClosed: boolean;
   pendingWords: IWordEntity[];
 }
+
+export type ConfidenceBand = 'ok' | 'low' | 'very-low';
