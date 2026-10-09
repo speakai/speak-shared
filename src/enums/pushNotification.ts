@@ -35,14 +35,6 @@ export enum PushDataKey {
   RECORDER_ID = 'recorderId',
 }
 
-export enum AndroidPushDataKey {
-  TITLE = 'title',
-  MESSAGE = 'message',
-  CATEGORY_ID = 'categoryId',
-  CHANNEL_ID = 'channelId',
-  TAG = 'tag',
-}
-
 export enum WebPushDataKey {
   TITLE = 'title',
   MESSAGE = 'message',

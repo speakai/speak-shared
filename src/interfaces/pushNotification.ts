@@ -14,8 +14,13 @@ export interface PushNotificationRegistryEntry {
   tapTarget: PushTapTarget;
 }
 
+export type EntityPushNotificationType = Exclude<
+  PushNotificationType,
+  PushNotificationType.MEETING_REMINDER
+>;
+
 export interface EntityPushNotificationPayload {
-  type: `${PushNotificationType}`;
+  type: `${EntityPushNotificationType}`;
   uid: string;
   tapTarget: `${PushTapTarget}`;
   category: string;
@@ -44,10 +49,6 @@ export interface AndroidPushData {
   categoryId: string;
   channelId: string;
   tag: string;
-}
-
-export interface PushNotificationPreferences {
-  meetingReminders: boolean;
 }
 
 export interface PushPayloadFields {

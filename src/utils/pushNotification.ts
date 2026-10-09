@@ -8,6 +8,7 @@ import type {
   AndroidPushData,
   AndroidPushFields,
   EntityPushFields,
+  EntityPushNotificationType,
   EntityPushNotificationPayload,
   PushNotificationPayload,
   PushNotificationRegistryEntry,
@@ -57,7 +58,7 @@ export const buildPushPayload = (
 };
 
 export const buildEntityPushPayload = (
-  type: PushNotificationType,
+  type: EntityPushNotificationType,
   fields: EntityPushFields,
 ): EntityPushNotificationPayload => {
   const config = requirePushNotificationConfig(type);
