@@ -724,7 +724,8 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     label: "Gemini 2.5 Flash",
     provider: LLMProvider.GOOGLE,
     family: "gemini",
-    status: "deprecated",
+    // Vertex retires it on 2026-10-20; retired so every resolver substitutes 3.7 Flash instead of dispatching it.
+    status: "retired",
     replacedBy: LLMModels.GEMINI_3_7_FLASH,
     offeredInChat: false,
     offeredInVoice: false,
