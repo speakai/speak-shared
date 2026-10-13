@@ -358,6 +358,18 @@ const widgetBase = {
   layout: layoutSchema,
 };
 
+/**
+ * Session-card layout for a records table. Every reference is a column HEADER
+ * (headers already reach the viewer in the data response; field names do not),
+ * and the superRefine below pins each one to a real header.
+ */
+const tableCardSchema = z.strictObject({
+  titleColumn: z.string().min(1).max(40).optional(),
+  subtitleColumns: z.array(z.string().min(1).max(40)).max(2).optional(),
+  detailColumns: z.array(z.string().min(1).max(40)).max(2).optional(),
+  showDuration: z.boolean().optional(),
+});
+
 const tableConfigSchema = z
   .strictObject({
     rowsAre: z.enum(['records', 'groups']),
@@ -370,6 +382,9 @@ const tableConfigSchema = z
     // Records tables show a leading media-name column; set false to hide it when
     // the media name is an opaque id (e.g. webhook-ingested recordings).
     showName: z.boolean().optional(),
+    // `cards` renders each record as a media card instead of a row. Records only.
+    display: z.enum(['table', 'cards']).optional(),
+    card: tableCardSchema.optional(),
   })
   .superRefine((c, ctx) => {
     const headers = c.columns.map((col) => col.header);
@@ -386,6 +401,46 @@ const tableConfigSchema = z
     }
     if (c.rowsAre === 'records' && c.groupBy) {
       ctx.addIssue({ code: 'custom', path: ['groupBy'], message: 'rowsAre:"records" must not carry a groupBy' });
+    }
+    if (c.display === 'cards' && c.rowsAre !== 'records') {
+      ctx.addIssue({ code: 'custom', path: ['display'], message: 'display:"cards" requires rowsAre:"records"' });
+    }
+    if (c.card && c.display !== 'cards') {
+      ctx.addIssue({ code: 'custom', path: ['card'], message: 'card config requires display:"cards"' });
+    }
+    if (c.card) {
+      const refs: Array<[string, string]> = [];
+      if (c.card.titleColumn) refs.push(['titleColumn', c.card.titleColumn]);
+      c.card.subtitleColumns?.forEach((h, i) => refs.push([`subtitleColumns.${i}`, h]));
+      c.card.detailColumns?.forEach((h, i) => refs.push([`detailColumns.${i}`, h]));
+      for (const [key, header] of refs) {
+        if (!headers.includes(header)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['card', ...key.split('.').map((k) => (/^\d+$/.test(k) ? Number(k) : k))],
+            message: `card column "${header}" is not one of the table's headers`,
+          });
+        }
+      }
+    }
+  });
+
+/**
+ * Call-to-action buttons on a notes widget: open the dashboard chat panel or
+ * jump to a section. `sectionId` is checked against the dashboard's sections.
+ */
+const widgetActionSchema = z
+  .strictObject({
+    label: z.string().min(1).max(40),
+    action: z.enum(['openChat', 'goToSection']),
+    sectionId: z.string().min(1).max(64).optional(),
+  })
+  .superRefine((a, ctx) => {
+    if (a.action === 'goToSection' && !a.sectionId) {
+      ctx.addIssue({ code: 'custom', path: ['sectionId'], message: 'action:"goToSection" requires a sectionId' });
+    }
+    if (a.action === 'openChat' && a.sectionId) {
+      ctx.addIssue({ code: 'custom', path: ['sectionId'], message: 'action:"openChat" must not carry a sectionId' });
     }
   });
 
@@ -500,7 +555,10 @@ const widgetSchemaRaw = z.discriminatedUnion('type', [
   z.strictObject({
     ...widgetBase,
     type: z.literal('notes'),
-    config: z.strictObject({ content: z.string().min(1).max(4000) }),
+    config: z.strictObject({
+      content: z.string().min(1).max(4000),
+      actions: z.array(widgetActionSchema).max(3).optional(),
+    }),
   }),
 
   z.strictObject({
@@ -566,6 +624,8 @@ export type WidgetLayout = z.infer<typeof layoutSchema>;
 export type Widget = z.infer<typeof widgetSchemaRaw>;
 export type WidgetType = z.infer<typeof widgetTypeSchema>;
 export type Section = z.infer<typeof sectionSchema>;
+export type TableCardConfig = z.infer<typeof tableCardSchema>;
+export type WidgetAction = z.infer<typeof widgetActionSchema>;
 
 /**
  * Drift guard: `widgetTypeSchema` (which drives the editor palette and MCP tool
@@ -874,6 +934,21 @@ export function buildDashboardSpecSchema(fieldTypes?: FieldTypeMap, fieldsById?:
         }
       }
     }
+
+    /* ── 3b. goToSection targets must exist ──────────────────────────────── */
+    const sectionTargets = new Set([...spec.sections.map((s) => s.id), SECTION_OVERVIEW_ID]);
+    spec.widgets.forEach((w, i) => {
+      if (w.type !== 'notes') return;
+      w.config.actions?.forEach((a, ai) => {
+        if (a.action === 'goToSection' && a.sectionId && !sectionTargets.has(a.sectionId)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['widgets', i, 'config', 'actions', ai, 'sectionId'],
+            message: `action targets unknown section "${a.sectionId}"`,
+          });
+        }
+      });
+    });
 
     /* ── 4. team-activity requires an effective source.type === "team" ────── */
     spec.widgets.forEach((w, i) => {
