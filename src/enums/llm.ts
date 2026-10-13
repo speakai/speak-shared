@@ -67,6 +67,7 @@ export enum LLMModels {
   GEMINI_3_5_FLASH = 'gemini-3.5-flash',
   GEMINI_3_7_FLASH = 'gemini-3.7-flash',
   GEMINI_3_8_FLASH = 'gemini-3.8-flash',
+  GEMINI_4_ARGON = 'gemini-4-argon',
 
   GROK_4_5 = 'x-ai/grok-4.5',
   GLM_5_2 = 'z-ai/glm-5.2'
