@@ -97,7 +97,7 @@ export const LABEL_PERMISSION_DEFAULTS: Readonly<Record<UserRole, ILabelPermissi
   [UserRole.OWNER]: ALL_LABEL_PERMISSIONS,
   [UserRole.ADMIN]: ALL_LABEL_PERMISSIONS,
   [UserRole.MEMBER]: {
-    labels: { create: false, update: false, delete: false, assign: true },
+    labels: { create: true, update: true, delete: false, assign: true },
     comments: { create: true, update: true, delete: false },
   },
 };
