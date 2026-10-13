@@ -573,7 +573,7 @@ describe("Label constants", () => {
     expect(Object.keys(c.LABEL_PERMISSION_DEFAULTS).sort()).toEqual(Object.values(UserRole).sort());
     expect(c.LABEL_PERMISSION_DEFAULTS[UserRole.OWNER].labels).toEqual({ create: true, update: true, delete: true, assign: true });
     expect(c.LABEL_PERMISSION_DEFAULTS[UserRole.MEMBER]).toEqual({
-      labels: { create: false, update: false, delete: false, assign: true },
+      labels: { create: true, update: true, delete: false, assign: true },
       comments: { create: true, update: true, delete: false },
     });
     expect(Object.isFrozen(c.LABEL_PERMISSION_DEFAULTS[UserRole.ADMIN].labels)).toBe(true);
