@@ -961,6 +961,124 @@ describe('table config', () => {
   });
 });
 
+describe('table cards', () => {
+  const table = (config: Record<string, unknown>) =>
+    specWith([{ id: 'tbl', type: 'table', title: 'T', layout: LAYOUT, config }]);
+  const columns = [
+    { header: 'Status', field: 'Status' },
+    { header: 'Country', field: 'Country' },
+    { header: 'Region', field: 'Region' },
+  ];
+
+  it('accepts display:"cards" with a card config that points at real headers', () => {
+    const result = dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      rowClick: 'openMedia',
+      columns,
+      display: 'cards',
+      card: { titleColumn: 'Status', subtitleColumns: ['Country'], detailColumns: ['Region'], showDuration: true },
+    }));
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects display:"cards" on a groups table', () => {
+    const result = dashboardSpecSchema.safeParse(table({
+      rowsAre: 'groups',
+      groupBy: { kind: 'folder' },
+      columns,
+      display: 'cards',
+    }));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      path: ['widgets', 0, 'config', 'display'],
+    }));
+  });
+
+  it('rejects a card config without display:"cards"', () => {
+    const result = dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      columns,
+      card: { titleColumn: 'Status' },
+    }));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      path: ['widgets', 0, 'config', 'card'],
+    }));
+  });
+
+  it('rejects a card column that is not a header, at its own path', () => {
+    const result = dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      columns,
+      display: 'cards',
+      card: { subtitleColumns: ['Country', 'Nope'] },
+    }));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      path: ['widgets', 0, 'config', 'card', 'subtitleColumns', 1],
+    }));
+  });
+
+  it('rejects more than two detail columns and unknown card keys', () => {
+    expect(dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      columns,
+      display: 'cards',
+      card: { detailColumns: ['Status', 'Country', 'Region'] },
+    })).success).toBe(false);
+    expect(dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      columns,
+      display: 'cards',
+      card: { imageField: 'Status' },
+    })).success).toBe(false);
+  });
+
+  it('rejects an unknown display value', () => {
+    expect(dashboardSpecSchema.safeParse(table({ rowsAre: 'records', columns, display: 'grid' })).success).toBe(false);
+  });
+});
+
+describe('notes widget actions', () => {
+  const notes = (actions: unknown, sections: unknown[] = []) =>
+    specWith(
+      [{ id: 'intro', type: 'notes', title: 'Welcome', layout: LAYOUT, config: { content: 'Hello', actions } }],
+      sections,
+    );
+  const sections = [{ id: 'sessions', title: 'Sessions', icon: 'video', widgetIds: [] }];
+
+  it('accepts openChat and goToSection buttons', () => {
+    const result = dashboardSpecSchema.safeParse(notes(
+      [
+        { label: 'Ask a question', action: 'openChat' },
+        { label: 'Watch sessions', action: 'goToSection', sectionId: 'sessions' },
+      ],
+      sections,
+    ));
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a goToSection with no sectionId or an unknown one', () => {
+    expect(dashboardSpecSchema.safeParse(notes([{ label: 'Go', action: 'goToSection' }], sections)).success).toBe(false);
+    const result = dashboardSpecSchema.safeParse(notes([{ label: 'Go', action: 'goToSection', sectionId: 'missing' }], sections));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      path: ['widgets', 0, 'config', 'actions', 0, 'sectionId'],
+    }));
+  });
+
+  it('accepts the implicit overview section as a target', () => {
+    expect(dashboardSpecSchema.safeParse(notes([{ label: 'Home', action: 'goToSection', sectionId: SECTION_OVERVIEW_ID }])).success).toBe(true);
+  });
+
+  it('rejects openChat carrying a sectionId, a fourth button, and a missing label', () => {
+    expect(dashboardSpecSchema.safeParse(notes([{ label: 'Chat', action: 'openChat', sectionId: 'sessions' }], sections)).success).toBe(false);
+    const four = Array.from({ length: 4 }, (_, i) => ({ label: `B${i}`, action: 'openChat' }));
+    expect(dashboardSpecSchema.safeParse(notes(four)).success).toBe(false);
+    expect(dashboardSpecSchema.safeParse(notes([{ label: '', action: 'openChat' }])).success).toBe(false);
+  });
+});
+
 /* ── Strictness / key drift (R14) ────────────────────────────────────────── */
 
 describe('strictness — unknown keys are rejected, never stripped', () => {
