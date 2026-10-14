@@ -59,6 +59,13 @@ export enum RecorderSessionEventCategory {
   USER = 'user',
 }
 
+export enum RecorderSessionWakeLock {
+  ACQUIRED = 'acquired',
+  DENIED = 'denied',
+  UNSUPPORTED = 'unsupported',
+  RELEASED = 'released',
+}
+
 export const RECORDER_SESSION_EVENTS: Readonly<
   Record<RecorderSessionEventType, IRecorderSessionEventEntry>
 > = {

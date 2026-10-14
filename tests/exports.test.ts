@@ -836,10 +836,20 @@ describe("Enum values — recorder", () => {
   });
 
   it("RECORDER_SESSION_EVENTS covers every session event with a category and description", async () => {
-    const { RECORDER_SESSION_EVENTS, RecorderSessionEventCategory, RecorderSessionEventType } =
-      await import("../src/index.js");
+    const {
+      RECORDER_SESSION_EVENTS,
+      RecorderSessionEventCategory,
+      RecorderSessionEventType,
+      RecorderSessionWakeLock,
+    } = await import("../src/index.js");
 
     expect(RecorderSessionEventType.SUSPEND_DETECTED).toBe("suspend_detected");
+    expect(Object.values(RecorderSessionWakeLock)).toEqual([
+      "acquired",
+      "denied",
+      "unsupported",
+      "released",
+    ]);
     expect(Object.values(RecorderSessionEventType)).toHaveLength(23);
     expect(Object.keys(RECORDER_SESSION_EVENTS).sort()).toEqual(
       Object.values(RecorderSessionEventType).sort(),
