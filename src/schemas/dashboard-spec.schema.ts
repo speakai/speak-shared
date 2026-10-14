@@ -375,6 +375,7 @@ const tableCardSchema = z.strictObject({
   hero: z.boolean().optional(),
   showDuration: z.boolean().optional(),
   imageColumn: z.string().min(1).max(40).optional(),
+  poster: z.boolean().optional(),
 });
 
 const tableConfigSchema = z

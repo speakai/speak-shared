@@ -978,9 +978,15 @@ describe('table cards', () => {
       rowClick: 'openMedia',
       columns,
       display: 'cards',
-      card: { titleColumn: 'Status', subtitleColumns: ['Country'], detailColumns: ['Region'], showDuration: true },
+      card: { titleColumn: 'Status', subtitleColumns: ['Country'], detailColumns: ['Region'], showDuration: true, poster: true },
     }));
     expect(result.success).toBe(true);
+    expect(dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      columns,
+      display: 'cards',
+      card: { poster: 'yes' },
+    })).success).toBe(false);
   });
 
   it('accepts pageSize 1..100 and rejects values outside it', () => {
