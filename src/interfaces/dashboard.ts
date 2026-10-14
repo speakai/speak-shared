@@ -292,6 +292,9 @@ export const DASHBOARD_SPEAKER_MAX_PROFILES = 60;
 export const DASHBOARD_SPEAKER_NAME_MAX = 80;
 export const DASHBOARD_SPEAKER_BIO_MAX = 600;
 export const DASHBOARD_SPEAKER_PHOTO_MAX_BYTES = 2 * 1024 * 1024;
+export const DASHBOARD_SPEAKER_PHOTO_KEY_MAX = 1024;
+export const DASHBOARD_SPEAKER_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}$/;
+export const DASHBOARD_SPEAKER_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const;
 
 /** One speaker as stored in dashboard.settings.speakers; photoKey is an S3 URI in the app bucket */
 export interface IDashboardSpeakerProfile {
@@ -317,4 +320,19 @@ export interface IPublicDashboardSpeaker {
 export interface IPublicDashboardSpeakers {
   fieldId: string;
   profiles: IPublicDashboardSpeaker[];
+}
+
+export const DASHBOARD_THEMES = ['light', 'dark'] as const;
+export type DashboardTheme = (typeof DASHBOARD_THEMES)[number];
+
+export interface IPublicDashboardBranding {
+  logo: string;
+  logoDark: string;
+  favicon: string;
+  primaryColor: string;
+  titleColor: string;
+  backgroundColor: string;
+  theme: DashboardTheme | '';
+  fontFamily: string;
+  assistantTemplateId: string;
 }

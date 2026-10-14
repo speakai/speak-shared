@@ -18,6 +18,14 @@ export const DASHBOARD_GRID_COLS = 12;
 /** Id of the implicit section that holds widgets no explicit section claims. */
 export const SECTION_OVERVIEW_ID = 'overview';
 
+export const TABLE_CARD_LAYOUTS = ['grid', 'rows'] as const;
+export type TableCardLayout = (typeof TABLE_CARD_LAYOUTS)[number];
+
+export const TABLE_PAGE_SIZE_MAX = 100;
+
+export const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+export const FONT_FAMILY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 ]{0,59}$/;
+
 /**
  * Max nesting depth of `and`/`or` in a filter. A leaf predicate is depth 1.
  * Semantic cap — produces a correctable error. NOT the stack-overflow defense.
@@ -116,4 +124,12 @@ export function resolveSectionGroups(
     { id: SECTION_OVERVIEW_ID, title: 'Overview', icon: 'layout-dashboard', widgetIds: orphans, isImplicit: true },
     ...groups,
   ];
+}
+
+export function isHexColor(value: unknown): value is string {
+  return typeof value === 'string' && HEX_COLOR_PATTERN.test(value);
+}
+
+export function isSafeFontFamily(value: unknown): value is string {
+  return typeof value === 'string' && FONT_FAMILY_PATTERN.test(value);
 }

@@ -13,6 +13,8 @@ import {
   MAX_JSON_DEPTH,
   SECTION_OVERVIEW_ID,
   exceedsJsonDepth,
+  isHexColor,
+  isSafeFontFamily,
   rectsOverlap,
   resolveSectionGroups,
 } from '../src/utils/dashboard-spec.js';
@@ -1817,5 +1819,17 @@ describe('field reference — resolving through the id map', () => {
       chart({ metric: { kind: 'field', fieldName: 'Nope', ref: { fieldId: 'bbbbbbbbbbbb' }, agg: 'avg' } }),
     ]));
     expect(message).toContain('unknown field "Nope"');
+  });
+});
+
+describe('branding value guards', () => {
+  it('accepts only #rgb or #rrggbb hex colours', () => {
+    expect(['#fff', '#0D9488'].every(isHexColor)).toBe(true);
+    expect(['fff', '#ffff', '#gggggg', 'red', '#fff;background:url(x)', 42, undefined].some(isHexColor)).toBe(false);
+  });
+
+  it('accepts only plain font family names of letters, digits and spaces', () => {
+    expect(['Inter', 'Open Sans 2'].every(isSafeFontFamily)).toBe(true);
+    expect([' Inter', 'Inter;color:red', "Inter'", 'a'.repeat(61), '', null].some(isSafeFontFamily)).toBe(false);
   });
 });
