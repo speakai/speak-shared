@@ -154,3 +154,15 @@ export interface IRecorderSessionSummary {
     failed: boolean;
   } | null;
 }
+
+export interface IRecorderSessionSaveBody {
+  sessionId: string;
+  version: number;
+  summary: IRecorderSessionSummary;
+  events: IRecorderSessionEvent[];
+}
+
+export interface IRecorderSessionLinkBody {
+  sessionId: string;
+  recordingId: string;
+}
