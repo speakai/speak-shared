@@ -368,6 +368,10 @@ const tableCardSchema = z.strictObject({
   subtitleColumns: z.array(z.string().min(1).max(40)).max(2).optional(),
   detailColumns: z.array(z.string().min(1).max(40)).max(2).optional(),
   showDuration: z.boolean().optional(),
+  layout: z.enum(['grid', 'rows']).optional(),
+  rowBy: z.string().min(1).max(40).optional(),
+  rowOrder: z.array(z.string().min(1).max(80)).max(50).optional(),
+  hero: z.boolean().optional(),
 });
 
 const tableConfigSchema = z
@@ -413,6 +417,7 @@ const tableConfigSchema = z
       if (c.card.titleColumn) refs.push(['titleColumn', c.card.titleColumn]);
       c.card.subtitleColumns?.forEach((h, i) => refs.push([`subtitleColumns.${i}`, h]));
       c.card.detailColumns?.forEach((h, i) => refs.push([`detailColumns.${i}`, h]));
+      if (c.card.rowBy) refs.push(['rowBy', c.card.rowBy]);
       for (const [key, header] of refs) {
         if (!headers.includes(header)) {
           ctx.addIssue({
@@ -421,6 +426,16 @@ const tableConfigSchema = z
             message: `card column "${header}" is not one of the table's headers`,
           });
         }
+      }
+      const isRows = c.card.layout === 'rows';
+      if (isRows && !c.card.rowBy) {
+        ctx.addIssue({ code: 'custom', path: ['card', 'rowBy'], message: 'card layout:"rows" requires rowBy' });
+      }
+      if (!isRows && c.card.rowBy) {
+        ctx.addIssue({ code: 'custom', path: ['card', 'rowBy'], message: 'card rowBy requires layout:"rows"' });
+      }
+      if (!isRows && c.card.rowOrder) {
+        ctx.addIssue({ code: 'custom', path: ['card', 'rowOrder'], message: 'card rowOrder requires layout:"rows"' });
       }
     }
   });

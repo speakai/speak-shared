@@ -1034,6 +1034,64 @@ describe('table cards', () => {
     })).success).toBe(false);
   });
 
+  describe('rows and hero', () => {
+    const cards = (card: Record<string, unknown>) =>
+      table({ rowsAre: 'records', columns, display: 'cards', card });
+    const paths = (r: ReturnType<typeof dashboardSpecSchema.safeParse>) =>
+      r.error!.issues.map((i) => i.path.join('.'));
+
+    it('accepts a rows layout with rowBy, rowOrder and hero', () => {
+      expect(dashboardSpecSchema.safeParse(cards({
+        layout: 'rows', rowBy: 'Country', rowOrder: ['Session A', 'Session B'], hero: true,
+      })).success).toBe(true);
+    });
+
+    it('rejects layout rows without rowBy', () => {
+      const r = dashboardSpecSchema.safeParse(cards({ layout: 'rows' }));
+      expect(r.success).toBe(false);
+      expect(paths(r)).toContain('widgets.0.config.card.rowBy');
+    });
+
+    it('rejects rowBy without layout rows', () => {
+      const r = dashboardSpecSchema.safeParse(cards({ rowBy: 'Country' }));
+      expect(r.success).toBe(false);
+      expect(paths(r)).toContain('widgets.0.config.card.rowBy');
+      expect(dashboardSpecSchema.safeParse(cards({ layout: 'grid', rowBy: 'Country' })).success).toBe(false);
+    });
+
+    it('rejects a rowBy that is not a header', () => {
+      const r = dashboardSpecSchema.safeParse(cards({ layout: 'rows', rowBy: 'Nope' }));
+      expect(r.success).toBe(false);
+      expect(paths(r)).toContain('widgets.0.config.card.rowBy');
+    });
+
+    it('rejects rowOrder without layout rows', () => {
+      const r = dashboardSpecSchema.safeParse(cards({ rowOrder: ['Session A'] }));
+      expect(r.success).toBe(false);
+      expect(paths(r)).toContain('widgets.0.config.card.rowOrder');
+    });
+
+    it('does not check rowOrder values against headers', () => {
+      expect(dashboardSpecSchema.safeParse(cards({
+        layout: 'rows', rowBy: 'Country', rowOrder: ['Not A Header'],
+      })).success).toBe(true);
+    });
+
+    it('rejects an oversized rowOrder', () => {
+      expect(dashboardSpecSchema.safeParse(cards({
+        layout: 'rows', rowBy: 'Country', rowOrder: Array.from({ length: 51 }, (_, i) => `v${i}`),
+      })).success).toBe(false);
+      expect(dashboardSpecSchema.safeParse(cards({
+        layout: 'rows', rowBy: 'Country', rowOrder: ['x'.repeat(81)],
+      })).success).toBe(false);
+    });
+
+    it('accepts hero alone and still rejects unknown card keys', () => {
+      expect(dashboardSpecSchema.safeParse(cards({ hero: true })).success).toBe(true);
+      expect(dashboardSpecSchema.safeParse(cards({ hero: true, banner: true })).success).toBe(false);
+    });
+  });
+
   it('rejects an unknown display value', () => {
     expect(dashboardSpecSchema.safeParse(table({ rowsAre: 'records', columns, display: 'grid' })).success).toBe(false);
   });
