@@ -367,11 +367,11 @@ const tableCardSchema = z.strictObject({
   titleColumn: z.string().min(1).max(40).optional(),
   subtitleColumns: z.array(z.string().min(1).max(40)).max(2).optional(),
   detailColumns: z.array(z.string().min(1).max(40)).max(2).optional(),
-  showDuration: z.boolean().optional(),
   layout: z.enum(['grid', 'rows']).optional(),
   rowBy: z.string().min(1).max(40).optional(),
   rowOrder: z.array(z.string().min(1).max(80)).max(50).optional(),
   hero: z.boolean().optional(),
+  showDuration: z.boolean().optional(),
 });
 
 const tableConfigSchema = z
