@@ -382,6 +382,7 @@ const tableConfigSchema = z
     columns: z.array(columnSchemaRaw).min(1).max(12),
     sort: z.strictObject({ column: z.string().min(1), dir: z.enum(['asc', 'desc']) }).optional(),
     limit: z.number().int().min(1).max(500).optional(),
+    pageSize: z.number().int().min(1).max(100).optional(),
     searchable: z.boolean().optional(),
     rowClick: z.enum(['openMedia', 'none']).optional(),
     // Records tables show a leading media-name column; set false to hide it when

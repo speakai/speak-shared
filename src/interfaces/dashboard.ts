@@ -291,6 +291,7 @@ export interface LeadCapture {
 export const DASHBOARD_SPEAKER_MAX_PROFILES = 60;
 export const DASHBOARD_SPEAKER_NAME_MAX = 80;
 export const DASHBOARD_SPEAKER_BIO_MAX = 600;
+export const DASHBOARD_SPEAKER_PHOTO_MAX_BYTES = 2 * 1024 * 1024;
 
 /** One speaker as stored in dashboard.settings.speakers; photoKey is an S3 URI in the app bucket */
 export interface IDashboardSpeakerProfile {

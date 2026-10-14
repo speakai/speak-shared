@@ -981,6 +981,13 @@ describe('table cards', () => {
     expect(result.success).toBe(true);
   });
 
+  it('accepts pageSize 1..100 and rejects values outside it', () => {
+    const withPageSize = (pageSize: number) =>
+      dashboardSpecSchema.safeParse(table({ rowsAre: 'records', columns, pageSize })).success;
+    expect([1, 25, 100].map(withPageSize)).toEqual([true, true, true]);
+    expect([0, 101, 2.5].map(withPageSize)).toEqual([false, false, false]);
+  });
+
   it('rejects display:"cards" on a groups table', () => {
     const result = dashboardSpecSchema.safeParse(table({
       rowsAre: 'groups',
