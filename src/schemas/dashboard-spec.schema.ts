@@ -368,6 +368,8 @@ const tableCardSchema = z.strictObject({
   subtitleColumns: z.array(z.string().min(1).max(40)).max(2).optional(),
   detailColumns: z.array(z.string().min(1).max(40)).max(2).optional(),
   showDuration: z.boolean().optional(),
+  // Column whose value is looked up in the dashboard's speaker profiles to show a round photo.
+  avatarColumn: z.string().min(1).max(40).optional(),
 });
 
 const tableConfigSchema = z
@@ -411,6 +413,7 @@ const tableConfigSchema = z
     if (c.card) {
       const refs: Array<[string, string]> = [];
       if (c.card.titleColumn) refs.push(['titleColumn', c.card.titleColumn]);
+      if (c.card.avatarColumn) refs.push(['avatarColumn', c.card.avatarColumn]);
       c.card.subtitleColumns?.forEach((h, i) => refs.push([`subtitleColumns.${i}`, h]));
       c.card.detailColumns?.forEach((h, i) => refs.push([`detailColumns.${i}`, h]));
       for (const [key, header] of refs) {
