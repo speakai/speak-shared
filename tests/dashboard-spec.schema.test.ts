@@ -13,6 +13,8 @@ import {
   MAX_JSON_DEPTH,
   SECTION_OVERVIEW_ID,
   exceedsJsonDepth,
+  isHexColor,
+  isSafeFontFamily,
   rectsOverlap,
   resolveSectionGroups,
 } from '../src/utils/dashboard-spec.js';
@@ -981,6 +983,13 @@ describe('table cards', () => {
     expect(result.success).toBe(true);
   });
 
+  it('accepts pageSize 1..100 and rejects values outside it', () => {
+    const withPageSize = (pageSize: number) =>
+      dashboardSpecSchema.safeParse(table({ rowsAre: 'records', columns, pageSize })).success;
+    expect([1, 25, 100].map(withPageSize)).toEqual([true, true, true]);
+    expect([0, 101, 2.5].map(withPageSize)).toEqual([false, false, false]);
+  });
+
   it('rejects display:"cards" on a groups table', () => {
     const result = dashboardSpecSchema.safeParse(table({
       rowsAre: 'groups',
@@ -1019,6 +1028,25 @@ describe('table cards', () => {
     }));
   });
 
+  it('accepts an imageColumn that is a real header and rejects one that is not', () => {
+    expect(dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      columns,
+      display: 'cards',
+      card: { imageColumn: 'Country' },
+    })).success).toBe(true);
+    const bad = dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      columns,
+      display: 'cards',
+      card: { imageColumn: 'Nope' },
+    }));
+    expect(bad.success).toBe(false);
+    expect(bad.error!.issues).toContainEqual(expect.objectContaining({
+      path: ['widgets', 0, 'config', 'card', 'imageColumn'],
+    }));
+  });
+
   it('rejects more than two detail columns and unknown card keys', () => {
     expect(dashboardSpecSchema.safeParse(table({
       rowsAre: 'records',
@@ -1032,6 +1060,38 @@ describe('table cards', () => {
       display: 'cards',
       card: { imageField: 'Status' },
     })).success).toBe(false);
+  });
+
+  describe('rows and hero', () => {
+    const cards = (card: Record<string, unknown>) =>
+      table({ rowsAre: 'records', columns, display: 'cards', card });
+    const failsAt = (card: Record<string, unknown>, path: string) => {
+      const r = dashboardSpecSchema.safeParse(cards(card));
+      expect(r.success).toBe(false);
+      expect(r.error!.issues.map((i) => i.path.join('.'))).toContain(path);
+    };
+
+    it('accepts a rows layout with rowBy, rowOrder and hero', () => {
+      expect(dashboardSpecSchema.safeParse(cards({
+        layout: 'rows', rowBy: 'Country', rowOrder: ['Not A Header'], hero: true,
+      })).success).toBe(true);
+    });
+
+    it('requires rowBy and rowOrder to go with layout rows, and rowBy to be a header', () => {
+      failsAt({ layout: 'rows' }, 'widgets.0.config.card.rowBy');
+      failsAt({ layout: 'grid', rowBy: 'Country' }, 'widgets.0.config.card.rowBy');
+      failsAt({ layout: 'rows', rowBy: 'Nope' }, 'widgets.0.config.card.rowBy');
+      failsAt({ rowOrder: ['Session A'] }, 'widgets.0.config.card.rowOrder');
+    });
+
+    it('caps rowOrder at 50 entries of 80 characters', () => {
+      expect(dashboardSpecSchema.safeParse(cards({
+        layout: 'rows', rowBy: 'Country', rowOrder: Array.from({ length: 51 }, (_, i) => `v${i}`),
+      })).success).toBe(false);
+      expect(dashboardSpecSchema.safeParse(cards({
+        layout: 'rows', rowBy: 'Country', rowOrder: ['x'.repeat(81)],
+      })).success).toBe(false);
+    });
   });
 
   it('rejects an unknown display value', () => {
@@ -1759,5 +1819,17 @@ describe('field reference — resolving through the id map', () => {
       chart({ metric: { kind: 'field', fieldName: 'Nope', ref: { fieldId: 'bbbbbbbbbbbb' }, agg: 'avg' } }),
     ]));
     expect(message).toContain('unknown field "Nope"');
+  });
+});
+
+describe('branding value guards', () => {
+  it('accepts only #rgb or #rrggbb hex colours', () => {
+    expect(['#fff', '#0D9488'].every(isHexColor)).toBe(true);
+    expect(['fff', '#ffff', '#gggggg', 'red', '#fff;background:url(x)', 42, undefined].some(isHexColor)).toBe(false);
+  });
+
+  it('accepts only plain font family names of letters, digits and spaces', () => {
+    expect(['Inter', 'Open Sans 2'].every(isSafeFontFamily)).toBe(true);
+    expect([' Inter', 'Inter;color:red', "Inter'", 'a'.repeat(61), '', null].some(isSafeFontFamily)).toBe(false);
   });
 });

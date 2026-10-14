@@ -3,6 +3,8 @@ import { CommentListFilter } from "../src/enums/index.js";
 import {
   DEFAULT_LABEL_COLOR,
   LABEL_COLOR_PRESETS,
+  findDashboardProfile,
+  isHttpUrl,
   SPEAK_LABEL_SETS,
   labelNameKey,
   matchesCommentFilter,
@@ -26,6 +28,26 @@ describe("reviewer name key", () => {
     expect(reviewerNameKey("  Ana \u00a0 REVIEWER ")).toBe(reviewerNameKey("ana reviewer"));
     expect(reviewerNameKey("\uff21na Reviewer")).toBe(reviewerNameKey("Ana Reviewer"));
     expect(reviewerNameKey("Ana Reviewer")).not.toBe(reviewerNameKey("Ana Reviewers"));
+  });
+});
+
+describe("dashboard profiles", () => {
+  it("finds a profile by field and name key, and accepts only http(s) links", () => {
+    const groups = [
+      { fieldId: "f1", label: "Agent", entries: [{ id: "a", name: "Ana Reviewer", imageUrl: "https://x/a.png" }] },
+      { fieldId: "f2", label: "Team", entries: [{ id: "b", name: "Ana Reviewer" }] },
+    ];
+    expect(findDashboardProfile(groups, "f1", "  ana  REVIEWER ")?.id).toBe("a");
+    expect(findDashboardProfile(groups, "f2", "Ana Reviewer")?.id).toBe("b");
+    expect(findDashboardProfile(groups, "f3", "Ana Reviewer")).toBeUndefined();
+    expect(findDashboardProfile(groups, undefined, "Ana Reviewer")).toBeUndefined();
+    expect(findDashboardProfile(groups, "f1", "  ")).toBeUndefined();
+    expect(findDashboardProfile(undefined, "f1", "Ana Reviewer")).toBeUndefined();
+    expect(isHttpUrl(" https://speakai.co ")).toBe(true);
+    expect(isHttpUrl("HTTP://speakai.co")).toBe(true);
+    expect(isHttpUrl("javascript:alert(1)")).toBe(false);
+    expect(isHttpUrl("//speakai.co")).toBe(false);
+    expect(isHttpUrl(undefined)).toBe(false);
   });
 });
 

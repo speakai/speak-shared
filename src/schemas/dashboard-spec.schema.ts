@@ -20,6 +20,8 @@ import {
   MAX_FILTER_DEPTH,
   MAX_JSON_DEPTH,
   SECTION_OVERVIEW_ID,
+  TABLE_CARD_LAYOUTS,
+  TABLE_PAGE_SIZE_MAX,
   exceedsJsonDepth,
   rectsOverlap,
   resolveSectionGroups,
@@ -367,7 +369,12 @@ const tableCardSchema = z.strictObject({
   titleColumn: z.string().min(1).max(40).optional(),
   subtitleColumns: z.array(z.string().min(1).max(40)).max(2).optional(),
   detailColumns: z.array(z.string().min(1).max(40)).max(2).optional(),
+  layout: z.enum(TABLE_CARD_LAYOUTS).optional(),
+  rowBy: z.string().min(1).max(40).optional(),
+  rowOrder: z.array(z.string().min(1).max(80)).max(50).optional(),
+  hero: z.boolean().optional(),
   showDuration: z.boolean().optional(),
+  imageColumn: z.string().min(1).max(40).optional(),
 });
 
 const tableConfigSchema = z
@@ -377,6 +384,7 @@ const tableConfigSchema = z
     columns: z.array(columnSchemaRaw).min(1).max(12),
     sort: z.strictObject({ column: z.string().min(1), dir: z.enum(['asc', 'desc']) }).optional(),
     limit: z.number().int().min(1).max(500).optional(),
+    pageSize: z.number().int().min(1).max(TABLE_PAGE_SIZE_MAX).optional(),
     searchable: z.boolean().optional(),
     rowClick: z.enum(['openMedia', 'none']).optional(),
     // Records tables show a leading media-name column; set false to hide it when
@@ -411,8 +419,10 @@ const tableConfigSchema = z
     if (c.card) {
       const refs: Array<[string, string]> = [];
       if (c.card.titleColumn) refs.push(['titleColumn', c.card.titleColumn]);
+      if (c.card.imageColumn) refs.push(['imageColumn', c.card.imageColumn]);
       c.card.subtitleColumns?.forEach((h, i) => refs.push([`subtitleColumns.${i}`, h]));
       c.card.detailColumns?.forEach((h, i) => refs.push([`detailColumns.${i}`, h]));
+      if (c.card.rowBy) refs.push(['rowBy', c.card.rowBy]);
       for (const [key, header] of refs) {
         if (!headers.includes(header)) {
           ctx.addIssue({
@@ -421,6 +431,16 @@ const tableConfigSchema = z
             message: `card column "${header}" is not one of the table's headers`,
           });
         }
+      }
+      const isRows = c.card.layout === 'rows';
+      if (isRows && !c.card.rowBy) {
+        ctx.addIssue({ code: 'custom', path: ['card', 'rowBy'], message: 'card layout:"rows" requires rowBy' });
+      }
+      if (!isRows && c.card.rowBy) {
+        ctx.addIssue({ code: 'custom', path: ['card', 'rowBy'], message: 'card rowBy requires layout:"rows"' });
+      }
+      if (!isRows && c.card.rowOrder) {
+        ctx.addIssue({ code: 'custom', path: ['card', 'rowOrder'], message: 'card rowOrder requires layout:"rows"' });
       }
     }
   });
