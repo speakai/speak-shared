@@ -16,6 +16,7 @@ export const MAX_DASHBOARD_LABEL_GROUPS = 100;
 export const PUBLIC_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 /** #rrggbb, any case; stored lowercase */
 export const LABEL_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
+const HTTP_URL_PATTERN = /^https?:\/\//i;
 
 /** Colours the label colour picker offers, in order */
 export const LABEL_COLOR_PRESETS = [
@@ -119,6 +120,20 @@ export function labelNameKey(name: string): string {
  */
 export function reviewerNameKey(name: string): string {
   return labelNameKey(name.normalize("NFKC"));
+}
+
+export function findDashboardProfile<E extends { name: string }>(
+  groups: readonly { fieldId: string; entries: readonly E[] }[] | undefined,
+  fieldId: string | undefined,
+  name: string
+): E | undefined {
+  const wanted = reviewerNameKey(name);
+  if (!fieldId || !wanted) return undefined;
+  return groups?.find((g) => g.fieldId === fieldId)?.entries.find((e) => reviewerNameKey(e.name) === wanted);
+}
+
+export function isHttpUrl(value: unknown): value is string {
+  return typeof value === 'string' && HTTP_URL_PATTERN.test(value.trim());
 }
 
 /** Whether a comment thread belongs under a comments filter, by its starter; ALL matches every thread */

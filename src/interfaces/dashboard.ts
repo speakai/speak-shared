@@ -304,7 +304,6 @@ export interface LeadCapture {
   consentText?: string;
 }
 
-/** One value of the group's field as stored in dashboard.settings.profiles; imageKey is an S3 URI in the app bucket */
 export interface IDashboardProfileEntry {
   id: string;
   name: string;
@@ -320,7 +319,6 @@ export interface IDashboardProfileGroup {
   entries: IDashboardProfileEntry[];
 }
 
-/** Public config profile entry: imageKey is replaced by a signed imageUrl */
 export interface IPublicDashboardProfileEntry {
   id: string;
   name: string;
