@@ -32,6 +32,8 @@ export enum RecorderSessionEventType {
   WAKELOCK_ACQUIRED = 'wakelock_acquired',
   WAKELOCK_RELEASED = 'wakelock_released',
   WAKELOCK_DENIED = 'wakelock_denied',
+  FLOATING_WINDOW_OPENED = 'floating_window_opened',
+  FLOATING_WINDOW_CLOSED = 'floating_window_closed',
   MIC_MUTED = 'mic_muted',
   MIC_UNMUTED = 'mic_unmuted',
   MIC_ENDED = 'mic_ended',
@@ -101,6 +103,14 @@ export const RECORDER_SESSION_EVENTS: Readonly<
   [RecorderSessionEventType.WAKELOCK_DENIED]: {
     category: RecorderSessionEventCategory.SCREEN_TAB,
     description: 'The browser did not allow the recorder to keep the screen awake.',
+  },
+  [RecorderSessionEventType.FLOATING_WINDOW_OPENED]: {
+    category: RecorderSessionEventCategory.SCREEN_TAB,
+    description: "The recorder's small floating window was opened to keep the laptop awake.",
+  },
+  [RecorderSessionEventType.FLOATING_WINDOW_CLOSED]: {
+    category: RecorderSessionEventCategory.SCREEN_TAB,
+    description: "The recorder's small floating window was closed; the recording continued.",
   },
   [RecorderSessionEventType.GAP]: {
     category: RecorderSessionEventCategory.AUDIO_CAPTURE,
