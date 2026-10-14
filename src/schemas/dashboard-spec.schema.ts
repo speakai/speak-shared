@@ -368,7 +368,6 @@ const tableCardSchema = z.strictObject({
   subtitleColumns: z.array(z.string().min(1).max(40)).max(2).optional(),
   detailColumns: z.array(z.string().min(1).max(40)).max(2).optional(),
   showDuration: z.boolean().optional(),
-  // Column whose value is looked up in the dashboard's speaker profiles to show a round photo.
   avatarColumn: z.string().min(1).max(40).optional(),
 });
 
