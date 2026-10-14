@@ -287,3 +287,33 @@ export interface LeadCapture {
   requireConsent: boolean;
   consentText?: string;
 }
+
+export const DASHBOARD_SPEAKER_MAX_PROFILES = 60;
+export const DASHBOARD_SPEAKER_NAME_MAX = 80;
+export const DASHBOARD_SPEAKER_BIO_MAX = 600;
+
+/** One speaker as stored in dashboard.settings.speakers; photoKey is an S3 URI in the app bucket */
+export interface IDashboardSpeakerProfile {
+  id: string;
+  name: string;
+  photoKey?: string;
+  bio?: string;
+}
+
+export interface IDashboardSpeakersSettings {
+  fieldId: string;
+  profiles: IDashboardSpeakerProfile[];
+}
+
+/** Public config speaker: photoKey is replaced by a signed photoUrl */
+export interface IPublicDashboardSpeaker {
+  id: string;
+  name: string;
+  photoUrl?: string;
+  bio?: string;
+}
+
+export interface IPublicDashboardSpeakers {
+  fieldId: string;
+  profiles: IPublicDashboardSpeaker[];
+}

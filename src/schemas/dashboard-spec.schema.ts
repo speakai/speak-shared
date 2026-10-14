@@ -372,6 +372,7 @@ const tableCardSchema = z.strictObject({
   rowOrder: z.array(z.string().min(1).max(80)).max(50).optional(),
   hero: z.boolean().optional(),
   showDuration: z.boolean().optional(),
+  avatarColumn: z.string().min(1).max(40).optional(),
 });
 
 const tableConfigSchema = z
@@ -415,6 +416,7 @@ const tableConfigSchema = z
     if (c.card) {
       const refs: Array<[string, string]> = [];
       if (c.card.titleColumn) refs.push(['titleColumn', c.card.titleColumn]);
+      if (c.card.avatarColumn) refs.push(['avatarColumn', c.card.avatarColumn]);
       c.card.subtitleColumns?.forEach((h, i) => refs.push([`subtitleColumns.${i}`, h]));
       c.card.detailColumns?.forEach((h, i) => refs.push([`detailColumns.${i}`, h]));
       if (c.card.rowBy) refs.push(['rowBy', c.card.rowBy]);

@@ -1019,6 +1019,25 @@ describe('table cards', () => {
     }));
   });
 
+  it('accepts an avatarColumn that is a real header and rejects one that is not', () => {
+    expect(dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      columns,
+      display: 'cards',
+      card: { avatarColumn: 'Country' },
+    })).success).toBe(true);
+    const bad = dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      columns,
+      display: 'cards',
+      card: { avatarColumn: 'Nope' },
+    }));
+    expect(bad.success).toBe(false);
+    expect(bad.error!.issues).toContainEqual(expect.objectContaining({
+      path: ['widgets', 0, 'config', 'card', 'avatarColumn'],
+    }));
+  });
+
   it('rejects more than two detail columns and unknown card keys', () => {
     expect(dashboardSpecSchema.safeParse(table({
       rowsAre: 'records',
