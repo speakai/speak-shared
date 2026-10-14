@@ -86,12 +86,6 @@ Work on a branch and open every pull request as a draft, for example with
 review once CI passes, and a person merges it. Use conventional commit subjects, because they
 decide the next version number.
 
-## Instructions for AI coding agents
-
-Agent instructions live in `AGENTS.md`; `CLAUDE.md` only imports it. Guard hooks in
-`.claude/hooks/ai-skills/` run in Claude Code and Codex: they keep pull requests as drafts, block
-merges and committed credentials, and flag weak or duplicated tests.
-
 ## Related
 
 - [@speakai/mcp-server](https://github.com/speakai/speakai-mcp) — MCP Server & CLI for Speak AI
