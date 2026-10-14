@@ -1,6 +1,7 @@
 export enum ExportFormatType {
   CSV = 'csv',
   CSV_INSIGHTS = 'csv-insights',
+  CSV_LABELS = 'csv-labels',
   CSV_TRANSCRIPT = 'csv-transcript',
   CSV_TRANSCRIPT_WITH_SENTIMENT = 'csv-transcript-sentiment',
   CSV_TEXT_WITH_SENTIMENT = 'csv-text-sentiment',

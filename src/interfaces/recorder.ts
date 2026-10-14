@@ -1,4 +1,9 @@
-import { RecorderAnswerType } from '../enums/index.js';
+import {
+  RecorderAnswerType,
+  RecorderSessionEventCategory,
+  RecorderSessionEventType,
+  RecorderSessionWakeLock,
+} from '../enums/index.js';
 
 export interface IRecorderQuestion {
   id: string;
@@ -116,4 +121,48 @@ export interface IRecording {
   };
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IRecorderSessionEventEntry {
+  category: RecorderSessionEventCategory;
+  description: string;
+}
+
+export interface IRecorderSessionEvent {
+  t: number;
+  type: RecorderSessionEventType;
+  data?: Record<string, string | number | boolean | null>;
+}
+
+export interface IRecorderSessionSummary {
+  timing: {
+    wallClockMs: number;
+    recordedMs: number;
+    userPausedMs: number;
+  };
+  interruptions: {
+    longestGapMs: number;
+    suspendDetected: boolean;
+  };
+  environment: {
+    wakeLock: RecorderSessionWakeLock | null;
+    embedded: boolean;
+    charging: boolean | null;
+  };
+  live: {
+    downMs: number;
+    failed: boolean;
+  } | null;
+}
+
+export interface IRecorderSessionSaveBody {
+  sessionId: string;
+  version: number;
+  summary: IRecorderSessionSummary;
+  events: IRecorderSessionEvent[];
+}
+
+export interface IRecorderSessionLinkBody {
+  sessionId: string;
+  recordingId: string;
 }

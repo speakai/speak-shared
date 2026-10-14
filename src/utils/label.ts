@@ -1,6 +1,8 @@
 import { CommentListFilter, SpeakLabelSet, UserRole } from '../enums/index.js';
-import type { IMediaComment } from '../interfaces/label.js';
+import type { IMediaComment, IRangeConfidence } from '../interfaces/label.js';
+import type { ConfidenceBand } from '../interfaces/transcript.js';
 import type { IUserPermission } from '../interfaces/user.js';
+import { confidenceBand } from './transcript.js';
 
 // Limits the server enforces on labels and comments; front ends and the MCP read the same values.
 export const LABEL_NAME_MAX = 80;
@@ -14,6 +16,7 @@ export const MAX_DASHBOARD_LABEL_GROUPS = 100;
 export const PUBLIC_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 /** #rrggbb, any case; stored lowercase */
 export const LABEL_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
+const HTTP_URL_PATTERN = /^https?:\/\//i;
 
 /** Colours the label colour picker offers, in order */
 export const LABEL_COLOR_PRESETS = [
@@ -95,7 +98,7 @@ export const LABEL_PERMISSION_DEFAULTS: Readonly<Record<UserRole, ILabelPermissi
   [UserRole.OWNER]: ALL_LABEL_PERMISSIONS,
   [UserRole.ADMIN]: ALL_LABEL_PERMISSIONS,
   [UserRole.MEMBER]: {
-    labels: { create: false, update: false, delete: false, assign: true },
+    labels: { create: true, update: true, delete: false, assign: true },
     comments: { create: true, update: true, delete: false },
   },
 };
@@ -119,6 +122,20 @@ export function reviewerNameKey(name: string): string {
   return labelNameKey(name.normalize("NFKC"));
 }
 
+export function findDashboardProfile<E extends { name: string }>(
+  groups: readonly { fieldId: string; entries: readonly E[] }[] | undefined,
+  fieldId: string | undefined,
+  name: string
+): E | undefined {
+  const wanted = reviewerNameKey(name);
+  if (!fieldId || !wanted) return undefined;
+  return groups?.find((g) => g.fieldId === fieldId)?.entries.find((e) => reviewerNameKey(e.name) === wanted);
+}
+
+export function isHttpUrl(value: unknown): value is string {
+  return typeof value === 'string' && HTTP_URL_PATTERN.test(value.trim());
+}
+
 /** Whether a comment thread belongs under a comments filter, by its starter; ALL matches every thread */
 export function matchesCommentFilter(
   thread: Pick<IMediaComment, 'isResolved'> & { anchor?: IMediaComment['anchor'] },
@@ -128,4 +145,20 @@ export function matchesCommentFilter(
   if (filter === CommentListFilter.RESOLVED) return thread.isResolved;
   if (filter === CommentListFilter.FILE) return !thread.anchor;
   return true;
+}
+
+export function rangeConfidence(confidences: (number | undefined)[], start: number, end: number): IRangeConfidence | null {
+  const measured: number[] = [];
+  for (let i = Math.max(0, start); i <= end && i < confidences.length; i++) {
+    const value = confidences[i];
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= 1) measured.push(value);
+  }
+  if (measured.length === 0) return null;
+  const bands = measured.map(confidenceBand);
+  const band: ConfidenceBand = bands.includes('very-low') ? 'very-low' : bands.includes('low') ? 'low' : 'ok';
+  return {
+    average: measured.reduce((sum, value) => sum + value, 0) / measured.length,
+    band,
+    lowWords: bands.filter((b) => b !== 'ok').length,
+  };
 }

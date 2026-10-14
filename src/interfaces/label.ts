@@ -7,6 +7,7 @@ import {
   SpeakLabelSet,
 } from '../enums/index.js';
 import type { IMediaTranscriptMeta } from './media.js';
+import type { ConfidenceBand } from './transcript.js';
 
 export interface IAnchor {
   /** Index of the first word in flattenWords() order at transcriptRevision */
@@ -362,4 +363,10 @@ export type ILinkCreateMediaCommentBody = Omit<ICreateMediaCommentBody, 'mediaLa
 /** PATCH /v1/embed/media/:mediaId/comments/:commentId */
 export interface ILinkUpdateMediaCommentBody extends ILinkReviewerBody {
   body: string;
+}
+
+export interface IRangeConfidence {
+  average: number;
+  band: ConfidenceBand;
+  lowWords: number;
 }

@@ -13,6 +13,8 @@ import {
   MAX_JSON_DEPTH,
   SECTION_OVERVIEW_ID,
   exceedsJsonDepth,
+  isHexColor,
+  isSafeFontFamily,
   rectsOverlap,
   resolveSectionGroups,
 } from '../src/utils/dashboard-spec.js';
@@ -961,6 +963,182 @@ describe('table config', () => {
   });
 });
 
+describe('table cards', () => {
+  const table = (config: Record<string, unknown>) =>
+    specWith([{ id: 'tbl', type: 'table', title: 'T', layout: LAYOUT, config }]);
+  const columns = [
+    { header: 'Status', field: 'Status' },
+    { header: 'Country', field: 'Country' },
+    { header: 'Region', field: 'Region' },
+  ];
+
+  it('accepts display:"cards" with a card config that points at real headers', () => {
+    const result = dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      rowClick: 'openMedia',
+      columns,
+      display: 'cards',
+      card: { titleColumn: 'Status', subtitleColumns: ['Country'], detailColumns: ['Region'], showDuration: true },
+    }));
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts pageSize 1..100 and rejects values outside it', () => {
+    const withPageSize = (pageSize: number) =>
+      dashboardSpecSchema.safeParse(table({ rowsAre: 'records', columns, pageSize })).success;
+    expect([1, 25, 100].map(withPageSize)).toEqual([true, true, true]);
+    expect([0, 101, 2.5].map(withPageSize)).toEqual([false, false, false]);
+  });
+
+  it('rejects display:"cards" on a groups table', () => {
+    const result = dashboardSpecSchema.safeParse(table({
+      rowsAre: 'groups',
+      groupBy: { kind: 'folder' },
+      columns,
+      display: 'cards',
+    }));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      path: ['widgets', 0, 'config', 'display'],
+    }));
+  });
+
+  it('rejects a card config without display:"cards"', () => {
+    const result = dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      columns,
+      card: { titleColumn: 'Status' },
+    }));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      path: ['widgets', 0, 'config', 'card'],
+    }));
+  });
+
+  it('rejects a card column that is not a header, at its own path', () => {
+    const result = dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      columns,
+      display: 'cards',
+      card: { subtitleColumns: ['Country', 'Nope'] },
+    }));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      path: ['widgets', 0, 'config', 'card', 'subtitleColumns', 1],
+    }));
+  });
+
+  it('accepts an imageColumn that is a real header and rejects one that is not', () => {
+    expect(dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      columns,
+      display: 'cards',
+      card: { imageColumn: 'Country' },
+    })).success).toBe(true);
+    const bad = dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      columns,
+      display: 'cards',
+      card: { imageColumn: 'Nope' },
+    }));
+    expect(bad.success).toBe(false);
+    expect(bad.error!.issues).toContainEqual(expect.objectContaining({
+      path: ['widgets', 0, 'config', 'card', 'imageColumn'],
+    }));
+  });
+
+  it('rejects more than two detail columns and unknown card keys', () => {
+    expect(dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      columns,
+      display: 'cards',
+      card: { detailColumns: ['Status', 'Country', 'Region'] },
+    })).success).toBe(false);
+    expect(dashboardSpecSchema.safeParse(table({
+      rowsAre: 'records',
+      columns,
+      display: 'cards',
+      card: { imageField: 'Status' },
+    })).success).toBe(false);
+  });
+
+  describe('rows and hero', () => {
+    const cards = (card: Record<string, unknown>) =>
+      table({ rowsAre: 'records', columns, display: 'cards', card });
+    const failsAt = (card: Record<string, unknown>, path: string) => {
+      const r = dashboardSpecSchema.safeParse(cards(card));
+      expect(r.success).toBe(false);
+      expect(r.error!.issues.map((i) => i.path.join('.'))).toContain(path);
+    };
+
+    it('accepts a rows layout with rowBy, rowOrder and hero', () => {
+      expect(dashboardSpecSchema.safeParse(cards({
+        layout: 'rows', rowBy: 'Country', rowOrder: ['Not A Header'], hero: true,
+      })).success).toBe(true);
+    });
+
+    it('requires rowBy and rowOrder to go with layout rows, and rowBy to be a header', () => {
+      failsAt({ layout: 'rows' }, 'widgets.0.config.card.rowBy');
+      failsAt({ layout: 'grid', rowBy: 'Country' }, 'widgets.0.config.card.rowBy');
+      failsAt({ layout: 'rows', rowBy: 'Nope' }, 'widgets.0.config.card.rowBy');
+      failsAt({ rowOrder: ['Session A'] }, 'widgets.0.config.card.rowOrder');
+    });
+
+    it('caps rowOrder at 50 entries of 80 characters', () => {
+      expect(dashboardSpecSchema.safeParse(cards({
+        layout: 'rows', rowBy: 'Country', rowOrder: Array.from({ length: 51 }, (_, i) => `v${i}`),
+      })).success).toBe(false);
+      expect(dashboardSpecSchema.safeParse(cards({
+        layout: 'rows', rowBy: 'Country', rowOrder: ['x'.repeat(81)],
+      })).success).toBe(false);
+    });
+  });
+
+  it('rejects an unknown display value', () => {
+    expect(dashboardSpecSchema.safeParse(table({ rowsAre: 'records', columns, display: 'grid' })).success).toBe(false);
+  });
+});
+
+describe('notes widget actions', () => {
+  const notes = (actions: unknown, sections: unknown[] = []) =>
+    specWith(
+      [{ id: 'intro', type: 'notes', title: 'Welcome', layout: LAYOUT, config: { content: 'Hello', actions } }],
+      sections,
+    );
+  const sections = [{ id: 'sessions', title: 'Sessions', icon: 'video', widgetIds: [] }];
+
+  it('accepts openChat and goToSection buttons', () => {
+    const result = dashboardSpecSchema.safeParse(notes(
+      [
+        { label: 'Ask a question', action: 'openChat' },
+        { label: 'Watch sessions', action: 'goToSection', sectionId: 'sessions' },
+      ],
+      sections,
+    ));
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a goToSection with no sectionId or an unknown one', () => {
+    expect(dashboardSpecSchema.safeParse(notes([{ label: 'Go', action: 'goToSection' }], sections)).success).toBe(false);
+    const result = dashboardSpecSchema.safeParse(notes([{ label: 'Go', action: 'goToSection', sectionId: 'missing' }], sections));
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toContainEqual(expect.objectContaining({
+      path: ['widgets', 0, 'config', 'actions', 0, 'sectionId'],
+    }));
+  });
+
+  it('accepts the implicit overview section as a target', () => {
+    expect(dashboardSpecSchema.safeParse(notes([{ label: 'Home', action: 'goToSection', sectionId: SECTION_OVERVIEW_ID }])).success).toBe(true);
+  });
+
+  it('rejects openChat carrying a sectionId, a fourth button, and a missing label', () => {
+    expect(dashboardSpecSchema.safeParse(notes([{ label: 'Chat', action: 'openChat', sectionId: 'sessions' }], sections)).success).toBe(false);
+    const four = Array.from({ length: 4 }, (_, i) => ({ label: `B${i}`, action: 'openChat' }));
+    expect(dashboardSpecSchema.safeParse(notes(four)).success).toBe(false);
+    expect(dashboardSpecSchema.safeParse(notes([{ label: '', action: 'openChat' }])).success).toBe(false);
+  });
+});
+
 /* ── Strictness / key drift (R14) ────────────────────────────────────────── */
 
 describe('strictness — unknown keys are rejected, never stripped', () => {
@@ -1626,5 +1804,17 @@ describe('field reference — resolving through the id map', () => {
       chart({ metric: { kind: 'field', fieldName: 'Nope', ref: { fieldId: 'bbbbbbbbbbbb' }, agg: 'avg' } }),
     ]));
     expect(message).toContain('unknown field "Nope"');
+  });
+});
+
+describe('branding value guards', () => {
+  it('accepts only #rgb or #rrggbb hex colours', () => {
+    expect(['#fff', '#0D9488'].every(isHexColor)).toBe(true);
+    expect(['fff', '#ffff', '#gggggg', 'red', '#fff;background:url(x)', 42, undefined].some(isHexColor)).toBe(false);
+  });
+
+  it('accepts only plain font family names of letters, digits and spaces', () => {
+    expect(['Inter', 'Open Sans 2'].every(isSafeFontFamily)).toBe(true);
+    expect([' Inter', 'Inter;color:red', "Inter'", 'a'.repeat(61), '', null].some(isSafeFontFamily)).toBe(false);
   });
 });

@@ -724,7 +724,8 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     label: "Gemini 2.5 Flash",
     provider: LLMProvider.GOOGLE,
     family: "gemini",
-    status: "deprecated",
+    // Vertex retires it on 2026-10-20; retired so every resolver substitutes 3.7 Flash instead of dispatching it.
+    status: "retired",
     replacedBy: LLMModels.GEMINI_3_7_FLASH,
     offeredInChat: false,
     offeredInVoice: false,
@@ -744,7 +745,8 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     label: "Gemini 2.5 Pro",
     provider: LLMProvider.GOOGLE,
     family: "gemini",
-    status: "deprecated",
+    // Vertex retires it on 2026-10-20.
+    status: "retired",
     replacedBy: LLMModels.GEMINI_3_8_FLASH,
     offeredInChat: false,
     offeredInVoice: false,
@@ -766,7 +768,8 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     label: "Gemini 2.5 Flash Lite",
     provider: LLMProvider.GOOGLE,
     family: "gemini",
-    status: "deprecated",
+    // Vertex retires it on 2026-10-20.
+    status: "retired",
     replacedBy: LLMModels.GEMINI_3_7_FLASH,
     offeredInChat: false,
     offeredInVoice: false,
@@ -901,6 +904,28 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     maxOutputTokens: GEMINI_MAX_OUTPUT_TOKENS,
     capabilities: GEMINI_THINKING,
     openRouterSlug: "google/gemini-3.8-flash",
+  },
+  // Backup only: reached by provider failover when both Flash models are overloaded, never offered for selection.
+  {
+    id: LLMModels.GEMINI_4_ARGON,
+    label: "Gemini 4 Argon",
+    provider: LLMProvider.GOOGLE,
+    family: "gemini",
+    status: "live",
+    offeredInChat: false,
+    offeredInVoice: false,
+    premium: true,
+    // Google's rate from 2026-12-01 ($2 / $10 until then), billed from day one so a turn is never under-charged.
+    pricing: {
+      inputPerMillion: 4,
+      outputPerMillion: 20,
+      cachedInputPerMillion: 0.2,
+      provider: LLMProvider.GOOGLE,
+    },
+    // Google publishes no separate audio rate; audio at 2x input and video at input, the same ratio as Gemini 3.x Flash.
+    modality: { audioPerMillion: 8, videoPerMillion: 4 },
+    maxOutputTokens: GEMINI_MAX_OUTPUT_TOKENS,
+    capabilities: GEMINI_THINKING,
   },
 
   {

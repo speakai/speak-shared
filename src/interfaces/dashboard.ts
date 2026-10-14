@@ -57,6 +57,22 @@ export type {
  */
 export { DASHBOARD_GRID_COLS } from '../utils/dashboard-spec.js';
 
+export const DASHBOARD_PROFILE_GROUPS_MAX = 5;
+export const DASHBOARD_PROFILE_ENTRIES_MAX = 60;
+export const DASHBOARD_PROFILE_NAME_MAX = 80;
+export const DASHBOARD_PROFILE_LABEL_MAX = 40;
+export const DASHBOARD_PROFILE_DESCRIPTION_MAX = 600;
+export const DASHBOARD_PROFILE_LINK_MAX = 2048;
+export const DASHBOARD_PROFILE_IMAGE_MAX_BYTES = 2 * 1024 * 1024;
+export const DASHBOARD_PROFILE_IMAGE_KEY_MAX = 1024;
+export const DASHBOARD_PROFILE_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}$/;
+export const DASHBOARD_PROFILE_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const;
+export const DASHBOARD_PROFILE_IMAGE_SHAPES = ['round', 'square'] as const;
+export type DashboardProfileImageShape = (typeof DASHBOARD_PROFILE_IMAGE_SHAPES)[number];
+
+export const DASHBOARD_THEMES = ['light', 'dark'] as const;
+export type DashboardTheme = (typeof DASHBOARD_THEMES)[number];
+
 /**
  * Per-widget-type presentation metadata: default title, default grid geometry,
  * minimum geometry, and which config affordances apply. The single source of
@@ -286,4 +302,46 @@ export interface LeadCapture {
   collectName: boolean;
   requireConsent: boolean;
   consentText?: string;
+}
+
+export interface IDashboardProfileEntry {
+  id: string;
+  name: string;
+  imageKey?: string;
+  description?: string;
+  link?: string;
+}
+
+export interface IDashboardProfileGroup {
+  fieldId: string;
+  label: string;
+  imageShape?: DashboardProfileImageShape;
+  entries: IDashboardProfileEntry[];
+}
+
+export interface IPublicDashboardProfileEntry {
+  id: string;
+  name: string;
+  imageUrl?: string;
+  description?: string;
+  link?: string;
+}
+
+export interface IPublicDashboardProfileGroup {
+  fieldId: string;
+  label: string;
+  imageShape?: DashboardProfileImageShape;
+  entries: IPublicDashboardProfileEntry[];
+}
+
+export interface IPublicDashboardBranding {
+  logo: string;
+  logoDark: string;
+  favicon: string;
+  primaryColor: string;
+  titleColor: string;
+  backgroundColor: string;
+  theme: DashboardTheme | '';
+  fontFamily: string;
+  assistantTemplateId: string;
 }

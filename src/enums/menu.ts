@@ -16,6 +16,7 @@ export enum MenuItemId {
   Developers = 'developers-manage',
   AiAssistant = 'ai-assistant',
   Fields = 'fields',
+  Labels = 'labels',
   KnowledgeBase = 'knowledge-base',
   AgentsList = 'agents-list',
   AgentsConversations = 'agents-conversations',
