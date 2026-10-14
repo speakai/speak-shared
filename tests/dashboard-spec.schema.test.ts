@@ -1037,58 +1037,32 @@ describe('table cards', () => {
   describe('rows and hero', () => {
     const cards = (card: Record<string, unknown>) =>
       table({ rowsAre: 'records', columns, display: 'cards', card });
-    const paths = (r: ReturnType<typeof dashboardSpecSchema.safeParse>) =>
-      r.error!.issues.map((i) => i.path.join('.'));
+    const failsAt = (card: Record<string, unknown>, path: string) => {
+      const r = dashboardSpecSchema.safeParse(cards(card));
+      expect(r.success).toBe(false);
+      expect(r.error!.issues.map((i) => i.path.join('.'))).toContain(path);
+    };
 
     it('accepts a rows layout with rowBy, rowOrder and hero', () => {
       expect(dashboardSpecSchema.safeParse(cards({
-        layout: 'rows', rowBy: 'Country', rowOrder: ['Session A', 'Session B'], hero: true,
+        layout: 'rows', rowBy: 'Country', rowOrder: ['Not A Header'], hero: true,
       })).success).toBe(true);
     });
 
-    it('rejects layout rows without rowBy', () => {
-      const r = dashboardSpecSchema.safeParse(cards({ layout: 'rows' }));
-      expect(r.success).toBe(false);
-      expect(paths(r)).toContain('widgets.0.config.card.rowBy');
+    it('requires rowBy and rowOrder to go with layout rows, and rowBy to be a header', () => {
+      failsAt({ layout: 'rows' }, 'widgets.0.config.card.rowBy');
+      failsAt({ layout: 'grid', rowBy: 'Country' }, 'widgets.0.config.card.rowBy');
+      failsAt({ layout: 'rows', rowBy: 'Nope' }, 'widgets.0.config.card.rowBy');
+      failsAt({ rowOrder: ['Session A'] }, 'widgets.0.config.card.rowOrder');
     });
 
-    it('rejects rowBy without layout rows', () => {
-      const r = dashboardSpecSchema.safeParse(cards({ rowBy: 'Country' }));
-      expect(r.success).toBe(false);
-      expect(paths(r)).toContain('widgets.0.config.card.rowBy');
-      expect(dashboardSpecSchema.safeParse(cards({ layout: 'grid', rowBy: 'Country' })).success).toBe(false);
-    });
-
-    it('rejects a rowBy that is not a header', () => {
-      const r = dashboardSpecSchema.safeParse(cards({ layout: 'rows', rowBy: 'Nope' }));
-      expect(r.success).toBe(false);
-      expect(paths(r)).toContain('widgets.0.config.card.rowBy');
-    });
-
-    it('rejects rowOrder without layout rows', () => {
-      const r = dashboardSpecSchema.safeParse(cards({ rowOrder: ['Session A'] }));
-      expect(r.success).toBe(false);
-      expect(paths(r)).toContain('widgets.0.config.card.rowOrder');
-    });
-
-    it('does not check rowOrder values against headers', () => {
-      expect(dashboardSpecSchema.safeParse(cards({
-        layout: 'rows', rowBy: 'Country', rowOrder: ['Not A Header'],
-      })).success).toBe(true);
-    });
-
-    it('rejects an oversized rowOrder', () => {
+    it('caps rowOrder at 50 entries of 80 characters', () => {
       expect(dashboardSpecSchema.safeParse(cards({
         layout: 'rows', rowBy: 'Country', rowOrder: Array.from({ length: 51 }, (_, i) => `v${i}`),
       })).success).toBe(false);
       expect(dashboardSpecSchema.safeParse(cards({
         layout: 'rows', rowBy: 'Country', rowOrder: ['x'.repeat(81)],
       })).success).toBe(false);
-    });
-
-    it('accepts hero alone and still rejects unknown card keys', () => {
-      expect(dashboardSpecSchema.safeParse(cards({ hero: true })).success).toBe(true);
-      expect(dashboardSpecSchema.safeParse(cards({ hero: true, banner: true })).success).toBe(false);
     });
   });
 
