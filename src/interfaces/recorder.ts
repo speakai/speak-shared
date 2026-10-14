@@ -1,4 +1,4 @@
-import { RecorderAnswerType } from '../enums/index.js';
+import { RecorderAnswerType, RecorderSessionEventCategory } from '../enums/index.js';
 
 export interface IRecorderQuestion {
   id: string;
@@ -116,4 +116,9 @@ export interface IRecording {
   };
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IRecorderSessionEventEntry {
+  category: RecorderSessionEventCategory;
+  description: string;
 }
