@@ -834,6 +834,25 @@ describe("Enum values — recorder", () => {
     expect(RecordingFeedbackRating.NEGATIVE).toBe("negative");
     expect(Object.values(RecordingFeedbackRating)).toHaveLength(2);
   });
+
+  it("RECORDER_SESSION_EVENTS covers every session event with a category and description", async () => {
+    const { RECORDER_SESSION_EVENTS, RecorderSessionEventCategory, RecorderSessionEventType } =
+      await import("../src/index.js");
+
+    expect(RecorderSessionEventType.SUSPEND_DETECTED).toBe("suspend_detected");
+    expect(Object.values(RecorderSessionEventType)).toHaveLength(23);
+    expect(Object.keys(RECORDER_SESSION_EVENTS).sort()).toEqual(
+      Object.values(RecorderSessionEventType).sort(),
+    );
+    const categories = Object.values(RecorderSessionEventCategory);
+    for (const entry of Object.values(RECORDER_SESSION_EVENTS)) {
+      expect(categories).toContain(entry.category);
+      expect(entry.description.trim()).not.toBe("");
+    }
+    expect(new Set(Object.values(RECORDER_SESSION_EVENTS).map((e) => e.category))).toEqual(
+      new Set(categories),
+    );
+  });
 });
 
 describe("Enum values — subscription", () => {
