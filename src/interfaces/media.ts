@@ -1,4 +1,4 @@
-import { MediaType, MediaState } from '../enums/index.js';
+import { MediaType, MediaState, ThumbnailOrigin } from '../enums/index.js';
 import { ITranscriptInstance } from './transcript.js';
 
 /** Insight item — used for all insight categories (keywords, people, brands, etc.) */
@@ -199,4 +199,14 @@ export interface IMediaListItem {
   remark: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export const CUSTOM_THUMBNAIL_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+export const CUSTOM_THUMBNAIL_MAX_BYTES = 10 * 1024 * 1024;
+
+export interface ThumbnailView {
+  url?: string;
+  source?: ThumbnailOrigin;
+  pending?: boolean;
+  error?: string;
 }

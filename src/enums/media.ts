@@ -65,3 +65,17 @@ export enum MediaProcessType {
   DUBBING = 'dubbing',
   TRANSLATION = 'translation',
 }
+
+export enum ThumbnailStatus {
+  PENDING = 'pending',
+  CREATED = 'created',
+  FAILED = 'failed',
+  EXPIRED = 'expired',
+  REPLACED = 'replaced',
+  DELETED = 'deleted',
+}
+
+export enum ThumbnailOrigin {
+  AUTO = 'auto',
+  CUSTOM = 'custom',
+}
