@@ -67,6 +67,12 @@ export const DASHBOARD_PROFILE_IMAGE_MAX_BYTES = 2 * 1024 * 1024;
 export const DASHBOARD_PROFILE_IMAGE_KEY_MAX = 1024;
 export const DASHBOARD_PROFILE_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}$/;
 export const DASHBOARD_PROFILE_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const;
+export const IMAGE_EXTENSIONS: Record<(typeof DASHBOARD_PROFILE_IMAGE_TYPES)[number], string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+};
 export const DASHBOARD_PROFILE_IMAGE_SHAPES = ['round', 'square'] as const;
 export type DashboardProfileImageShape = (typeof DASHBOARD_PROFILE_IMAGE_SHAPES)[number];
 
