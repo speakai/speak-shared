@@ -555,12 +555,8 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
         shutdown();
         return;
       }
-      if (response.status === 429 || response.status >= 500) {
-        retryBody = body;
-        return;
-      }
-      retryBody = null;
-      acknowledge(body);
+      retryBody = body;
+      if (response.status === 429 || response.status >= 500) return;
       reportError(new Error(`Embed session save rejected with status ${response.status}`));
     } catch {
       retryBody = body;

@@ -103,6 +103,7 @@ export interface IEmbedSessionSaveResponse {
   sessionId: string;
   lastSeq: number;
   applied: boolean;
+  rejected?: { i: number; reason: string }[];
 }
 
 export interface IEmbedSessionSaveSkippedResponse {
@@ -272,7 +273,11 @@ export interface IEmbedSessionSummaryQuery {
   tz?: string;
   traffic?: EmbedSessionTrafficFilter;
   includeOwner?: boolean;
+  mediaPage?: number;
+  mediaPageSize?: number;
 }
+
+export type IEmbedSessionLiveQuery = Pick<IEmbedSessionSummaryQuery, 'traffic' | 'includeOwner'>;
 
 export interface IEmbedSessionMediaRow {
   mediaId: string;
@@ -295,7 +300,6 @@ export interface IEmbedSessionLiveResponse {
 }
 
 export interface IEmbedSessionSummaryResponse {
-  liveNow: number;
   kpis: {
     sessions: number;
     people: number;
@@ -312,6 +316,9 @@ export interface IEmbedSessionSummaryResponse {
   };
   overTime: { date: string; sessions: number; visitors: number; activeMs: number }[];
   media: IEmbedSessionMediaRow[];
+  mediaPage: number;
+  mediaPageSize: number;
+  mediaTotal: number;
   legacy: { sessions: number };
 }
 

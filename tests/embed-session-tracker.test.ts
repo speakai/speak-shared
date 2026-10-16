@@ -250,13 +250,13 @@ describe('createEmbedSessionTracker', () => {
     }
   });
 
-  it('sends long strings, many data keys, over 1,000 pending events and over 500 media intact', async () => {
+  it('keeps a batch the server answered 400 and sends long strings, many data keys, over 1,000 pending events and over 500 media intact', async () => {
     vi.useFakeTimers({ now: Date.UTC(2026, 9, 16, 10) });
     const fake = fakeTransport();
     let online = false;
     const delivered: IEmbedSessionSaveBody[] = [];
     fake.respondWith((body) => {
-      if (!online) return { status: 503 };
+      if (!online) return { status: fake.sends.length === 1 ? 400 : 503 };
       delivered.push(structuredClone(body));
       return undefined;
     });
