@@ -87,6 +87,10 @@ export interface IEmbedSessionSaveResponse {
   applied: boolean;
 }
 
+export interface IEmbedSessionSaveSkippedResponse {
+  applied: false;
+}
+
 export interface IEmbedSessionClient {
   country?: string;
   region?: string;
@@ -215,9 +219,33 @@ export interface IEmbedSessionDetailResponse {
     media: IEmbedSessionDetailMedia[];
     chat: IEmbedSessionDetailChat[];
     events: IEmbedSessionEvent[];
+    eventsPage: number;
+    eventsPageSize: number;
+    eventsTotal: number;
     parts: number;
   };
   visitorSessions: number;
+}
+
+export interface EmbedSessionEventsPageQuery {
+  eventsPage?: number;
+  eventsPageSize?: number;
+}
+
+export interface EmbedSessionCountriesQuery {
+  from?: string;
+  to?: string;
+  includeOwner?: boolean;
+  includeLegacy?: boolean;
+}
+
+export interface EmbedSessionCountryRow {
+  country: string;
+  sessions: number;
+}
+
+export interface EmbedSessionCountriesResponse {
+  countries: EmbedSessionCountryRow[];
 }
 
 export interface IEmbedSessionSummaryQuery {
@@ -285,7 +313,10 @@ export interface EmbedSessionStorageLike {
 }
 
 export interface EmbedSessionTransport {
-  send(url: string, body: IEmbedSessionSaveBody, token: string): Promise<{ status: number; data?: IEmbedSessionSaveResponse }>;
+  send(url: string, body: IEmbedSessionSaveBody, token: string): Promise<{
+    status: number;
+    data?: IEmbedSessionSaveResponse | IEmbedSessionSaveSkippedResponse;
+  }>;
   beacon(url: string, body: IEmbedSessionSaveBody, token: string): boolean;
 }
 

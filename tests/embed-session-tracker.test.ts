@@ -5,16 +5,17 @@ import type {
   EmbedSessionTransport,
   IEmbedSessionSaveBody,
   IEmbedSessionSaveResponse,
+  IEmbedSessionSaveSkippedResponse,
 } from '../src/interfaces/index.js';
 import { createEmbedSessionTracker } from '../src/index.js';
 
 const TOKEN = 'embed-token';
-const SESSION_KEY = `speak.embedSession.${TOKEN}`;
-const VISITOR_KEY = `speak.embedVisitor.${TOKEN}`;
+const SESSION_PREFIX = 'speak.embedSession.';
+const VISITOR_PREFIX = 'speak.embedVisitor.';
 
 interface SaveResult {
   status: number;
-  data?: IEmbedSessionSaveResponse;
+  data?: IEmbedSessionSaveResponse | IEmbedSessionSaveSkippedResponse;
 }
 
 function memoryStorage(entries: Map<string, string> = new Map()): EmbedSessionStorageLike & { entries: Map<string, string> } {
@@ -66,6 +67,13 @@ function fakeTransport() {
 
 const types = (body: IEmbedSessionSaveBody | undefined) => body?.events.map((event) => event.type);
 
+function hashedKey(storage: { entries: Map<string, string> }, prefix: string): string {
+  const keys = [...storage.entries.keys()].filter((key) => key.startsWith(prefix));
+  expect(keys).toHaveLength(1);
+  expect(keys[0]).toMatch(/^speak\.embed(Session|Visitor)\.[0-9a-f]{16}$/);
+  return keys[0]!;
+}
+
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
@@ -75,11 +83,11 @@ describe('createEmbedSessionTracker', () => {
   it('starts, flushes, resumes after a refresh, beacons on pagehide and rolls over after the idle timeout', async () => {
     vi.useFakeTimers({ now: Date.UTC(2026, 9, 16, 10) });
     const fakeWindow = Object.assign(new EventTarget(), {
-      location: { pathname: '/library', search: '?utm_source=email', hostname: 'example.com' },
+      location: { pathname: '/library', search: '?utm_source=email&code=secret', hostname: 'example.com' },
       screen: { width: 1440, height: 900 },
     });
     Object.assign(fakeWindow, { self: fakeWindow, top: fakeWindow });
-    const fakeDocument = Object.assign(new EventTarget(), { visibilityState: 'visible', referrer: 'https://mail.example.com/' });
+    const fakeDocument = Object.assign(new EventTarget(), { visibilityState: 'visible', referrer: 'https://mail.example.com/inbox?thread=secret#m1' });
     vi.stubGlobal('window', fakeWindow);
     vi.stubGlobal('document', fakeDocument);
 
@@ -94,9 +102,16 @@ describe('createEmbedSessionTracker', () => {
 
     expect(fake.sends).toHaveLength(1);
     expect(fake.sends[0]).toMatchObject({ version: 1, seq: 1, sessionId: first.sessionId, visitorId: first.visitorId, viewerId: null });
-    expect(fake.sends[0]?.context).toMatchObject({ path: '/library', embedded: false, utm: { utmSource: 'email' } });
+    expect(fake.sends[0]?.context).toMatchObject({
+      path: '/library',
+      referrer: 'https://mail.example.com/inbox',
+      embedded: false,
+      utm: { utmSource: 'email' },
+    });
+    expect(JSON.stringify(fake.sends[0])).not.toContain('secret');
     expect(types(fake.sends[0])).toEqual([EmbedSessionEventType.SESSION_START]);
-    expect(local.entries.get(VISITOR_KEY)).toBe(first.visitorId);
+    expect(local.entries.get(hashedKey(local, VISITOR_PREFIX))).toBe(first.visitorId);
+    expect(JSON.stringify([...session.entries.keys(), ...local.entries.keys()])).not.toContain(TOKEN);
 
     first.pageView('/library/media/m1?code=secret#top');
     const media = first.media('m1');
@@ -129,6 +144,7 @@ describe('createEmbedSessionTracker', () => {
     const second = createEmbedSessionTracker({ ...options, sessionStorage: refreshedSession, localStorage: local });
     second.start();
     expect(second.sessionId).toBe(first.sessionId);
+    const sessionKey = hashedKey(refreshedSession, SESSION_PREFIX);
     await vi.advanceTimersByTimeAsync(150);
 
     const resumed = fake.sends[sentBeforeRefresh];
@@ -149,10 +165,12 @@ describe('createEmbedSessionTracker', () => {
     const lastActiveOffset = resumed!.events.at(-1)!.t;
     expect(idleEnd?.events.at(-1)).toMatchObject({ t: lastActiveOffset, data: { reason: 'idle_timeout' } });
     expect(idleEnd?.totals.timing.wallClockMs).toBe(lastActiveOffset);
-    expect(refreshedSession.entries.has(SESSION_KEY)).toBe(true);
+    expect(refreshedSession.entries.has(sessionKey)).toBe(true);
+    fakeWindow.dispatchEvent(new Event('pagehide'));
+    expect(fake.beacons.at(-1)).toEqual(idleEnd);
     await vi.advanceTimersByTimeAsync(30_000);
     expect(fake.sends.at(-1)).toEqual(idleEnd);
-    expect(refreshedSession.entries.has(SESSION_KEY)).toBe(false);
+    expect(refreshedSession.entries.has(sessionKey)).toBe(false);
     const sentAfterIdle = fake.sends.length;
     await vi.advanceTimersByTimeAsync(60_000);
     expect(fake.sends).toHaveLength(sentAfterIdle);
@@ -167,7 +185,7 @@ describe('createEmbedSessionTracker', () => {
     second.stop();
   });
 
-  it('survives a StrictMode remount, hands a duplicated tab a new session and caps long media ids', async () => {
+  it('survives a StrictMode remount, hands a duplicated tab a new session, caps long media ids and stops on a render-bot reply', async () => {
     vi.useFakeTimers({ now: Date.UTC(2026, 9, 16, 10) });
     const fake = fakeTransport();
     const session = memoryStorage();
@@ -177,16 +195,21 @@ describe('createEmbedSessionTracker', () => {
       transport: fake.transport,
       sessionStorage: session,
       localStorage: memoryStorage(),
+      viewerId: 'not-a-viewer-id',
     });
     tracker.start();
     tracker.stop();
     tracker.start();
     await vi.advanceTimersByTimeAsync(1_000);
     expect(fake.sends.flatMap((body) => types(body))).toEqual([EmbedSessionEventType.SESSION_START]);
+    expect(fake.sends[0]?.viewerId).toBeNull();
 
     const forkedId = tracker.sessionId;
     const longId = 'm'.repeat(150);
-    tracker.media(longId).open(EmbedSessionMediaOpenSource.LIST);
+    const scrubbed = tracker.media(longId, { inferSeeks: true });
+    scrubbed.open(EmbedSessionMediaOpenSource.LIST);
+    scrubbed.timeUpdate(10, 100);
+    scrubbed.timeUpdate(40, 100);
     tracker.track(EmbedSessionEventType.SEARCH, { data: { text: 'pricing' } });
     fake.respondWith((body) =>
       body.sessionId === forkedId ? { status: 200, data: { sessionId: forkedId, lastSeq: body.seq, applied: false } } : undefined,
@@ -201,37 +224,74 @@ describe('createEmbedSessionTracker', () => {
     expect(fake.sends.at(-1)?.events.map((event) => [event.i, event.type])).toEqual([
       [1, EmbedSessionEventType.SESSION_START],
       [2, EmbedSessionEventType.MEDIA_OPEN],
-      [3, EmbedSessionEventType.SEARCH],
+      [3, EmbedSessionEventType.SEEK],
+      [4, EmbedSessionEventType.SEARCH],
     ]);
-    expect(JSON.parse(session.entries.get(SESSION_KEY)!).pending).toEqual([]);
-
+    expect(fake.sends.at(-1)?.events[2]?.data).toEqual({ fromSec: 10, toSec: 40 });
+    expect(JSON.parse(session.entries.get(hashedKey(session, SESSION_PREFIX))!).pending).toEqual([]);
     tracker.stop();
+
+    {
+      const render = fakeTransport();
+      render.respondWith(() => ({ status: 200, data: { applied: false } }));
+      const bot = createEmbedSessionTracker({
+        token: TOKEN,
+        apiBaseUrl: 'https://api.example.com/v1',
+        transport: render.transport,
+        sessionStorage: memoryStorage(),
+        localStorage: memoryStorage(),
+      });
+      bot.start();
+      await vi.advanceTimersByTimeAsync(0);
+      bot.track(EmbedSessionEventType.SEARCH, { data: { text: 'pricing' } });
+      await bot.flush();
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(render.sends.map((body) => body.seq)).toEqual([1]);
+    }
   });
 
-  it('keeps the keepalive budget for the pagehide save', async () => {
+  it('sends the hidden flush and the pagehide save with keepalive inside the shared 64 KB budget', async () => {
     vi.useFakeTimers({ now: Date.UTC(2026, 9, 16, 10) });
     const fakeWindow = Object.assign(new EventTarget(), { location: { pathname: '/', search: '', hostname: 'example.com' } });
     Object.assign(fakeWindow, { self: fakeWindow, top: fakeWindow });
     vi.stubGlobal('window', fakeWindow);
-    vi.stubGlobal('document', Object.assign(new EventTarget(), { visibilityState: 'visible', referrer: '' }));
+    const fakeDocument = Object.assign(new EventTarget(), { visibilityState: 'visible', referrer: '' });
+    vi.stubGlobal('document', fakeDocument);
     vi.stubGlobal('navigator', { sendBeacon: () => false, language: 'en' });
-    const fetchMock = vi.fn(async (_url: string, init: RequestInit) => ({
-      status: 200,
-      json: async () => ({ data: { lastSeq: JSON.parse(String(init.body)).seq, applied: true } }),
-    }));
+    let answered = 0;
+    const fetchMock = vi.fn((_url: string, init: RequestInit) => {
+      answered += 1;
+      if (answered > 1) return new Promise<never>(() => undefined);
+      return Promise.resolve({
+        status: 200,
+        json: async () => ({ data: { lastSeq: JSON.parse(String(init.body)).seq, applied: true } }),
+      });
+    });
     vi.stubGlobal('fetch', fetchMock);
 
+    const session = memoryStorage();
     const tracker = createEmbedSessionTracker({
       token: TOKEN,
       apiBaseUrl: 'https://api.example.com/v1',
-      sessionStorage: memoryStorage(),
+      sessionStorage: session,
       localStorage: memoryStorage(),
     });
     tracker.start();
     await vi.advanceTimersByTimeAsync(0);
+    for (let count = 0; count < 100; count += 1) {
+      tracker.track(EmbedSessionEventType.EXPORT, { data: { format: 'x'.repeat(500) } });
+    }
+    fakeDocument.visibilityState = 'hidden';
+    fakeDocument.dispatchEvent(new Event('visibilitychange'));
     fakeWindow.dispatchEvent(new Event('pagehide'));
 
-    expect(fetchMock.mock.calls.map(([, init]) => init.keepalive)).toEqual([false, true]);
+    const unloadBodies = fetchMock.mock.calls.slice(1).map(([, init]) => String(init.body));
+    expect(fetchMock.mock.calls.map(([, init]) => init.keepalive)).toEqual([true, true, true]);
+    expect(unloadBodies.reduce((total, body) => total + new TextEncoder().encode(body).length, 0)).toBeLessThanOrEqual(65_536);
+    expect(JSON.parse(unloadBodies[0]!).events.length).toBeLessThan(100);
+    const stored = JSON.parse(session.entries.get(hashedKey(session, SESSION_PREFIX))!);
+    expect(stored.pending).toHaveLength(101);
+    expect(stored.pending.at(-1).type).toBe(EmbedSessionEventType.SESSION_END);
     tracker.stop();
   });
 });

@@ -25,6 +25,8 @@ export const EMBED_SESSION_LIMITS = {
   maxReferrerLength: 2_000,
   maxEventOffsetMs: 7 * 24 * 3_600_000,
   completedPositionPct: 95,
+  eventsPageSize: 200,
+  maxEventsPageSize: 500,
 } as const;
 
 export const isLegacyEmbedSessionId = (sessionId: string): boolean =>

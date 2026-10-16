@@ -47,6 +47,11 @@ const MAX_UTM_LENGTH = 200;
 const FALLBACK_PATH = '/';
 const CREDENTIALED_HOST_SUFFIX = 'speakai.co';
 const BEACON_CONTENT_TYPE = 'text/plain;charset=UTF-8';
+const KEEPALIVE_BODY_BYTES = EMBED_SESSION_LIMITS.maxBodyBytes / 2;
+const STORAGE_KEY_HASH_OFFSET = 0xcbf29ce484222325n;
+const STORAGE_KEY_HASH_PRIME = 0x100000001b3n;
+const STORAGE_KEY_HASH_MASK = 0xffffffffffffffffn;
+const STORAGE_KEY_HASH_LENGTH = 16;
 const INPUT_EVENTS = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const;
 const UTM_PARAMS: Readonly<Record<keyof IEmbedSessionCampaign, string>> = {
   utmSource: 'utm_source',
@@ -121,6 +126,14 @@ function writeStorage(storage: EmbedSessionStorageLike | null, key: string, valu
   }
 }
 
+function storageKeyHash(value: string): string {
+  let hash = STORAGE_KEY_HASH_OFFSET;
+  for (const byte of new TextEncoder().encode(value)) {
+    hash = ((hash ^ BigInt(byte)) * STORAGE_KEY_HASH_PRIME) & STORAGE_KEY_HASH_MASK;
+  }
+  return hash.toString(16).padStart(STORAGE_KEY_HASH_LENGTH, '0');
+}
+
 function zeroTotals(): IEmbedSessionTotals {
   return { timing: { wallClockMs: 0, visibleMs: 0, activeMs: 0 }, pageViews: 0, media: [] };
 }
@@ -187,6 +200,17 @@ function readCampaign(search: string): IEmbedSessionCampaign | undefined {
   return found ? campaign : undefined;
 }
 
+function readReferrer(): string | undefined {
+  if (!document.referrer) return undefined;
+  try {
+    const referrer = new URL(document.referrer);
+    if (referrer.origin === 'null') return undefined;
+    return `${referrer.origin}${referrer.pathname}`.slice(0, EMBED_SESSION_LIMITS.maxReferrerLength);
+  } catch {
+    return undefined;
+  }
+}
+
 function isEmbedded(): boolean {
   try {
     return window.self !== window.top;
@@ -202,7 +226,7 @@ function readContext(): IEmbedSessionContext {
       path: window.location.pathname.slice(0, EMBED_SESSION_LIMITS.maxPathLength) || FALLBACK_PATH,
       embedded: isEmbedded(),
     };
-    const referrer = document.referrer.slice(0, EMBED_SESSION_LIMITS.maxReferrerLength);
+    const referrer = readReferrer();
     if (referrer) context.referrer = referrer;
     if (window.screen) context.screen = `${window.screen.width}x${window.screen.height}`;
     if (navigator.language) context.language = navigator.language;
@@ -226,10 +250,10 @@ function byteLength(value: string): number {
 }
 
 function createDefaultTransport(): EmbedSessionTransport {
-  const post = async (url: string, body: IEmbedSessionSaveBody, token: string, keepalive: boolean) => {
+  const post = async (url: string, body: IEmbedSessionSaveBody, token: string) => {
     const response = await fetch(url, {
       method: 'POST',
-      keepalive,
+      keepalive: true,
       headers: { 'Content-Type': 'application/json', 'x-speakai-player-token': token },
       credentials:
         typeof location !== 'undefined' && location.hostname.endsWith(CREDENTIALED_HOST_SUFFIX) ? 'include' : 'omit',
@@ -244,7 +268,7 @@ function createDefaultTransport(): EmbedSessionTransport {
     return { status: response.status, data };
   };
   return {
-    send: (url, body, token) => post(url, body, token, false),
+    send: (url, body, token) => post(url, body, token),
     beacon(url, body, token) {
       let queued = false;
       try {
@@ -255,7 +279,7 @@ function createDefaultTransport(): EmbedSessionTransport {
       } catch {
         queued = false;
       }
-      if (!queued) post(url, body, token, true).catch(() => undefined);
+      if (!queued) post(url, body, token).catch(() => undefined);
       return true;
     },
   };
@@ -267,8 +291,9 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
   const url = `${options.apiBaseUrl.replace(/\/+$/, '')}/embed/session?token=${encodeURIComponent(options.token)}`;
   const sessionStore = options.sessionStorage === undefined ? browserStorage('sessionStorage') : options.sessionStorage;
   const localStore = options.localStorage === undefined ? browserStorage('localStorage') : options.localStorage;
-  const sessionKey = `${SESSION_STORAGE_PREFIX}${options.token}`;
-  const visitorKey = `${VISITOR_STORAGE_PREFIX}${options.token}`;
+  const tokenHash = storageKeyHash(options.token);
+  const sessionKey = `${SESSION_STORAGE_PREFIX}${tokenHash}`;
+  const visitorKey = `${VISITOR_STORAGE_PREFIX}${tokenHash}`;
 
   const loadStoredState = (): IEmbedSessionTrackerState | null => {
     const raw = readStorage(sessionStore, sessionKey);
@@ -442,7 +467,7 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     let events = state.pending.slice(0, EMBED_SESSION_LIMITS.maxEventsPerBatch);
     let media = changedMedia().slice(0, EMBED_SESSION_LIMITS.maxMediaPerBatch);
     let body = build(events, media);
-    while (byteLength(JSON.stringify(body)) > EMBED_SESSION_LIMITS.maxBodyBytes && (events.length > 1 || media.length > 1)) {
+    while (byteLength(JSON.stringify(body)) > KEEPALIVE_BODY_BYTES && (events.length > 1 || media.length > 1)) {
       if (events.length > 1) events = events.slice(0, Math.ceil(events.length / 2));
       else media = media.slice(0, Math.ceil(media.length / 2));
       body = build(events, media);
@@ -483,10 +508,10 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     persist();
   };
 
-  const isForked = (body: IEmbedSessionSaveBody, data: IEmbedSessionSaveResponse | undefined, isRetry: boolean): boolean =>
+  const isForked = (body: IEmbedSessionSaveBody, data: IEmbedSessionSaveResponse, isRetry: boolean): boolean =>
     !isRetry &&
     !ended &&
-    data?.applied === false &&
+    !data.applied &&
     body.sessionId === state.sessionId &&
     (data.lastSeq === body.seq || data.lastSeq > state.seq);
 
@@ -494,12 +519,17 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     try {
       const response = await transport.send(url, body, options.token);
       if (response.status >= 200 && response.status < 300) {
-        if (typeof response.data?.lastSeq === 'number' && response.data.lastSeq < body.seq) {
+        const data = response.data;
+        if (data?.applied === false && !('lastSeq' in data)) {
+          shutdown();
+          return;
+        }
+        if (data && 'lastSeq' in data && data.lastSeq < body.seq) {
           retryBody = body;
           return;
         }
         retryBody = null;
-        if (isForked(body, response.data, isRetry)) forkSession();
+        if (data && 'lastSeq' in data && isForked(body, data, isRetry)) forkSession();
         else acknowledge(body);
         return;
       }
@@ -542,13 +572,17 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     }
   };
 
-  const sendBeacon = (): void => {
-    const body = buildBody();
+  const beacon = (body: IEmbedSessionSaveBody): void => {
     try {
       transport.beacon(url, body, options.token);
     } catch (error) {
       reportError(error);
     }
+  };
+
+  const beaconUnsentFinalBodies = (): void => {
+    if (retryBody) beacon(retryBody);
+    for (const body of finalBodies) beacon(body);
   };
 
   const sessionStartData = (): EmbedSessionEventData => {
@@ -722,10 +756,14 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     if (dead) return;
     pageHidden = true;
     pageHiddenAt = now();
-    if (!decided || ended) return;
+    if (!decided) return;
+    if (ended) {
+      beaconUnsentFinalBodies();
+      return;
+    }
     stopTicker();
     appendEvent(EmbedSessionEventType.SESSION_END, { data: { reason: EmbedSessionEndReason.PAGEHIDE } });
-    sendBeacon();
+    beacon(buildBody());
   };
 
   const onPageShow = (event: Event): void => {
