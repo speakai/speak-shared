@@ -1,4 +1,11 @@
-import { MeetingPlatform, MeetingStatus, MeetingAttendeeType } from '../enums/index.js';
+import {
+  MeetingPlatform,
+  MeetingStatus,
+  MeetingAttendeeType,
+  MeetingRecorder,
+  DesktopAutoRecord,
+  DesktopConsentNotice,
+} from '../enums/index.js';
 
 export interface IMeetingAttendee {
   email: string;
@@ -26,6 +33,13 @@ export interface IMeetingEvent {
   speakers: { timestamp: number; name: string }[];
   history: IMeetingEventHistory[];
   createdAt?: Date;
+}
+
+export interface IDesktopMeetingPolicy {
+  recorder: MeetingRecorder;
+  autoRecord: DesktopAutoRecord;
+  consentNotice: DesktopConsentNotice;
+  consentMessages: string[];
 }
 
 export interface IMeetingEventHistory {
