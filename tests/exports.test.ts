@@ -80,3 +80,26 @@ describe("Recorder session events", () => {
     );
   });
 });
+
+describe("Embed session exports", () => {
+  it("exposes the tracker, event map and helpers from the root barrel without touching the DOM", async () => {
+    expect(typeof globalThis.window).toBe("undefined");
+    const pkg = await import("../src/index.js");
+    const { EmbedSessionEventSource, EmbedSessionEventType } = pkg;
+
+    expect(typeof pkg.createEmbedSessionTracker).toBe("function");
+    expect(Object.keys(pkg.EMBED_SESSION_EVENTS).sort()).toEqual(Object.values(EmbedSessionEventType).sort());
+    const serverTypes = Object.entries(pkg.EMBED_SESSION_EVENTS)
+      .filter(([, entry]) => entry.source === EmbedSessionEventSource.SERVER)
+      .map(([type]) => type)
+      .sort();
+    expect(serverTypes).toEqual([EmbedSessionEventType.CHAT_QUESTION, EmbedSessionEventType.LEAD_CAPTURED]);
+    expect(pkg.isLegacyEmbedSessionId("legacy:abc")).toBe(true);
+    expect(pkg.embedSessionVisitorCode("7f3a91c2-0b6e-4e9b-8d1a-5c2e4f6a8b10")).toBe("7F3A");
+    expect(pkg.embedSessionEventCategory(EmbedSessionEventType.SEEK)).toBe("playback");
+
+    const tracker = pkg.createEmbedSessionTracker({ token: "t", apiBaseUrl: "https://api.example.com/v1" });
+    expect(pkg.EMBED_SESSION_ID_PATTERN.test(tracker.sessionId)).toBe(true);
+    expect(tracker.chatContext()).toEqual({ embedSessionId: tracker.sessionId });
+  });
+});

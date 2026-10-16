@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.2.0 (2026-10-16)
+
+- Added embed session wire types: `EmbedSessionEventType`, `EmbedSessionEventCategory` and the other embed session enums, the `EMBED_SESSION_EVENTS` map, save, list, detail, summary and viewer shapes in `interfaces/embedSession`, and the protocol constants and helpers in `utils/embedSession` (`EMBED_SESSION_LIMITS`, id patterns, `isLegacyEmbedSessionId`, `embedSessionEventCategory`, `embedSessionVisitorCode`).
+- Added `createEmbedSessionTracker`, a framework-free browser tracker that records an embed viewing session (timing, navigation, playback and engagement events), batches them to the session endpoint with retry and dedupe, resumes after a refresh and sends a beacon on page hide. It does no DOM access at import time, so the root barrel stays safe to import in Node.
+- `tsconfig.json` now includes the `DOM` lib.
+
 ## v2.1.56 (2026-10-15)
 
 - Maintenance release
