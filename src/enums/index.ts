@@ -28,3 +28,4 @@ export * from './translation.js';
 export * from './user.js';
 export * from './webhook.js';
 export * from './llm.js';
+export * from './embedSession.js';

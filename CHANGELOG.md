@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.2.0 (2026-10-16)
+
+- Added embed session wire types: `EmbedSessionEventType`, `EmbedSessionEventCategory` and the other embed session enums (including `EmbedSessionChatFeedbackScale`, `EmbedSessionTranscriptFormat` and `EmbedSessionExportKind`), the `EMBED_SESSION_EVENTS` map, save, list, detail (with paged events: `EmbedSessionEventsPageQuery`, `eventsTotal`), summary, live (`IEmbedSessionLiveResponse`), countries (`EmbedSessionCountriesQuery`, `EmbedSessionCountriesResponse`) and viewer shapes in `interfaces/embedSession`, and the protocol constants and helpers in `utils/embedSession` (`EMBED_SESSION_LIMITS`, id patterns, `isLegacyEmbedSessionId`, `embedSessionEventCategory`, `embedSessionVisitorCode`). `EMBED_SESSION_LIMITS` holds timing settings, the per-document event count and display paging only: there are no size, length or count caps on what a session stores.
+- `IEmbedSessionSaveResponse.rejected` lists each event the server did not store as `{ i?, index?, reason }`: `i` when the event carried a usable index, `index` (its position in the sent `events` array) when it failed validation, and a short fixed `reason` (the error type and field path) that never repeats sent values.
+- `tracker.track` types the `data` of `chat_feedback`, `transcript_download` and `export` events with those enums.
+- Added `createEmbedSessionTracker`, a framework-free browser tracker that records an embed viewing session (timing, navigation, playback and engagement events), batches them to the session endpoint with retry and dedupe, resumes after a refresh and sends a beacon on page hide. It keeps every event and value as sent: no queue drops, string truncation, data key limits or media limits. Sends go out in batches of up to 200 events and under 32 KB so they fit the browser keepalive budget; the page hide send is split into as many such chunks as needed, and a single body too large for keepalive is sent without it. Storage keys hold a hash of the embed token, recorded paths and referrers carry no query strings, and credentials are sent only from `speakai.co` and its subdomains. A `{ applied: false }` save reply (a render bot) stops the tracker. Any 2xx reply counts as delivered, including one that lists `rejected` events; a network error, 429 or 5xx retries the same request; a 404 stops the tracker; any other 4xx (a request the server can never accept) is reported through `onError` and only that request is dropped, so later batches still go out. It does no DOM access at import time, so the root barrel stays safe to import in Node.
+- `tsconfig.json` now includes the `DOM` lib.
+
 ## v2.1.57 (2026-10-16)
 
 - Maintenance release
