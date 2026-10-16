@@ -1,17 +1,35 @@
 import type {
   EmbedSessionBotKind,
+  EmbedSessionChatFeedbackScale,
   EmbedSessionDeviceFilter,
   EmbedSessionEventCategory,
   EmbedSessionEventSource,
   EmbedSessionEventType,
+  EmbedSessionExportKind,
   EmbedSessionMediaOpenSource,
   EmbedSessionSort,
   EmbedSessionTrafficFilter,
+  EmbedSessionTranscriptFormat,
   EmbedSessionViewerFilter,
   EmbedViewerAuthMethod,
 } from '../enums/embedSession.js';
 
 export type EmbedSessionEventData = Record<string, string | number | boolean | null>;
+
+export type EmbedSessionChatFeedbackData = {
+  score: number;
+  scale: EmbedSessionChatFeedbackScale;
+  messageId?: string;
+};
+
+export type EmbedSessionTranscriptDownloadData = {
+  format: EmbedSessionTranscriptFormat;
+};
+
+export type EmbedSessionExportData = {
+  format: string;
+  kind: EmbedSessionExportKind;
+};
 
 export interface IEmbedSessionEventEntry {
   category: EmbedSessionEventCategory;
@@ -271,6 +289,11 @@ export interface IEmbedSessionMediaRow {
   shares: number;
 }
 
+export interface IEmbedSessionLiveResponse {
+  liveNow: number;
+  lastActivityAt: string | null;
+}
+
 export interface IEmbedSessionSummaryResponse {
   liveNow: number;
   kpis: {
@@ -342,10 +365,16 @@ export interface EmbedSessionMediaHandle {
   timeUpdate(positionSec: number, durationSec?: number): void;
 }
 
-export interface EmbedSessionTrackFields {
+export interface EmbedSessionTrackFields<T extends EmbedSessionEventType = EmbedSessionEventType> {
   mediaId?: string;
   promptId?: string;
-  data?: EmbedSessionEventData;
+  data?: T extends EmbedSessionEventType.CHAT_FEEDBACK
+    ? EmbedSessionChatFeedbackData
+    : T extends EmbedSessionEventType.TRANSCRIPT_DOWNLOAD
+      ? EmbedSessionTranscriptDownloadData
+      : T extends EmbedSessionEventType.EXPORT
+        ? EmbedSessionExportData
+        : EmbedSessionEventData;
 }
 
 export interface EmbedSessionTracker {
@@ -353,7 +382,7 @@ export interface EmbedSessionTracker {
   readonly visitorId: string;
   start(): void;
   stop(): void;
-  track(type: EmbedSessionEventType, fields?: EmbedSessionTrackFields): void;
+  track<T extends EmbedSessionEventType>(type: T, fields?: EmbedSessionTrackFields<T>): void;
   pageView(path: string): void;
   setViewerId(viewerId: string | null): void;
   media(mediaId: string, options?: { inferSeeks?: boolean }): EmbedSessionMediaHandle;

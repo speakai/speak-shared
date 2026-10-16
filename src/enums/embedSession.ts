@@ -64,6 +64,23 @@ export enum EmbedSessionSearchScope {
   TRANSCRIPT = 'transcript',
 }
 
+export enum EmbedSessionChatFeedbackScale {
+  THUMBS = 'thumbs',
+}
+
+export enum EmbedSessionTranscriptFormat {
+  DOCX = 'docx',
+  PDF = 'pdf',
+  TXT = 'txt',
+  SRT = 'srt',
+  VTT = 'vtt',
+  CLIPBOARD = 'clipboard',
+}
+
+export enum EmbedSessionExportKind {
+  CHAT_ANSWER = 'chat_answer',
+}
+
 export enum EmbedSessionBotKind {
   RENDER = 'render',
   CRAWLER = 'crawler',

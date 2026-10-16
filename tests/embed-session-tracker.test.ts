@@ -185,7 +185,7 @@ describe('createEmbedSessionTracker', () => {
     second.stop();
   });
 
-  it('survives a StrictMode remount, hands a duplicated tab a new session, caps long media ids and stops on a render-bot reply', async () => {
+  it('survives a StrictMode remount, hands a duplicated tab a new session, keeps long media ids intact and stops on a render-bot reply', async () => {
     vi.useFakeTimers({ now: Date.UTC(2026, 9, 16, 10) });
     const fake = fakeTransport();
     const session = memoryStorage();
@@ -217,7 +217,7 @@ describe('createEmbedSessionTracker', () => {
     await tracker.flush();
 
     const forkedSave = fake.sends.at(-2);
-    expect(forkedSave?.events[0]?.mediaId).toHaveLength(100);
+    expect(forkedSave?.events[0]?.mediaId).toBe(longId);
     expect(forkedSave?.totals.media[0]?.mediaId).toBe(forkedSave?.events[0]?.mediaId);
     expect(tracker.sessionId).not.toBe(forkedId);
     expect(fake.sends.at(-1)).toMatchObject({ seq: 1, sessionId: tracker.sessionId });
@@ -250,48 +250,105 @@ describe('createEmbedSessionTracker', () => {
     }
   });
 
-  it('sends the hidden flush and the pagehide save with keepalive inside the shared 64 KB budget', async () => {
+  it('sends long strings, many data keys, over 1,000 pending events and over 500 media intact', async () => {
     vi.useFakeTimers({ now: Date.UTC(2026, 9, 16, 10) });
-    const fakeWindow = Object.assign(new EventTarget(), { location: { pathname: '/', search: '', hostname: 'example.com' } });
-    Object.assign(fakeWindow, { self: fakeWindow, top: fakeWindow });
-    vi.stubGlobal('window', fakeWindow);
-    const fakeDocument = Object.assign(new EventTarget(), { visibilityState: 'visible', referrer: '' });
-    vi.stubGlobal('document', fakeDocument);
-    vi.stubGlobal('navigator', { sendBeacon: () => false, language: 'en' });
-    let answered = 0;
-    const fetchMock = vi.fn((_url: string, init: RequestInit) => {
-      answered += 1;
-      if (answered > 1) return new Promise<never>(() => undefined);
-      return Promise.resolve({
-        status: 200,
-        json: async () => ({ data: { lastSeq: JSON.parse(String(init.body)).seq, applied: true } }),
-      });
+    const fake = fakeTransport();
+    let online = false;
+    const delivered: IEmbedSessionSaveBody[] = [];
+    fake.respondWith((body) => {
+      if (!online) return { status: 503 };
+      delivered.push(structuredClone(body));
+      return undefined;
     });
-    vi.stubGlobal('fetch', fetchMock);
-
-    const session = memoryStorage();
     const tracker = createEmbedSessionTracker({
       token: TOKEN,
       apiBaseUrl: 'https://api.example.com/v1',
-      sessionStorage: session,
+      transport: fake.transport,
+      sessionStorage: memoryStorage(),
       localStorage: memoryStorage(),
     });
     tracker.start();
     await vi.advanceTimersByTimeAsync(0);
-    for (let count = 0; count < 100; count += 1) {
-      tracker.track(EmbedSessionEventType.EXPORT, { data: { format: 'x'.repeat(500) } });
+
+    const longText = 'q'.repeat(5_000);
+    const manyKeys = Object.fromEntries(Array.from({ length: 30 }, (_, index) => [`key${index}`, `value${index}`]));
+    const mediaIds = Array.from({ length: 600 }, (_, index) => `media-${index}-${'x'.repeat(200)}`);
+    for (const mediaId of mediaIds) tracker.media(mediaId).open(EmbedSessionMediaOpenSource.LIST);
+    for (let count = 0; count < 1_200; count += 1) {
+      tracker.track(EmbedSessionEventType.SEARCH, { data: { text: longText, ...manyKeys } });
     }
-    fakeDocument.visibilityState = 'hidden';
-    fakeDocument.dispatchEvent(new Event('visibilitychange'));
+    await vi.advanceTimersByTimeAsync(0);
+
+    online = true;
+    for (let round = 0; round < 100; round += 1) await tracker.flush();
+
+    const events = new Map(delivered.flatMap((body) => body.events).map((event) => [event.i, event]));
+    expect([...events.keys()].sort((a, b) => a - b)).toEqual(Array.from({ length: 1_801 }, (_, index) => index + 1));
+    const searches = [...events.values()].filter((event) => event.type === EmbedSessionEventType.SEARCH);
+    expect(searches).toHaveLength(1_200);
+    expect(searches.every((event) => event.data?.text === longText && Object.keys(event.data).length === 31)).toBe(true);
+    const sentMedia = new Set(delivered.flatMap((body) => body.totals.media.map((entry) => entry.mediaId)));
+    expect(sentMedia).toEqual(new Set(mediaIds));
+    tracker.stop();
+  });
+
+  it('sends credentials only to speakai.co hosts, skips keepalive for an oversized body and splits the pagehide send into keepalive chunks', async () => {
+    vi.useFakeTimers({ now: Date.UTC(2026, 9, 16, 10) });
+    const fakeWindow = Object.assign(new EventTarget(), { location: { pathname: '/', search: '', hostname: 'evilspeakai.co' } });
+    Object.assign(fakeWindow, { self: fakeWindow, top: fakeWindow });
+    vi.stubGlobal('window', fakeWindow);
+    vi.stubGlobal('location', fakeWindow.location);
+    const fakeDocument = Object.assign(new EventTarget(), { visibilityState: 'visible', referrer: '' });
+    vi.stubGlobal('document', fakeDocument);
+    const beaconBlobs: Blob[] = [];
+    vi.stubGlobal('navigator', {
+      language: 'en',
+      sendBeacon: (_url: string, blob: Blob) => {
+        beaconBlobs.push(blob);
+        return true;
+      },
+    });
+    const fetchMock = vi.fn((_url: string, init: RequestInit) =>
+      Promise.resolve({
+        status: 200,
+        json: async () => ({ data: { lastSeq: JSON.parse(String(init.body)).seq, applied: true } }),
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const tracker = createEmbedSessionTracker({
+      token: TOKEN,
+      apiBaseUrl: 'https://api.example.com/v1',
+      sessionStorage: memoryStorage(),
+      localStorage: memoryStorage(),
+    });
+    tracker.start();
+    await vi.advanceTimersByTimeAsync(0);
+    fakeWindow.location.hostname = 'app.speakai.co';
+    const hugeText = 'h'.repeat(40_000);
+    tracker.track(EmbedSessionEventType.SEARCH, { data: { text: hugeText } });
+    await tracker.flush();
+
+    expect(fetchMock.mock.calls.map(([, init]) => [init.credentials, init.keepalive])).toEqual([
+      ['omit', true],
+      ['include', false],
+    ]);
+    expect(JSON.parse(String(fetchMock.mock.calls[1]![1].body)).events[0].data.text).toBe(hugeText);
+
+    for (let count = 0; count < 300; count += 1) {
+      tracker.track(EmbedSessionEventType.SEARCH, { data: { text: 's'.repeat(1_000) } });
+    }
     fakeWindow.dispatchEvent(new Event('pagehide'));
 
-    const unloadBodies = fetchMock.mock.calls.slice(1).map(([, init]) => String(init.body));
-    expect(fetchMock.mock.calls.map(([, init]) => init.keepalive)).toEqual([true, true, true]);
-    expect(unloadBodies.reduce((total, body) => total + new TextEncoder().encode(body).length, 0)).toBeLessThanOrEqual(65_536);
-    expect(JSON.parse(unloadBodies[0]!).events.length).toBeLessThan(100);
-    const stored = JSON.parse(session.entries.get(hashedKey(session, SESSION_PREFIX))!);
-    expect(stored.pending).toHaveLength(101);
-    expect(stored.pending.at(-1).type).toBe(EmbedSessionEventType.SESSION_END);
+    expect(beaconBlobs.length).toBeGreaterThan(1);
+    expect(beaconBlobs.every((blob) => blob.size < 65_536)).toBe(true);
+    const beaconed = await Promise.all(beaconBlobs.map(async (blob) => JSON.parse(await blob.text()) as IEmbedSessionSaveBody));
+    const beaconedIndexes = beaconed.flatMap((body) => body.events.map((event) => event.i));
+    expect(new Set(beaconedIndexes).size).toBe(beaconedIndexes.length);
+    expect(beaconed.flatMap((body) => types(body))).toEqual([
+      ...Array.from({ length: 300 }, () => EmbedSessionEventType.SEARCH),
+      EmbedSessionEventType.SESSION_END,
+    ]);
     tracker.stop();
   });
 });

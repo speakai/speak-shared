@@ -42,12 +42,11 @@ const CLAIM_TIMEOUT_MS = 150;
 const TICK_INTERVAL_MS = 1_000;
 const MAX_TICK_DELTA_MS = 5_000;
 const MOUSEMOVE_THROTTLE_MS = 5_000;
-const MAX_ID_LENGTH = 100;
-const MAX_UTM_LENGTH = 200;
 const FALLBACK_PATH = '/';
-const CREDENTIALED_HOST_SUFFIX = 'speakai.co';
+const CREDENTIALED_HOST = 'speakai.co';
 const BEACON_CONTENT_TYPE = 'text/plain;charset=UTF-8';
-const KEEPALIVE_BODY_BYTES = EMBED_SESSION_LIMITS.maxBodyBytes / 2;
+const KEEPALIVE_BODY_BYTES = 32_768;
+const EVENTS_PER_BATCH = 200;
 const STORAGE_KEY_HASH_OFFSET = 0xcbf29ce484222325n;
 const STORAGE_KEY_HASH_PRIME = 0x100000001b3n;
 const STORAGE_KEY_HASH_MASK = 0xffffffffffffffffn;
@@ -162,27 +161,14 @@ function validViewerId(viewerId: string | null | undefined): string | null {
   return typeof viewerId === 'string' && EMBED_VIEWER_ID_PATTERN.test(viewerId) ? viewerId : null;
 }
 
-function sanitizeData(type: EmbedSessionEventType, data: EmbedSessionEventData): EmbedSessionEventData {
+function sanitizeData(data: EmbedSessionEventData): EmbedSessionEventData {
   const clean: EmbedSessionEventData = {};
-  let keys = 0;
   for (const [key, value] of Object.entries(data)) {
-    if (keys >= EMBED_SESSION_LIMITS.maxDataKeys) break;
     if (!EMBED_SESSION_DATA_KEY_PATTERN.test(key)) continue;
-    if (typeof value === 'string') {
-      const max =
-        type === EmbedSessionEventType.SEARCH && key === 'text'
-          ? EMBED_SESSION_LIMITS.maxSearchTextLength
-          : EMBED_SESSION_LIMITS.maxDataStringLength;
-      clean[key] = value.slice(0, max);
-    } else if (typeof value === 'number') {
-      if (!Number.isFinite(value)) continue;
+    if (typeof value === 'number' && !Number.isFinite(value)) continue;
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' || value === null) {
       clean[key] = value;
-    } else if (typeof value === 'boolean' || value === null) {
-      clean[key] = value;
-    } else {
-      continue;
     }
-    keys += 1;
   }
   return clean;
 }
@@ -194,7 +180,7 @@ function readCampaign(search: string): IEmbedSessionCampaign | undefined {
   for (const [field, param] of Object.entries(UTM_PARAMS) as [keyof IEmbedSessionCampaign, string][]) {
     const value = params.get(param);
     if (!value) continue;
-    campaign[field] = value.slice(0, MAX_UTM_LENGTH);
+    campaign[field] = value;
     found = true;
   }
   return found ? campaign : undefined;
@@ -205,7 +191,7 @@ function readReferrer(): string | undefined {
   try {
     const referrer = new URL(document.referrer);
     if (referrer.origin === 'null') return undefined;
-    return `${referrer.origin}${referrer.pathname}`.slice(0, EMBED_SESSION_LIMITS.maxReferrerLength);
+    return `${referrer.origin}${referrer.pathname}`;
   } catch {
     return undefined;
   }
@@ -223,7 +209,7 @@ function readContext(): IEmbedSessionContext {
   if (!hasWindow()) return { path: FALLBACK_PATH, embedded: false };
   try {
     const context: IEmbedSessionContext = {
-      path: window.location.pathname.slice(0, EMBED_SESSION_LIMITS.maxPathLength) || FALLBACK_PATH,
+      path: window.location.pathname || FALLBACK_PATH,
       embedded: isEmbedded(),
     };
     const referrer = readReferrer();
@@ -245,19 +231,25 @@ function isVisible(): boolean {
   return hasWindow() && document.visibilityState === 'visible';
 }
 
+function isCredentialedHost(): boolean {
+  if (typeof location === 'undefined') return false;
+  const { hostname } = location;
+  return hostname === CREDENTIALED_HOST || hostname.endsWith(`.${CREDENTIALED_HOST}`);
+}
+
 function byteLength(value: string): number {
   return new TextEncoder().encode(value).length;
 }
 
 function createDefaultTransport(): EmbedSessionTransport {
   const post = async (url: string, body: IEmbedSessionSaveBody, token: string) => {
+    const payload = JSON.stringify(body);
     const response = await fetch(url, {
       method: 'POST',
-      keepalive: true,
+      keepalive: byteLength(payload) <= KEEPALIVE_BODY_BYTES,
       headers: { 'Content-Type': 'application/json', 'x-speakai-player-token': token },
-      credentials:
-        typeof location !== 'undefined' && location.hostname.endsWith(CREDENTIALED_HOST_SUFFIX) ? 'include' : 'omit',
-      body: JSON.stringify(body),
+      credentials: isCredentialedHost() ? 'include' : 'omit',
+      body: payload,
     });
     let data;
     try {
@@ -378,10 +370,9 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     writeStorage(sessionStore, sessionKey, JSON.stringify(state));
   };
 
-  const mediaTotals = (mediaId: string): IEmbedSessionMediaTotals | null => {
+  const mediaTotals = (mediaId: string): IEmbedSessionMediaTotals => {
     const existing = state.totals.media.find((entry) => entry.mediaId === mediaId);
     if (existing) return existing;
-    if (state.totals.media.length >= EMBED_SESSION_LIMITS.maxMediaPerSession) return null;
     const created: IEmbedSessionMediaTotals = {
       mediaId,
       opens: 0,
@@ -412,19 +403,16 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     state.eventIndex += 1;
     const event: IEmbedSessionClientEvent = {
       i: state.eventIndex,
-      t: Math.min(EMBED_SESSION_LIMITS.maxEventOffsetMs, Math.max(0, Math.round(at - state.startedAt))),
+      t: Math.max(0, Math.round(at - state.startedAt)),
       type,
     };
-    if (fields.mediaId) event.mediaId = fields.mediaId.slice(0, MAX_ID_LENGTH);
-    if (fields.promptId) event.promptId = fields.promptId.slice(0, MAX_ID_LENGTH);
-    if (fields.data) event.data = sanitizeData(type, fields.data);
+    if (fields.mediaId) event.mediaId = fields.mediaId;
+    if (fields.promptId) event.promptId = fields.promptId;
+    if (fields.data) event.data = sanitizeData(fields.data);
     state.pending.push(event);
-    if (state.pending.length > EMBED_SESSION_LIMITS.maxPendingEvents) {
-      state.pending.splice(0, state.pending.length - EMBED_SESSION_LIMITS.maxPendingEvents);
-    }
     if (!ACTIVITY_NEUTRAL_EVENTS.has(type)) state.lastActivityAt = Math.max(state.lastActivityAt, clock());
     persist();
-    if (state.pending.length >= EMBED_SESSION_LIMITS.maxEventsPerBatch) void flush();
+    if (state.pending.length >= EVENTS_PER_BATCH) void flush();
   };
 
   const changedMedia = (): IEmbedSessionMediaTotals[] =>
@@ -441,13 +429,19 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     state.totals.pageViews !== ackedPageViews ||
     changedMedia().length > 0;
 
-  const buildBody = (at: number = clock()): IEmbedSessionSaveBody => {
+  const settleTotals = (at: number): void => {
     if (tickTimer !== null) tick();
     settlePlayback(at);
     const timing = state.totals.timing;
     timing.wallClockMs = Math.max(0, Math.round(at - state.startedAt));
     timing.visibleMs = Math.min(timing.visibleMs, timing.wallClockMs);
     timing.activeMs = Math.min(timing.activeMs, timing.wallClockMs);
+  };
+
+  const buildBody = (
+    pendingEvents: IEmbedSessionClientEvent[],
+    changed: IEmbedSessionMediaTotals[],
+  ): IEmbedSessionSaveBody => {
     state.seq += 1;
     persist();
     const build = (events: IEmbedSessionClientEvent[], media: IEmbedSessionMediaTotals[]): IEmbedSessionSaveBody => ({
@@ -464,8 +458,8 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
         media: media.map((entry) => ({ ...entry })),
       },
     });
-    let events = state.pending.slice(0, EMBED_SESSION_LIMITS.maxEventsPerBatch);
-    let media = changedMedia().slice(0, EMBED_SESSION_LIMITS.maxMediaPerBatch);
+    let events = pendingEvents.slice(0, EVENTS_PER_BATCH);
+    let media = changed;
     let body = build(events, media);
     while (byteLength(JSON.stringify(body)) > KEEPALIVE_BODY_BYTES && (events.length > 1 || media.length > 1)) {
       if (events.length > 1) events = events.slice(0, Math.ceil(events.length / 2));
@@ -473,6 +467,30 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
       body = build(events, media);
     }
     return body;
+  };
+
+  const buildNextBody = (): { body: IEmbedSessionSaveBody; partial: boolean } => {
+    settleTotals(clock());
+    const changed = changedMedia();
+    const body = buildBody(state.pending, changed);
+    return {
+      body,
+      partial: body.events.length < state.pending.length || body.totals.media.length < changed.length,
+    };
+  };
+
+  const buildAllBodies = (at: number): IEmbedSessionSaveBody[] => {
+    settleTotals(at);
+    const bodies: IEmbedSessionSaveBody[] = [];
+    let events = state.pending;
+    let media = changedMedia();
+    do {
+      const body = buildBody(events, media);
+      bodies.push(body);
+      events = events.slice(body.events.length);
+      media = media.slice(body.totals.media.length);
+    } while (events.length > 0 || media.length > 0);
+    return bodies;
   };
 
   const acknowledge = (body: IEmbedSessionSaveBody): void => {
@@ -553,7 +571,9 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     if (dead || !decided) return;
     if (inflight) return inflight;
     const isRetry = retryBody !== null;
-    const body = retryBody ?? finalBodies.shift() ?? (!ended && isDirty() ? buildBody() : null);
+    let body = retryBody ?? finalBodies.shift() ?? null;
+    let partial = false;
+    if (!body && !ended && isDirty()) ({ body, partial } = buildNextBody());
     if (!body) return;
     inflight = deliver(body, isRetry).finally(() => {
       inflight = null;
@@ -566,7 +586,7 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     if (
       finalBodies.length > 0 ||
       body.sessionId !== state.sessionId ||
-      (!ended && state.pending.length >= EMBED_SESSION_LIMITS.maxEventsPerBatch)
+      (!ended && (partial || state.pending.length >= EVENTS_PER_BATCH))
     ) {
       await flush();
     }
@@ -604,7 +624,7 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
   const whenReady = (action: () => void): void => {
     if (dead) return;
     if (!decided) {
-      if (queued.length < EMBED_SESSION_LIMITS.maxPendingEvents) queued.push({ at: now(), action });
+      queued.push({ at: now(), action });
       return;
     }
     if (ended) beginNewSession(clock());
@@ -684,12 +704,8 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
   const endForIdle = (): void => {
     const endAt = Math.max(state.startedAt, state.lastActivityAt);
     appendEvent(EmbedSessionEventType.SESSION_END, { data: { reason: EmbedSessionEndReason.IDLE_TIMEOUT } }, endAt);
-    while (state.pending.length > 0) {
-      const body = buildBody(endAt);
-      finalBodies.push(body);
-      const lastIndex = body.events.reduce((max, event) => Math.max(max, event.i), 0);
-      state.pending = state.pending.filter((event) => event.i > lastIndex);
-    }
+    finalBodies.push(...buildAllBodies(endAt));
+    state.pending = [];
     ended = true;
     resumable = false;
     void flush();
@@ -763,7 +779,7 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     }
     stopTicker();
     appendEvent(EmbedSessionEventType.SESSION_END, { data: { reason: EmbedSessionEndReason.PAGEHIDE } });
-    beacon(buildBody());
+    for (const body of buildAllBodies(clock())) beacon(body);
   };
 
   const onPageShow = (event: Event): void => {
@@ -891,7 +907,7 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
       whenReady(() => {
         state.totals.pageViews += 1;
         const pathname = path.split(/[?#]/)[0] ?? '';
-        appendEvent(EmbedSessionEventType.PAGE_VIEW, { data: { path: pathname.slice(0, EMBED_SESSION_LIMITS.maxPathLength) } });
+        appendEvent(EmbedSessionEventType.PAGE_VIEW, { data: { path: pathname } });
       });
     },
     setViewerId(nextViewerId) {
@@ -901,8 +917,7 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
       viewerDirty = valid !== null;
       void flush();
     },
-    media(rawMediaId, mediaOptions) {
-      const mediaId = rawMediaId.slice(0, MAX_ID_LENGTH);
+    media(mediaId, mediaOptions) {
       const existing = handles.get(mediaId);
       if (existing) return existing;
       const runtime = createEmbedSessionMediaRuntime(mediaId, mediaOptions?.inferSeeks === true);
