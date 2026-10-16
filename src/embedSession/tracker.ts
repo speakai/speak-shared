@@ -18,6 +18,7 @@ import type {
   IEmbedSessionMediaRuntime,
   IEmbedSessionMediaTotals,
   IEmbedSessionSaveBody,
+  IEmbedSessionSaveResponse,
   IEmbedSessionTotals,
   IEmbedSessionTrackerState,
 } from '../interfaces/embedSession.js';
@@ -58,6 +59,11 @@ const ACTIVITY_NEUTRAL_EVENTS: ReadonlySet<EmbedSessionEventType> = new Set([
   EmbedSessionEventType.SESSION_END,
   EmbedSessionEventType.HIDDEN,
   EmbedSessionEventType.IDLE,
+]);
+const SESSION_LIFECYCLE_EVENTS: ReadonlySet<EmbedSessionEventType> = new Set([
+  EmbedSessionEventType.SESSION_START,
+  EmbedSessionEventType.SESSION_RESUME,
+  EmbedSessionEventType.SESSION_END,
 ]);
 
 interface QueuedAction {
@@ -193,7 +199,7 @@ function readContext(): IEmbedSessionContext {
   if (!hasWindow()) return { path: FALLBACK_PATH, embedded: false };
   try {
     const context: IEmbedSessionContext = {
-      path: `${window.location.pathname}${window.location.search}`.slice(0, EMBED_SESSION_LIMITS.maxPathLength) || FALLBACK_PATH,
+      path: window.location.pathname.slice(0, EMBED_SESSION_LIMITS.maxPathLength) || FALLBACK_PATH,
       embedded: isEmbedded(),
     };
     const referrer = document.referrer.slice(0, EMBED_SESSION_LIMITS.maxReferrerLength);
@@ -220,10 +226,10 @@ function byteLength(value: string): number {
 }
 
 function createDefaultTransport(): EmbedSessionTransport {
-  const send: EmbedSessionTransport['send'] = async (url, body, token) => {
+  const post = async (url: string, body: IEmbedSessionSaveBody, token: string, keepalive: boolean) => {
     const response = await fetch(url, {
       method: 'POST',
-      keepalive: true,
+      keepalive,
       headers: { 'Content-Type': 'application/json', 'x-speakai-player-token': token },
       credentials:
         typeof location !== 'undefined' && location.hostname.endsWith(CREDENTIALED_HOST_SUFFIX) ? 'include' : 'omit',
@@ -238,7 +244,7 @@ function createDefaultTransport(): EmbedSessionTransport {
     return { status: response.status, data };
   };
   return {
-    send,
+    send: (url, body, token) => post(url, body, token, false),
     beacon(url, body, token) {
       let queued = false;
       try {
@@ -249,7 +255,7 @@ function createDefaultTransport(): EmbedSessionTransport {
       } catch {
         queued = false;
       }
-      if (!queued) send(url, body, token).catch(() => undefined);
+      if (!queued) post(url, body, token, true).catch(() => undefined);
       return true;
     },
   };
@@ -314,6 +320,7 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
   let queued: QueuedAction[] = [];
   let inflight: Promise<void> | null = null;
   let retryBody: IEmbedSessionSaveBody | null = null;
+  const finalBodies: IEmbedSessionSaveBody[] = [];
   let ackedTiming = '';
   let ackedPageViews = -1;
   const ackedMedia = new Map<string, string>();
@@ -409,11 +416,13 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     state.totals.pageViews !== ackedPageViews ||
     changedMedia().length > 0;
 
-  const buildBody = (): IEmbedSessionSaveBody => {
+  const buildBody = (at: number = clock()): IEmbedSessionSaveBody => {
     if (tickTimer !== null) tick();
-    const at = clock();
     settlePlayback(at);
-    state.totals.timing.wallClockMs = Math.max(0, Math.round(at - state.startedAt));
+    const timing = state.totals.timing;
+    timing.wallClockMs = Math.max(0, Math.round(at - state.startedAt));
+    timing.visibleMs = Math.min(timing.visibleMs, timing.wallClockMs);
+    timing.activeMs = Math.min(timing.activeMs, timing.wallClockMs);
     state.seq += 1;
     persist();
     const build = (events: IEmbedSessionClientEvent[], media: IEmbedSessionMediaTotals[]): IEmbedSessionSaveBody => ({
@@ -459,7 +468,29 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     viewerDirty = viewerId !== null;
   };
 
-  const deliver = async (body: IEmbedSessionSaveBody): Promise<void> => {
+  const forkSession = (): void => {
+    const previousStartedAt = state.startedAt;
+    const carried = state.pending.filter((event) => !SESSION_LIFECYCLE_EVENTS.has(event.type));
+    const at = clock();
+    const startAt = carried[0] ? Math.min(at, previousStartedAt + carried[0].t) : at;
+    state = newState(startAt);
+    resetAcks();
+    appendEvent(EmbedSessionEventType.SESSION_START, { data: sessionStartData() }, startAt);
+    for (const event of carried) {
+      state.eventIndex += 1;
+      state.pending.push({ ...event, i: state.eventIndex, t: Math.max(0, previousStartedAt + event.t - startAt) });
+    }
+    persist();
+  };
+
+  const isForked = (body: IEmbedSessionSaveBody, data: IEmbedSessionSaveResponse | undefined, isRetry: boolean): boolean =>
+    !isRetry &&
+    !ended &&
+    data?.applied === false &&
+    body.sessionId === state.sessionId &&
+    (data.lastSeq === body.seq || data.lastSeq > state.seq);
+
+  const deliver = async (body: IEmbedSessionSaveBody, isRetry: boolean): Promise<void> => {
     try {
       const response = await transport.send(url, body, options.token);
       if (response.status >= 200 && response.status < 300) {
@@ -468,7 +499,8 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
           return;
         }
         retryBody = null;
-        acknowledge(body);
+        if (isForked(body, response.data, isRetry)) forkSession();
+        else acknowledge(body);
         return;
       }
       if (response.status === 404) {
@@ -490,22 +522,30 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
   const flush = async (): Promise<void> => {
     if (dead || !decided) return;
     if (inflight) return inflight;
-    const body = retryBody ?? (!ended && isDirty() ? buildBody() : null);
+    const isRetry = retryBody !== null;
+    const body = retryBody ?? finalBodies.shift() ?? (!ended && isDirty() ? buildBody() : null);
     if (!body) return;
-    inflight = deliver(body).finally(() => {
+    inflight = deliver(body, isRetry).finally(() => {
       inflight = null;
     });
     await inflight;
-    if (!dead && !ended && retryBody === null && state.pending.length >= EMBED_SESSION_LIMITS.maxEventsPerBatch) {
+    if (dead || retryBody !== null) return;
+    if (ended && finalBodies.length === 0 && body.sessionId === state.sessionId) {
+      writeStorage(sessionStore, sessionKey, null);
+    }
+    if (
+      finalBodies.length > 0 ||
+      body.sessionId !== state.sessionId ||
+      (!ended && state.pending.length >= EMBED_SESSION_LIMITS.maxEventsPerBatch)
+    ) {
       await flush();
     }
   };
 
-  const sendFinal = (mode: 'beacon' | 'send'): void => {
+  const sendBeacon = (): void => {
     const body = buildBody();
     try {
-      if (mode === 'beacon') transport.beacon(url, body, options.token);
-      else transport.send(url, body, options.token).catch(() => undefined);
+      transport.beacon(url, body, options.token);
     } catch (error) {
       reportError(error);
     }
@@ -602,24 +642,32 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     tickTimer = null;
   };
 
+  const idleExpired = (at: number): boolean =>
+    !anyPlaying() &&
+    at - state.lastActivityAt >= EMBED_SESSION_LIMITS.sessionTimeoutMs &&
+    at - lastInputAt >= EMBED_SESSION_LIMITS.sessionTimeoutMs;
+
   const endForIdle = (): void => {
-    settlePlayback(now());
-    appendEvent(EmbedSessionEventType.SESSION_END, { data: { reason: EmbedSessionEndReason.IDLE_TIMEOUT } });
-    sendFinal('send');
-    writeStorage(sessionStore, sessionKey, null);
+    const endAt = Math.max(state.startedAt, state.lastActivityAt);
+    appendEvent(EmbedSessionEventType.SESSION_END, { data: { reason: EmbedSessionEndReason.IDLE_TIMEOUT } }, endAt);
+    while (state.pending.length > 0) {
+      const body = buildBody(endAt);
+      finalBodies.push(body);
+      const lastIndex = body.events.reduce((max, event) => Math.max(max, event.i), 0);
+      state.pending = state.pending.filter((event) => event.i > lastIndex);
+    }
     ended = true;
     resumable = false;
-    retryBody = null;
+    void flush();
   };
 
   const onFlushTimer = (): void => {
     if (decided && !ended && !dead) {
       const at = now();
-      if (anyPlaying()) state.lastActivityAt = at;
-      else if (
-        at - state.lastActivityAt >= EMBED_SESSION_LIMITS.sessionTimeoutMs &&
-        at - lastInputAt >= EMBED_SESSION_LIMITS.sessionTimeoutMs
-      ) {
+      if (anyPlaying()) {
+        state.lastActivityAt = at;
+        settlePlayback(at);
+      } else if (idleExpired(at)) {
         endForIdle();
         return;
       }
@@ -631,6 +679,9 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     if (dead) return;
     const at = now();
     if (decided && ended) {
+      beginNewSession(at);
+    } else if (decided && idleExpired(at)) {
+      endForIdle();
       beginNewSession(at);
     } else if (decided && isVisible() && !anyPlaying() && at - idleFrom > EMBED_SESSION_LIMITS.engagementGapMs) {
       appendEvent(EmbedSessionEventType.IDLE, { data: { durationMs: Math.round(at - idleFrom) } }, idleFrom);
@@ -657,7 +708,9 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
       void flush();
       return;
     }
-    if (hiddenAt !== null && decided && !ended && at - hiddenAt > EMBED_SESSION_LIMITS.engagementGapMs) {
+    if (decided && !ended && idleExpired(at)) {
+      endForIdle();
+    } else if (hiddenAt !== null && decided && !ended && at - hiddenAt > EMBED_SESSION_LIMITS.engagementGapMs) {
       appendEvent(EmbedSessionEventType.HIDDEN, { data: { durationMs: Math.round(at - hiddenAt) } }, hiddenAt);
     }
     hiddenAt = null;
@@ -672,7 +725,7 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     if (!decided || ended) return;
     stopTicker();
     appendEvent(EmbedSessionEventType.SESSION_END, { data: { reason: EmbedSessionEndReason.PAGEHIDE } });
-    sendFinal('beacon');
+    sendBeacon();
   };
 
   const onPageShow = (event: Event): void => {
@@ -680,9 +733,13 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     pageHidden = false;
     if (!(event as PageTransitionEvent).persisted || !decided || ended) return;
     const at = now();
-    appendEvent(EmbedSessionEventType.SESSION_RESUME, {
-      data: { gapMs: Math.max(0, at - (pageHiddenAt ?? at)) },
-    });
+    if (idleExpired(at)) {
+      beginNewSession(at);
+    } else {
+      appendEvent(EmbedSessionEventType.SESSION_RESUME, {
+        data: { gapMs: Math.max(0, at - (pageHiddenAt ?? at)) },
+      });
+    }
     lastInputAt = at;
     idleFrom = at;
     startTicker();
@@ -769,6 +826,7 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
       flushTimer = setInterval(onFlushTimer, EMBED_SESSION_LIMITS.flushIntervalMs);
       startTicker();
       openChannel();
+      if (decided) return;
       if (resumable && !ended && channel) {
         decided = false;
         claiming = true;
@@ -794,7 +852,8 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     pageView(path) {
       whenReady(() => {
         state.totals.pageViews += 1;
-        appendEvent(EmbedSessionEventType.PAGE_VIEW, { data: { path: path.slice(0, EMBED_SESSION_LIMITS.maxPathLength) } });
+        const pathname = path.split(/[?#]/)[0] ?? '';
+        appendEvent(EmbedSessionEventType.PAGE_VIEW, { data: { path: pathname.slice(0, EMBED_SESSION_LIMITS.maxPathLength) } });
       });
     },
     setViewerId(nextViewerId) {
@@ -804,7 +863,8 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
       viewerDirty = valid !== null;
       void flush();
     },
-    media(mediaId, mediaOptions) {
+    media(rawMediaId, mediaOptions) {
+      const mediaId = rawMediaId.slice(0, MAX_ID_LENGTH);
       const existing = handles.get(mediaId);
       if (existing) return existing;
       const runtime = createEmbedSessionMediaRuntime(mediaId, mediaOptions?.inferSeeks === true);
