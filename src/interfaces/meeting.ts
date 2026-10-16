@@ -5,8 +5,6 @@ import {
   MeetingRecorder,
   DesktopAutoRecord,
   DesktopConsentNotice,
-  ConsentNoticeAction,
-  ConsentAnswer,
 } from '../enums/index.js';
 
 export interface IMeetingAttendee {
@@ -34,16 +32,7 @@ export interface IMeetingEvent {
   folderId?: string;
   speakers: { timestamp: number; name: string }[];
   history: IMeetingEventHistory[];
-  consent?: IMeetingConsentRecord;
   createdAt?: Date;
-}
-
-export interface IMeetingConsentRecord {
-  action: ConsentNoticeAction;
-  noticeText?: string;
-  shownAt?: string;
-  app?: string;
-  answer?: ConsentAnswer;
 }
 
 export interface IDesktopMeetingPolicy {

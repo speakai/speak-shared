@@ -103,15 +103,3 @@ export enum DesktopConsentNotice {
   REMIND = 'remind',
   REQUIRE = 'require',
 }
-
-export enum ConsentNoticeAction {
-  COPIED = 'copied',
-  POSTED = 'posted',
-  SKIPPED = 'skipped',
-}
-
-export enum ConsentAnswer {
-  YES = 'yes',
-  NO = 'no',
-  NOT_ASKED = 'notAsked',
-}
