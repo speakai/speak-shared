@@ -66,7 +66,7 @@ describe("Recorder session events", () => {
       "unsupported",
       "released",
     ]);
-    expect(Object.values(RecorderSessionEventType)).toHaveLength(25);
+    expect(Object.values(RecorderSessionEventType)).toHaveLength(31);
     expect(Object.keys(RECORDER_SESSION_EVENTS).sort()).toEqual(
       Object.values(RecorderSessionEventType).sort(),
     );

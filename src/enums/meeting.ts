@@ -9,6 +9,8 @@ export enum MeetingPlatform {
   ZOOM = 'zoom',
   MICROSOFT_TEAMS = 'microsoftTeams',
   WEBEX = 'webex',
+  SLACK = 'slack',
+  OTHER = 'other',
 }
 
 export const MEETING_PLATFORM_LABELS: Readonly<Record<MeetingPlatform, string>> = {
@@ -16,6 +18,8 @@ export const MEETING_PLATFORM_LABELS: Readonly<Record<MeetingPlatform, string>> 
   [MeetingPlatform.GOOGLE_MEET]: 'Google Meet',
   [MeetingPlatform.MICROSOFT_TEAMS]: 'Microsoft Teams',
   [MeetingPlatform.WEBEX]: 'Webex',
+  [MeetingPlatform.SLACK]: 'Slack',
+  [MeetingPlatform.OTHER]: 'Other',
 };
 
 export enum MeetingStatus {
@@ -79,4 +83,35 @@ export enum MeetingAttendeeType {
 export enum MeetingAssistantEventSource {
   INSTANT = 'instant',
   ASSISTANT = 'assistant',
+  DESKTOP = 'desktop',
+}
+
+export enum MeetingRecorder {
+  DESKTOP_FIRST = 'desktopFirst',
+  DESKTOP_ONLY = 'desktopOnly',
+  BOT_ONLY = 'botOnly',
+}
+
+export enum DesktopAutoRecord {
+  ALLOW = 'allow',
+  PROMPT_ONLY = 'promptOnly',
+  OFF = 'off',
+}
+
+export enum DesktopConsentNotice {
+  OFF = 'off',
+  REMIND = 'remind',
+  REQUIRE = 'require',
+}
+
+export enum ConsentNoticeAction {
+  COPIED = 'copied',
+  POSTED = 'posted',
+  SKIPPED = 'skipped',
+}
+
+export enum ConsentAnswer {
+  YES = 'yes',
+  NO = 'no',
+  NOT_ASKED = 'notAsked',
 }

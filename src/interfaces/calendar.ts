@@ -1,4 +1,4 @@
-import { CalendarType, MeetingPlatform, MeetingAttendeeType } from '../enums/index.js';
+import { CalendarType, MeetingPlatform, MeetingAttendeeType, MeetingRecorder } from '../enums/index.js';
 
 export interface ICalendarEvent {
   _id: string;
@@ -42,4 +42,13 @@ export type UpcomingCalendarEventResponse = Pick<
 > & {
   startTime: string;
   endTime: string;
+  recordDecision?: IRecordDecision;
 };
+
+export interface IRecordDecision {
+  record: boolean;
+  reason: string;
+  recorder: MeetingRecorder;
+  claimedByDeviceId?: string;
+  claimedAt?: string;
+}

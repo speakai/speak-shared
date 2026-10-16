@@ -3,6 +3,7 @@ import {
   RecorderSessionEventCategory,
   RecorderSessionEventType,
   RecorderSessionWakeLock,
+  RecordingSessionSource,
 } from '../enums/index.js';
 
 export interface IRecorderQuestion {
@@ -157,6 +158,7 @@ export interface IRecorderSessionSummary {
 
 export interface IRecorderSessionSaveBody {
   sessionId: string;
+  source?: RecordingSessionSource;
   version: number;
   summary: IRecorderSessionSummary;
   events: IRecorderSessionEvent[];

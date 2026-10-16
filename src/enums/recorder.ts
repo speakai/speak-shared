@@ -49,6 +49,17 @@ export enum RecorderSessionEventType {
   LIVE_RECONNECTING = 'live_reconnecting',
   LIVE_RESUMED = 'live_resumed',
   LIVE_FAILED = 'live_failed',
+  SYSTEM_RESUMED = 'system_resumed',
+  SYSTEM_AUDIO_RESTARTED = 'system_audio_restarted',
+  SIDE_SILENT = 'side_silent',
+  ECHO_CANCELLER_CHANGED = 'echo_canceller_changed',
+  UPLOAD_RETRY = 'upload_retry',
+  TAKE_SPLIT = 'take_split',
+}
+
+export enum RecordingSessionSource {
+  EMBED = 'embed',
+  DESKTOP = 'desktop',
 }
 
 export enum RecorderSessionEventCategory {
@@ -74,6 +85,10 @@ export const RECORDER_SESSION_EVENTS: Readonly<
   [RecorderSessionEventType.SUSPEND_DETECTED]: {
     category: RecorderSessionEventCategory.DEVICE_SLEEP,
     description: 'The laptop or browser was asleep, so no audio was recorded for that time.',
+  },
+  [RecorderSessionEventType.SYSTEM_RESUMED]: {
+    category: RecorderSessionEventCategory.DEVICE_SLEEP,
+    description: 'The computer woke up from sleep.',
   },
   [RecorderSessionEventType.PAGE_FREEZE]: {
     category: RecorderSessionEventCategory.DEVICE_SLEEP,
@@ -132,6 +147,22 @@ export const RECORDER_SESSION_EVENTS: Readonly<
     category: RecorderSessionEventCategory.AUDIO_CAPTURE,
     description: 'A microphone, headset or other audio device was plugged in, unplugged or switched.',
   },
+  [RecorderSessionEventType.SYSTEM_AUDIO_RESTARTED]: {
+    category: RecorderSessionEventCategory.AUDIO_CAPTURE,
+    description: "The recorder restarted capture of the computer's sound, for example after a headset switch.",
+  },
+  [RecorderSessionEventType.SIDE_SILENT]: {
+    category: RecorderSessionEventCategory.AUDIO_CAPTURE,
+    description: 'One side of the call (your microphone or the other people) was silent while the other side was talking.',
+  },
+  [RecorderSessionEventType.ECHO_CANCELLER_CHANGED]: {
+    category: RecorderSessionEventCategory.AUDIO_CAPTURE,
+    description: 'Echo removal was turned on or off, for example when switching between speakers and headphones.',
+  },
+  [RecorderSessionEventType.TAKE_SPLIT]: {
+    category: RecorderSessionEventCategory.USER,
+    description: 'The recording was split into a new meeting.',
+  },
   [RecorderSessionEventType.RECORDER_ERROR]: {
     category: RecorderSessionEventCategory.AUDIO_CAPTURE,
     description: 'The browser reported an error while recording audio.',
@@ -151,6 +182,10 @@ export const RECORDER_SESSION_EVENTS: Readonly<
   [RecorderSessionEventType.LIVE_FAILED]: {
     category: RecorderSessionEventCategory.LIVE_TRANSCRIPTION,
     description: 'Live transcription stopped and could not reconnect; the recording itself continued.',
+  },
+  [RecorderSessionEventType.UPLOAD_RETRY]: {
+    category: RecorderSessionEventCategory.NETWORK,
+    description: 'An upload failed and was tried again.',
   },
   [RecorderSessionEventType.ONLINE]: {
     category: RecorderSessionEventCategory.NETWORK,
