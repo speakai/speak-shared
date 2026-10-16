@@ -493,10 +493,14 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     return bodies;
   };
 
-  const acknowledge = (body: IEmbedSessionSaveBody): void => {
-    if (body.sessionId !== state.sessionId) return;
+  const removeSentEvents = (body: IEmbedSessionSaveBody): void => {
     const lastIndex = body.events.reduce((max, event) => Math.max(max, event.i), 0);
     state.pending = state.pending.filter((event) => event.i > lastIndex);
+  };
+
+  const acknowledge = (body: IEmbedSessionSaveBody): void => {
+    if (body.sessionId !== state.sessionId) return;
+    removeSentEvents(body);
     ackedTiming = timingKey(body.totals);
     ackedPageViews = body.totals.pageViews;
     for (const entry of body.totals.media) ackedMedia.set(entry.mediaId, JSON.stringify(entry));
@@ -555,9 +559,14 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
         shutdown();
         return;
       }
-      retryBody = body;
+      const neverAccepted = response.status >= 400 && response.status < 500 && response.status !== 429;
+      retryBody = neverAccepted ? null : body;
       if (response.status === 429 || response.status >= 500) return;
       reportError(new Error(`Embed session save rejected with status ${response.status}`));
+      if (neverAccepted && body.sessionId === state.sessionId) {
+        removeSentEvents(body);
+        persist();
+      }
     } catch {
       retryBody = body;
     }

@@ -250,11 +250,12 @@ describe('createEmbedSessionTracker', () => {
     }
   });
 
-  it('keeps a batch the server answered 400 and sends long strings, many data keys, over 1,000 pending events and over 500 media intact', async () => {
+  it('drops only a batch the server answered 400, delivers the next batches and sends long strings, many data keys, over 1,000 pending events and over 500 media intact', async () => {
     vi.useFakeTimers({ now: Date.UTC(2026, 9, 16, 10) });
     const fake = fakeTransport();
     let online = false;
     const delivered: IEmbedSessionSaveBody[] = [];
+    const onError = vi.fn();
     fake.respondWith((body) => {
       if (!online) return { status: fake.sends.length === 1 ? 400 : 503 };
       delivered.push(structuredClone(body));
@@ -266,6 +267,7 @@ describe('createEmbedSessionTracker', () => {
       transport: fake.transport,
       sessionStorage: memoryStorage(),
       localStorage: memoryStorage(),
+      onError,
     });
     tracker.start();
     await vi.advanceTimersByTimeAsync(0);
@@ -282,8 +284,13 @@ describe('createEmbedSessionTracker', () => {
     online = true;
     for (let round = 0; round < 100; round += 1) await tracker.flush();
 
+    expect(onError).toHaveBeenCalledTimes(1);
+    const dropped = new Set(fake.sends[0]!.events.map((event) => event.i));
+    expect(dropped.size).toBeGreaterThan(0);
     const events = new Map(delivered.flatMap((body) => body.events).map((event) => [event.i, event]));
-    expect([...events.keys()].sort((a, b) => a - b)).toEqual(Array.from({ length: 1_801 }, (_, index) => index + 1));
+    expect([...events.keys()].sort((a, b) => a - b)).toEqual(
+      Array.from({ length: 1_801 }, (_, index) => index + 1).filter((i) => !dropped.has(i)),
+    );
     const searches = [...events.values()].filter((event) => event.type === EmbedSessionEventType.SEARCH);
     expect(searches).toHaveLength(1_200);
     expect(searches.every((event) => event.data?.text === longText && Object.keys(event.data).length === 31)).toBe(true);

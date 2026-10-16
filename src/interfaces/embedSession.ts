@@ -103,7 +103,7 @@ export interface IEmbedSessionSaveResponse {
   sessionId: string;
   lastSeq: number;
   applied: boolean;
-  rejected?: { i: number; reason: string }[];
+  rejected?: { i?: number; index?: number; reason: string }[];
 }
 
 export interface IEmbedSessionSaveSkippedResponse {
