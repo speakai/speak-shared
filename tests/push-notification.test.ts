@@ -75,6 +75,8 @@ describe("push payload builders", () => {
   it("labels every action id and platform", () => {
     expect(PUSH_NOTIFICATION_ACTION_LABELS).toEqual({ join: "Join", record: "Record", "open-media": "Open" });
     expect(getMeetingPlatformLabel("googleMeet")).toBe("Google Meet");
+    expect(getMeetingPlatformLabel("slack")).toBe("Slack");
+    expect(getMeetingPlatformLabel("other")).toBe("Other");
     expect(getMeetingPlatformLabel("constructor")).toBeUndefined();
     expect(getMeetingPlatformLabel(undefined)).toBeUndefined();
   });
