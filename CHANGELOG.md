@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.58 (2026-10-18)
+
+- Maintenance release
+
 ## v2.2.0 (2026-10-16)
 
 - Added embed session wire types: `EmbedSessionEventType` (including `transcript_copy`), `EmbedSessionEventCategory` and the other embed session enums, the `EMBED_SESSION_EVENTS` map, and in `interfaces/embedSession` the save (`IEmbedSessionSaveBody`, `IEmbedSessionSaveResponse`), list (`IEmbedSessionListQuery`, `IEmbedSessionListResponse`), detail (`IEmbedSessionDetailQuery`, `IEmbedSessionDetailResponse` with paged events and `eventsTotal`), summary (`IEmbedSessionSummaryQuery`, `IEmbedSessionSummaryResponse` with paged `media` rows), live (`IEmbedSessionLiveQuery`, `IEmbedSessionLiveResponse`), countries (`IEmbedSessionCountriesQuery`, `IEmbedSessionCountriesResponse`) and viewer (`IEmbedViewerSummary`) shapes. The list, summary, live and countries queries share one base, `IEmbedSessionQuery`. Every interface in this file carries the `I` prefix, and single-use parts are written inline.
