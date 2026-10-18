@@ -36,6 +36,7 @@ const VISITOR_STORAGE_PREFIX = 'speak.embedVisitor.';
 const CLAIM_CHANNEL_NAME = 'speak-embed-session';
 const CLAIM_TIMEOUT_MS = 150;
 const TICK_INTERVAL_MS = 1_000;
+const PERSIST_INTERVAL_MS = 1_000;
 const MAX_TICK_DELTA_MS = 5_000;
 const MOUSEMOVE_THROTTLE_MS = 5_000;
 const FALLBACK_PATH = '/';
@@ -362,6 +363,8 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
   let tickTimer: ReturnType<typeof setInterval> | null = null;
   let flushTimer: ReturnType<typeof setInterval> | null = null;
   let claimTimer: ReturnType<typeof setTimeout> | null = null;
+  let persistTimer: ReturnType<typeof setTimeout> | null = null;
+  let persistedSessionId = storedState?.sessionId ?? null;
   let channel: BroadcastChannel | null = null;
   let detachListeners: (() => void)[] = [];
 
@@ -375,9 +378,21 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
     }
   };
 
-  const persist = (): void => {
+  const persistNow = (): void => {
+    if (persistTimer !== null) clearTimeout(persistTimer);
+    persistTimer = null;
     if (ended) return;
     writeStorage(sessionStore, sessionKey, JSON.stringify(state));
+    persistedSessionId = state.sessionId;
+  };
+
+  const persist = (): void => {
+    if (state.sessionId !== persistedSessionId) {
+      persistNow();
+      return;
+    }
+    if (ended || persistTimer !== null) return;
+    persistTimer = setTimeout(persistNow, PERSIST_INTERVAL_MS);
   };
 
   const mediaTotals = (mediaId: string): IEmbedSessionMediaTotals => {
@@ -453,7 +468,6 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
     changed: IEmbedSessionMediaTotals[],
   ): IEmbedSessionSaveBody => {
     state.seq += 1;
-    persist();
     const build = (events: IEmbedSessionClientEvent[], media: IEmbedSessionMediaTotals[]): IEmbedSessionSaveBody => ({
       version: EMBED_SESSION_PROTOCOL_VERSION,
       sessionId: state.sessionId,
@@ -483,6 +497,7 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
     settleTotals(clock());
     const changed = changedMedia();
     const body = buildBody(state.pending, changed);
+    persistNow();
     return {
       body,
       partial: body.events.length < state.pending.length || body.totals.media.length < changed.length,
@@ -500,6 +515,7 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
       events = events.slice(body.events.length);
       media = media.slice(body.totals.media.length);
     } while (events.length > 0 || media.length > 0);
+    persistNow();
     return bodies;
   };
 
@@ -515,7 +531,7 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
     ackedPageViews = body.totals.pageViews;
     for (const entry of body.totals.media) ackedMedia.set(entry.mediaId, JSON.stringify(entry));
     if (body.viewerId === viewerId) viewerDirty = false;
-    persist();
+    persistNow();
   };
 
   const resetAcks = (): void => {
@@ -537,7 +553,7 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
       state.eventIndex += 1;
       state.pending.push({ ...event, i: state.eventIndex, t: Math.max(0, previousStartedAt + event.t - startAt) });
     }
-    persist();
+    persistNow();
   };
 
   const isForked = (body: IEmbedSessionSaveBody, data: IEmbedSessionSaveResponse, isRetry: boolean): boolean =>
@@ -575,7 +591,7 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
       reportError(new Error(`Embed session save rejected with status ${response.status}`));
       if (neverAccepted && body.sessionId === state.sessionId) {
         removeSentEvents(body);
-        persist();
+        persistNow();
       }
     } catch {
       retryBody = body;
@@ -769,7 +785,7 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
     if (!isVisible()) {
       stopTicker();
       hiddenAt = at;
-      persist();
+      persistNow();
       void flush();
       return;
     }
@@ -878,6 +894,7 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
     dead = true;
     started = false;
     teardown();
+    persistNow();
     queued = [];
   }
 
@@ -910,7 +927,7 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
       started = false;
       teardown();
       if (decided) {
-        persist();
+        persistNow();
         void flush();
       }
     },
@@ -955,7 +972,10 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
     chatContext() {
       return viewerId ? { embedSessionId: state.sessionId, viewerId } : { embedSessionId: state.sessionId };
     },
-    flush,
+    flush() {
+      if (decided && !dead) persistNow();
+      return flush();
+    },
   };
 
   return tracker;

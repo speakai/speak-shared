@@ -11,13 +11,18 @@ type StorageLike = NonNullable<IEmbedSessionTrackerOptions['sessionStorage']>;
 type Transport = NonNullable<IEmbedSessionTrackerOptions['transport']>;
 type SaveResult = Awaited<ReturnType<Transport['send']>>;
 
-function memoryStorage(entries: Map<string, string> = new Map()): StorageLike & { entries: Map<string, string> } {
-  return {
+function memoryStorage(entries: Map<string, string> = new Map()): StorageLike & { entries: Map<string, string>; writes: number } {
+  const storage = {
     entries,
-    getItem: (key) => entries.get(key) ?? null,
-    setItem: (key, value) => void entries.set(key, value),
-    removeItem: (key) => void entries.delete(key),
+    writes: 0,
+    getItem: (key: string) => entries.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      storage.writes += 1;
+      entries.set(key, value);
+    },
+    removeItem: (key: string) => void entries.delete(key),
   };
+  return storage;
 }
 
 function fakeTransport() {
@@ -59,6 +64,8 @@ function fakeTransport() {
 }
 
 const types = (body: IEmbedSessionSaveBody | undefined) => body?.events.map((event) => event.type);
+const storedIndexes = (storage: { entries: Map<string, string> }, key: string): number[] =>
+  JSON.parse(storage.entries.get(key)!).pending.map((event: { i: number }) => event.i);
 
 function hashedKey(storage: { entries: Map<string, string> }, prefix: string): string {
   const keys = [...storage.entries.keys()].filter((key) => key.startsWith(prefix));
@@ -106,14 +113,21 @@ describe('createEmbedSessionTracker', () => {
     expect(local.entries.get(hashedKey(local, VISITOR_PREFIX))).toBe(first.visitorId);
     expect(JSON.stringify([...session.entries.keys(), ...local.entries.keys()])).not.toContain(TOKEN);
 
+    const firstKey = hashedKey(session, SESSION_PREFIX);
+    const writesBeforeBurst = session.writes;
     first.pageView('/library/media/m1?code=secret#top');
     const media = first.media('m1');
     media.open(EmbedSessionMediaOpenSource.LIST);
     media.timeUpdate(0, 100);
     media.play(0);
     first.track(EmbedSessionEventType.CHAT_QUESTION);
+    expect(session.writes).toBe(writesBeforeBurst);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(session.writes).toBe(writesBeforeBurst + 1);
+    expect(storedIndexes(session, firstKey)).toEqual([2, 3, 4]);
+    const coalescedSession = memoryStorage(new Map(session.entries));
     fake.holdNextSend();
-    await vi.advanceTimersByTimeAsync(30_000);
+    await vi.advanceTimersByTimeAsync(29_000);
 
     const inflight = fake.sends[1];
     expect(inflight?.seq).toBe(2);
@@ -127,12 +141,32 @@ describe('createEmbedSessionTracker', () => {
     expect(fake.beacons[0]?.seq).toBe(3);
     expect(fake.beacons[0]?.events.map((event) => event.i)).toEqual([...inflight!.events.map((event) => event.i), 5]);
     expect(fake.beacons[0]?.events.at(-1)).toMatchObject({ type: EmbedSessionEventType.SESSION_END, data: { reason: 'pagehide' } });
+    expect(storedIndexes(session, firstKey)).toEqual([2, 3, 4, 5]);
 
     const refreshedSession = memoryStorage(new Map(session.entries));
     first.stop();
     fake.release({ status: 200, data: { sessionId: first.sessionId, lastSeq: 2, applied: true } });
     await vi.advanceTimersByTimeAsync(0);
     const sentBeforeRefresh = fake.sends.length;
+
+    const coalescedFake = fakeTransport();
+    const fromCoalesced = createEmbedSessionTracker({
+      ...options,
+      transport: coalescedFake.transport,
+      sessionStorage: coalescedSession,
+      localStorage: local,
+    });
+    fromCoalesced.start();
+    await vi.advanceTimersByTimeAsync(150);
+    expect(coalescedFake.sends[0]).toMatchObject({ seq: 2, sessionId: first.sessionId });
+    expect(coalescedFake.sends[0]?.events.map((event) => event.i)).toEqual([2, 3, 4, 5]);
+    expect(types(coalescedFake.sends[0])).toEqual([
+      EmbedSessionEventType.PAGE_VIEW,
+      EmbedSessionEventType.MEDIA_OPEN,
+      EmbedSessionEventType.PLAY,
+      EmbedSessionEventType.SESSION_RESUME,
+    ]);
+    fromCoalesced.stop();
 
     const second = createEmbedSessionTracker({ ...options, sessionStorage: refreshedSession, localStorage: local });
     second.start();
@@ -221,8 +255,12 @@ describe('createEmbedSessionTracker', () => {
       [4, EmbedSessionEventType.SEARCH],
     ]);
     expect(fake.sends.at(-1)?.events[2]?.data).toEqual({ fromSec: 10, toSec: 40 });
-    expect(JSON.parse(session.entries.get(hashedKey(session, SESSION_PREFIX))!).pending).toEqual([]);
+    const sessionKey = hashedKey(session, SESSION_PREFIX);
+    expect(storedIndexes(session, sessionKey)).toEqual([]);
+    tracker.track(EmbedSessionEventType.SEARCH, { data: { text: 'first' } });
+    tracker.track(EmbedSessionEventType.SEARCH, { data: { text: 'second' } });
     tracker.stop();
+    expect(storedIndexes(session, sessionKey)).toEqual([5, 6]);
 
     {
       const render = fakeTransport();
