@@ -1,35 +1,17 @@
 import type {
   EmbedSessionBotKind,
-  EmbedSessionChatFeedbackScale,
   EmbedSessionDeviceFilter,
   EmbedSessionEventCategory,
   EmbedSessionEventSource,
   EmbedSessionEventType,
-  EmbedSessionExportKind,
   EmbedSessionMediaOpenSource,
   EmbedSessionSort,
   EmbedSessionTrafficFilter,
-  EmbedSessionTranscriptFormat,
   EmbedSessionViewerFilter,
-  EmbedViewerAuthMethod,
 } from '../enums/embedSession.js';
+import type { ExportFormatType } from '../enums/export.js';
 
 export type EmbedSessionEventData = Record<string, string | number | boolean | null>;
-
-export type EmbedSessionChatFeedbackData = {
-  score: number;
-  scale: EmbedSessionChatFeedbackScale;
-  messageId?: string;
-};
-
-export type EmbedSessionTranscriptDownloadData = {
-  format: EmbedSessionTranscriptFormat;
-};
-
-export type EmbedSessionExportData = {
-  format: string;
-  kind: EmbedSessionExportKind;
-};
 
 export interface IEmbedSessionEventEntry {
   category: EmbedSessionEventCategory;
@@ -56,13 +38,20 @@ export interface IEmbedSessionContext {
   utm?: IEmbedSessionCampaign;
 }
 
-export interface IEmbedSessionClientEvent {
-  i: number;
-  t: number;
-  type: EmbedSessionEventType;
-  mediaId?: string;
-  promptId?: string;
-  data?: EmbedSessionEventData;
+export interface IEmbedSessionClient {
+  country?: string;
+  region?: string;
+  city?: string;
+  continent?: string;
+  timeZone?: string;
+  browser?: string;
+  os?: string;
+  deviceType?: string;
+  referer?: string;
+  referrerHost?: string;
+  screen?: string;
+  language?: string;
+  embedded?: boolean;
 }
 
 export interface IEmbedSessionTiming {
@@ -82,74 +71,13 @@ export interface IEmbedSessionMediaTotals {
   completed: boolean;
 }
 
-export interface IEmbedSessionTotals {
-  timing: IEmbedSessionTiming;
-  pageViews: number;
-  media: IEmbedSessionMediaTotals[];
-}
-
-export interface IEmbedSessionSaveBody {
-  version: number;
-  sessionId: string;
-  visitorId: string;
-  seq: number;
-  viewerId?: string | null;
-  context: IEmbedSessionContext;
-  events: IEmbedSessionClientEvent[];
-  totals: IEmbedSessionTotals;
-}
-
-export interface IEmbedSessionSaveResponse {
-  sessionId: string;
-  lastSeq: number;
-  applied: boolean;
-  rejected?: { i?: number; index?: number; reason: string }[];
-}
-
-export interface IEmbedSessionSaveSkippedResponse {
-  applied: false;
-}
-
-export interface IEmbedSessionClient {
-  country?: string;
-  region?: string;
-  city?: string;
-  continent?: string;
-  timeZone?: string;
-  browser?: string;
-  os?: string;
-  deviceType?: string;
-  referer?: string;
-  referrerHost?: string;
-  screen?: string;
-  language?: string;
-  embedded?: boolean;
-}
-
-export interface IEmbedSessionBot {
-  kind: EmbedSessionBotKind;
-  name?: string;
-}
-
-export interface IEmbedSessionSummary {
-  startedAt: string;
-  lastActiveAt: string;
-  endedAt?: string;
-  timing: IEmbedSessionTiming;
-  media: { opened: number; watchedMs: number };
-  chat: { questions: number };
-  pages: { views: number };
-}
-
-export interface IEmbedSessionMedia extends IEmbedSessionMediaTotals {
-  firstOpenedAt: string;
-}
-
-export interface IEmbedSessionChat {
-  promptId: string;
-  messageId: string;
-  askedAt: string;
-  mediaIds: string[];
+export interface IEmbedSessionClientEvent {
+  i: number;
+  t: number;
+  type: EmbedSessionEventType;
+  mediaId?: string;
+  promptId?: string;
+  data?: EmbedSessionEventData;
 }
 
 export interface IEmbedSessionEvent {
@@ -162,32 +90,78 @@ export interface IEmbedSessionEvent {
   receivedAt: string;
 }
 
-export interface IEmbedSessionViewer {
-  viewerId: string;
-  email?: string;
+export interface IEmbedSessionMedia extends IEmbedSessionMediaTotals {
+  firstOpenedAt: string;
   name?: string;
-  consent?: boolean;
-  consentText?: string;
-  authMethod?: EmbedViewerAuthMethod;
-  verifiedAt?: string;
+  durationSec?: number;
 }
 
-export interface IEmbedSessionListQuery {
+export interface IEmbedSessionChat {
+  promptId: string;
+  messageId: string;
+  askedAt: string;
+  mediaIds: string[];
+  question?: string;
+  state?: string;
+  feedbackScore?: number;
+}
+
+export interface IEmbedSessionSaveBody {
+  version: number;
+  sessionId: string;
+  visitorId: string;
+  seq: number;
+  viewerId?: string | null;
+  context: IEmbedSessionContext;
+  events: IEmbedSessionClientEvent[];
+  totals: {
+    timing: IEmbedSessionTiming;
+    pageViews: number;
+    media: IEmbedSessionMediaTotals[];
+  };
+}
+
+export interface IEmbedSessionSaveResponse {
+  sessionId: string;
+  lastSeq: number;
+  applied: boolean;
+  rejected?: { i?: number; index?: number; reason: string }[];
+}
+
+export interface IEmbedSessionQuery {
   from?: string;
   to?: string;
+  traffic?: EmbedSessionTrafficFilter;
+  includeOwner?: boolean;
+}
+
+export interface IEmbedSessionListQuery extends IEmbedSessionQuery {
   page?: number;
   pageSize?: number;
   search?: string;
   viewer?: EmbedSessionViewerFilter;
-  traffic?: EmbedSessionTrafficFilter;
   device?: EmbedSessionDeviceFilter;
   country?: string;
-  includeOwner?: boolean;
   includeLegacy?: boolean;
   viewerId?: string;
   visitorId?: string;
   mediaId?: string;
   sort?: EmbedSessionSort;
+}
+
+export interface IEmbedSessionSummaryQuery extends IEmbedSessionQuery {
+  tz?: string;
+  mediaPage?: number;
+  mediaPageSize?: number;
+}
+
+export type IEmbedSessionCountriesQuery = Pick<IEmbedSessionListQuery, 'from' | 'to' | 'includeOwner' | 'includeLegacy'>;
+
+export type IEmbedSessionLiveQuery = Pick<IEmbedSessionQuery, 'traffic' | 'includeOwner'>;
+
+export interface IEmbedSessionDetailQuery {
+  eventsPage?: number;
+  eventsPageSize?: number;
 }
 
 export interface IEmbedSessionListItem {
@@ -200,7 +174,6 @@ export interface IEmbedSessionListItem {
   viewerId?: string;
   email?: string;
   name?: string;
-  authMethod?: EmbedViewerAuthMethod;
   startedAt: string;
   lastActiveAt?: string;
   endedAt?: string;
@@ -211,7 +184,7 @@ export interface IEmbedSessionListItem {
   questions: number | null;
   client?: IEmbedSessionClient;
   campaign?: IEmbedSessionCampaign;
-  bot?: IEmbedSessionBot;
+  bot?: { kind: EmbedSessionBotKind; name?: string };
 }
 
 export interface IEmbedSessionListResponse {
@@ -221,63 +194,26 @@ export interface IEmbedSessionListResponse {
   pageSize: number;
 }
 
-export interface IEmbedSessionDetailMedia extends IEmbedSessionMedia {
-  name?: string;
-  durationSec?: number;
-}
-
-export interface IEmbedSessionDetailChat extends IEmbedSessionChat {
-  question?: string;
-  state?: string;
-  feedbackScore?: number;
-}
-
 export interface IEmbedSessionDetailResponse {
   session: IEmbedSessionListItem & {
-    summary?: IEmbedSessionSummary;
-    media: IEmbedSessionDetailMedia[];
-    chat: IEmbedSessionDetailChat[];
+    media: IEmbedSessionMedia[];
+    chat: IEmbedSessionChat[];
     events: IEmbedSessionEvent[];
     eventsPage: number;
     eventsPageSize: number;
     eventsTotal: number;
-    parts: number;
   };
   visitorSessions: number;
 }
 
-export interface EmbedSessionEventsPageQuery {
-  eventsPage?: number;
-  eventsPageSize?: number;
+export interface IEmbedSessionCountriesResponse {
+  countries: { country: string; sessions: number }[];
 }
 
-export interface EmbedSessionCountriesQuery {
-  from?: string;
-  to?: string;
-  includeOwner?: boolean;
-  includeLegacy?: boolean;
+export interface IEmbedSessionLiveResponse {
+  liveNow: number;
+  lastActivityAt: string | null;
 }
-
-export interface EmbedSessionCountryRow {
-  country: string;
-  sessions: number;
-}
-
-export interface EmbedSessionCountriesResponse {
-  countries: EmbedSessionCountryRow[];
-}
-
-export interface IEmbedSessionSummaryQuery {
-  from?: string;
-  to?: string;
-  tz?: string;
-  traffic?: EmbedSessionTrafficFilter;
-  includeOwner?: boolean;
-  mediaPage?: number;
-  mediaPageSize?: number;
-}
-
-export type IEmbedSessionLiveQuery = Pick<IEmbedSessionSummaryQuery, 'traffic' | 'includeOwner'>;
 
 export interface IEmbedSessionMediaRow {
   mediaId: string;
@@ -291,35 +227,13 @@ export interface IEmbedSessionMediaRow {
   completionRate: number;
   questions: number;
   downloads: number;
-  shares: number;
-}
-
-export interface IEmbedSessionLiveResponse {
-  liveNow: number;
-  lastActivityAt: string | null;
 }
 
 export interface IEmbedSessionSummaryResponse {
-  kpis: {
-    sessions: number;
-    people: number;
-    bots: number;
-    uniqueVisitors: number;
-    returningVisitors: number;
-    identifiedViewers: number;
-    avgActiveMs: number;
-    totalActiveMs: number;
-    mediaOpens: number;
-    watchedMs: number;
-    questions: number;
-    sessionsWithQuestions: number;
-  };
-  overTime: { date: string; sessions: number; visitors: number; activeMs: number }[];
   media: IEmbedSessionMediaRow[];
   mediaPage: number;
   mediaPageSize: number;
   mediaTotal: number;
-  legacy: { sessions: number };
 }
 
 export interface IEmbedViewerSummary {
@@ -329,39 +243,34 @@ export interface IEmbedViewerSummary {
   viewCount: number;
   firstSeenAt: string;
   lastSeenAt: string;
-  authMethod?: EmbedViewerAuthMethod;
   activeMs: number;
   watchedMs: number;
   questions: number;
   location?: { city?: string; regionName?: string; countryName?: string };
 }
 
-export interface EmbedSessionStorageLike {
-  getItem(key: string): string | null;
-  setItem(key: string, value: string): void;
-  removeItem(key: string): void;
-}
-
-export interface EmbedSessionTransport {
-  send(url: string, body: IEmbedSessionSaveBody, token: string): Promise<{
-    status: number;
-    data?: IEmbedSessionSaveResponse | IEmbedSessionSaveSkippedResponse;
-  }>;
-  beacon(url: string, body: IEmbedSessionSaveBody, token: string): boolean;
-}
-
-export interface EmbedSessionTrackerOptions {
+export interface IEmbedSessionTrackerOptions {
   token: string;
   apiBaseUrl: string;
   viewerId?: string | null;
-  sessionStorage?: EmbedSessionStorageLike | null;
-  localStorage?: EmbedSessionStorageLike | null;
-  transport?: EmbedSessionTransport;
+  sessionStorage?: {
+    getItem(key: string): string | null;
+    setItem(key: string, value: string): void;
+    removeItem(key: string): void;
+  } | null;
+  localStorage?: IEmbedSessionTrackerOptions['sessionStorage'];
+  transport?: {
+    send(url: string, body: IEmbedSessionSaveBody, token: string): Promise<{
+      status: number;
+      data?: IEmbedSessionSaveResponse | { applied: false };
+    }>;
+    beacon(url: string, body: IEmbedSessionSaveBody, token: string): boolean;
+  };
   now?: () => number;
   onError?: (error: unknown) => void;
 }
 
-export interface EmbedSessionMediaHandle {
+export interface IEmbedSessionMediaHandle {
   open(source?: EmbedSessionMediaOpenSource): void;
   close(): void;
   play(positionSec: number): void;
@@ -372,58 +281,25 @@ export interface EmbedSessionMediaHandle {
   timeUpdate(positionSec: number, durationSec?: number): void;
 }
 
-export interface EmbedSessionTrackFields<T extends EmbedSessionEventType = EmbedSessionEventType> {
+export interface IEmbedSessionTrackFields<T extends EmbedSessionEventType = EmbedSessionEventType> {
   mediaId?: string;
   promptId?: string;
   data?: T extends EmbedSessionEventType.CHAT_FEEDBACK
-    ? EmbedSessionChatFeedbackData
-    : T extends EmbedSessionEventType.TRANSCRIPT_DOWNLOAD
-      ? EmbedSessionTranscriptDownloadData
-      : T extends EmbedSessionEventType.EXPORT
-        ? EmbedSessionExportData
-        : EmbedSessionEventData;
+    ? { score: number; messageId?: string }
+    : T extends EmbedSessionEventType.TRANSCRIPT_DOWNLOAD | EmbedSessionEventType.EXPORT
+      ? { format: ExportFormatType }
+      : EmbedSessionEventData;
 }
 
-export interface EmbedSessionTracker {
+export interface IEmbedSessionTracker {
   readonly sessionId: string;
   readonly visitorId: string;
   start(): void;
   stop(): void;
-  track<T extends EmbedSessionEventType>(type: T, fields?: EmbedSessionTrackFields<T>): void;
+  track<T extends EmbedSessionEventType>(type: T, fields?: IEmbedSessionTrackFields<T>): void;
   pageView(path: string): void;
   setViewerId(viewerId: string | null): void;
-  media(mediaId: string, options?: { inferSeeks?: boolean }): EmbedSessionMediaHandle;
+  media(mediaId: string, options?: { inferSeeks?: boolean }): IEmbedSessionMediaHandle;
   chatContext(): { embedSessionId: string; viewerId?: string };
   flush(): Promise<void>;
-}
-
-export interface IEmbedSessionTrackerState {
-  sessionId: string;
-  visitorId: string;
-  startedAt: number;
-  lastActivityAt: number;
-  seq: number;
-  eventIndex: number;
-  totals: IEmbedSessionTotals;
-  pending: IEmbedSessionClientEvent[];
-}
-
-export interface IEmbedSessionMediaRuntime {
-  mediaId: string;
-  inferSeeks: boolean;
-  isOpen: boolean;
-  playingSince: number | null;
-  lastPositionSec: number | null;
-  lastPositionAt: number | null;
-  durationSec: number | null;
-  rate: number;
-}
-
-export interface IEmbedSessionMediaHandleDeps {
-  clock(): number;
-  run(action: () => void): void;
-  totals(mediaId: string): IEmbedSessionMediaTotals | null;
-  emit(type: EmbedSessionEventType, fields: EmbedSessionTrackFields): void;
-  onActivity(): void;
-  onPlaybackStop(): void;
 }

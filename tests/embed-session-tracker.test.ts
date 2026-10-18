@@ -1,24 +1,17 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EmbedSessionEventType, EmbedSessionMediaOpenSource } from '../src/enums/index.js';
-import type {
-  EmbedSessionStorageLike,
-  EmbedSessionTransport,
-  IEmbedSessionSaveBody,
-  IEmbedSessionSaveResponse,
-  IEmbedSessionSaveSkippedResponse,
-} from '../src/interfaces/index.js';
+import type { IEmbedSessionSaveBody, IEmbedSessionTrackerOptions } from '../src/interfaces/index.js';
 import { createEmbedSessionTracker } from '../src/index.js';
 
 const TOKEN = 'embed-token';
 const SESSION_PREFIX = 'speak.embedSession.';
 const VISITOR_PREFIX = 'speak.embedVisitor.';
 
-interface SaveResult {
-  status: number;
-  data?: IEmbedSessionSaveResponse | IEmbedSessionSaveSkippedResponse;
-}
+type StorageLike = NonNullable<IEmbedSessionTrackerOptions['sessionStorage']>;
+type Transport = NonNullable<IEmbedSessionTrackerOptions['transport']>;
+type SaveResult = Awaited<ReturnType<Transport['send']>>;
 
-function memoryStorage(entries: Map<string, string> = new Map()): EmbedSessionStorageLike & { entries: Map<string, string> } {
+function memoryStorage(entries: Map<string, string> = new Map()): StorageLike & { entries: Map<string, string> } {
   return {
     entries,
     getItem: (key) => entries.get(key) ?? null,
@@ -33,7 +26,7 @@ function fakeTransport() {
   let hold: ((result: SaveResult) => void) | null = null;
   let holdNext = false;
   let respond: ((body: IEmbedSessionSaveBody) => SaveResult | undefined) | null = null;
-  const transport: EmbedSessionTransport = {
+  const transport: Transport = {
     send(_url, body) {
       sends.push(structuredClone(body));
       const override = respond?.(body);

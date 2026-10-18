@@ -22,8 +22,8 @@ export enum EmbedSessionEventType {
   CITATION_OPEN = 'citation_open',
   SEARCH = 'search',
   TRANSCRIPT_DOWNLOAD = 'transcript_download',
+  TRANSCRIPT_COPY = 'transcript_copy',
   MEDIA_DOWNLOAD = 'media_download',
-  CLIP_SHARE = 'clip_share',
   EXPORT = 'export',
   PLAY = 'play',
   PAUSE = 'pause',
@@ -36,7 +36,6 @@ export enum EmbedSessionEventType {
   IDLE = 'idle',
   GATE_SHOWN = 'gate_shown',
   LEAD_CAPTURED = 'lead_captured',
-  SIGNED_IN = 'signed_in',
 }
 
 export enum EmbedSessionEventSource {
@@ -54,7 +53,6 @@ export enum EmbedSessionMediaOpenSource {
   CITATION = 'citation',
   SEARCH = 'search',
   WIDGET = 'widget',
-  CHAT = 'chat',
   DIRECT = 'direct',
 }
 
@@ -64,35 +62,9 @@ export enum EmbedSessionSearchScope {
   TRANSCRIPT = 'transcript',
 }
 
-export enum EmbedSessionChatFeedbackScale {
-  THUMBS = 'thumbs',
-}
-
-export enum EmbedSessionTranscriptFormat {
-  DOCX = 'docx',
-  PDF = 'pdf',
-  TXT = 'txt',
-  SRT = 'srt',
-  VTT = 'vtt',
-  CLIPBOARD = 'clipboard',
-}
-
-export enum EmbedSessionExportKind {
-  CHAT_ANSWER = 'chat_answer',
-}
-
 export enum EmbedSessionBotKind {
   RENDER = 'render',
   CRAWLER = 'crawler',
-}
-
-export enum EmbedViewerAuthMethod {
-  EMAIL_GATE = 'email_gate',
-  EMAIL_VERIFIED = 'email_verified',
-  GOOGLE = 'google',
-  MICROSOFT = 'microsoft',
-  SPEAK_ACCOUNT = 'speak_account',
-  SSO = 'sso',
 }
 
 export enum EmbedSessionTrafficFilter {
@@ -178,20 +150,20 @@ export const EMBED_SESSION_EVENTS: Readonly<Record<EmbedSessionEventType, IEmbed
     source: EmbedSessionEventSource.CLIENT,
     description: 'The viewer downloaded a transcript.',
   },
+  [EmbedSessionEventType.TRANSCRIPT_COPY]: {
+    category: EmbedSessionEventCategory.SHARING,
+    source: EmbedSessionEventSource.CLIENT,
+    description: 'The viewer copied a transcript.',
+  },
   [EmbedSessionEventType.MEDIA_DOWNLOAD]: {
     category: EmbedSessionEventCategory.SHARING,
     source: EmbedSessionEventSource.CLIENT,
     description: 'The viewer downloaded a media file.',
   },
-  [EmbedSessionEventType.CLIP_SHARE]: {
-    category: EmbedSessionEventCategory.SHARING,
-    source: EmbedSessionEventSource.CLIENT,
-    description: 'The viewer shared a clip.',
-  },
   [EmbedSessionEventType.EXPORT]: {
     category: EmbedSessionEventCategory.SHARING,
     source: EmbedSessionEventSource.CLIENT,
-    description: 'The viewer exported content.',
+    description: 'The viewer exported an AI answer.',
   },
   [EmbedSessionEventType.PLAY]: {
     category: EmbedSessionEventCategory.PLAYBACK,
@@ -247,10 +219,5 @@ export const EMBED_SESSION_EVENTS: Readonly<Record<EmbedSessionEventType, IEmbed
     category: EmbedSessionEventCategory.IDENTITY,
     source: EmbedSessionEventSource.SERVER,
     description: 'The viewer entered their email to get access.',
-  },
-  [EmbedSessionEventType.SIGNED_IN]: {
-    category: EmbedSessionEventCategory.IDENTITY,
-    source: EmbedSessionEventSource.CLIENT,
-    description: 'The viewer signed in to view the embed.',
   },
 };

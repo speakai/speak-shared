@@ -1,21 +1,40 @@
 import { EmbedSessionEventType, EmbedSessionMediaOpenSource } from '../enums/embedSession.js';
 import type {
-  EmbedSessionMediaHandle,
-  IEmbedSessionMediaHandleDeps,
-  IEmbedSessionMediaRuntime,
+  IEmbedSessionMediaHandle,
   IEmbedSessionMediaTotals,
+  IEmbedSessionTrackFields,
 } from '../interfaces/embedSession.js';
 import { EMBED_SESSION_LIMITS } from '../utils/embedSession.js';
 
 const SEEK_INFERENCE_THRESHOLD_SEC = 2;
 const POSITION_PRECISION = 100;
 
+export interface MediaRuntime {
+  mediaId: string;
+  inferSeeks: boolean;
+  isOpen: boolean;
+  playingSince: number | null;
+  lastPositionSec: number | null;
+  lastPositionAt: number | null;
+  durationSec: number | null;
+  rate: number;
+}
+
+interface MediaHandleDeps {
+  clock(): number;
+  run(action: () => void): void;
+  totals(mediaId: string): IEmbedSessionMediaTotals | null;
+  emit(type: EmbedSessionEventType, fields: IEmbedSessionTrackFields): void;
+  onActivity(): void;
+  onPlaybackStop(): void;
+}
+
 const roundPosition = (value: number): number => Math.round(value * POSITION_PRECISION) / POSITION_PRECISION;
 
 const isFiniteNonNegative = (value: number | undefined): value is number =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0;
 
-export function createEmbedSessionMediaRuntime(mediaId: string, inferSeeks: boolean): IEmbedSessionMediaRuntime {
+export function createEmbedSessionMediaRuntime(mediaId: string, inferSeeks: boolean): MediaRuntime {
   return {
     mediaId,
     inferSeeks,
@@ -29,7 +48,7 @@ export function createEmbedSessionMediaRuntime(mediaId: string, inferSeeks: bool
 }
 
 export function settleEmbedSessionMediaPlayback(
-  runtime: IEmbedSessionMediaRuntime,
+  runtime: MediaRuntime,
   totals: IEmbedSessionMediaTotals | null,
   at: number,
 ): void {
@@ -39,9 +58,9 @@ export function settleEmbedSessionMediaPlayback(
 }
 
 export function createEmbedSessionMediaHandle(
-  runtime: IEmbedSessionMediaRuntime,
-  deps: IEmbedSessionMediaHandleDeps,
-): EmbedSessionMediaHandle {
+  runtime: MediaRuntime,
+  deps: MediaHandleDeps,
+): IEmbedSessionMediaHandle {
   const { mediaId } = runtime;
 
   const markPosition = (positionSec: number): void => {

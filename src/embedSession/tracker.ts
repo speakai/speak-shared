@@ -6,21 +6,16 @@ import {
 } from '../enums/embedSession.js';
 import type {
   EmbedSessionEventData,
-  EmbedSessionMediaHandle,
-  EmbedSessionStorageLike,
-  EmbedSessionTrackFields,
-  EmbedSessionTracker,
-  EmbedSessionTrackerOptions,
-  EmbedSessionTransport,
   IEmbedSessionCampaign,
   IEmbedSessionClientEvent,
   IEmbedSessionContext,
-  IEmbedSessionMediaRuntime,
+  IEmbedSessionMediaHandle,
   IEmbedSessionMediaTotals,
   IEmbedSessionSaveBody,
   IEmbedSessionSaveResponse,
-  IEmbedSessionTotals,
-  IEmbedSessionTrackerState,
+  IEmbedSessionTrackFields,
+  IEmbedSessionTracker,
+  IEmbedSessionTrackerOptions,
 } from '../interfaces/embedSession.js';
 import {
   EMBED_SESSION_DATA_KEY_PATTERN,
@@ -34,6 +29,7 @@ import {
   createEmbedSessionMediaRuntime,
   settleEmbedSessionMediaPlayback,
 } from './playback.js';
+import type { MediaRuntime } from './playback.js';
 
 const SESSION_STORAGE_PREFIX = 'speak.embedSession.';
 const VISITOR_STORAGE_PREFIX = 'speak.embedVisitor.';
@@ -80,6 +76,20 @@ interface ClaimMessage {
   sessionId: string;
 }
 
+interface TrackerState {
+  sessionId: string;
+  visitorId: string;
+  startedAt: number;
+  lastActivityAt: number;
+  seq: number;
+  eventIndex: number;
+  totals: IEmbedSessionSaveBody['totals'];
+  pending: IEmbedSessionClientEvent[];
+}
+
+type StorageLike = NonNullable<IEmbedSessionTrackerOptions['sessionStorage']>;
+type Transport = NonNullable<IEmbedSessionTrackerOptions['transport']>;
+
 const hasWindow = (): boolean => typeof window !== 'undefined' && typeof document !== 'undefined';
 
 function randomId(): string {
@@ -97,7 +107,7 @@ function randomId(): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
-function browserStorage(kind: 'sessionStorage' | 'localStorage'): EmbedSessionStorageLike | null {
+function browserStorage(kind: 'sessionStorage' | 'localStorage'): StorageLike | null {
   if (typeof window === 'undefined') return null;
   try {
     return window[kind] ?? null;
@@ -106,7 +116,7 @@ function browserStorage(kind: 'sessionStorage' | 'localStorage'): EmbedSessionSt
   }
 }
 
-function readStorage(storage: EmbedSessionStorageLike | null, key: string): string | null {
+function readStorage(storage: StorageLike | null, key: string): string | null {
   if (!storage) return null;
   try {
     return storage.getItem(key);
@@ -115,7 +125,7 @@ function readStorage(storage: EmbedSessionStorageLike | null, key: string): stri
   }
 }
 
-function writeStorage(storage: EmbedSessionStorageLike | null, key: string, value: string | null): void {
+function writeStorage(storage: StorageLike | null, key: string, value: string | null): void {
   if (!storage) return;
   try {
     if (value === null) storage.removeItem(key);
@@ -133,13 +143,13 @@ function storageKeyHash(value: string): string {
   return hash.toString(16).padStart(STORAGE_KEY_HASH_LENGTH, '0');
 }
 
-function zeroTotals(): IEmbedSessionTotals {
+function zeroTotals(): IEmbedSessionSaveBody['totals'] {
   return { timing: { wallClockMs: 0, visibleMs: 0, activeMs: 0 }, pageViews: 0, media: [] };
 }
 
-function isTrackerState(value: unknown): value is IEmbedSessionTrackerState {
+function isTrackerState(value: unknown): value is TrackerState {
   if (!value || typeof value !== 'object') return false;
-  const state = value as Partial<IEmbedSessionTrackerState>;
+  const state = value as Partial<TrackerState>;
   return (
     typeof state.sessionId === 'string' &&
     EMBED_SESSION_ID_PATTERN.test(state.sessionId) &&
@@ -241,7 +251,7 @@ function byteLength(value: string): number {
   return new TextEncoder().encode(value).length;
 }
 
-function createDefaultTransport(): EmbedSessionTransport {
+function createDefaultTransport(): Transport {
   const post = async (url: string, body: IEmbedSessionSaveBody, token: string) => {
     const payload = JSON.stringify(body);
     const response = await fetch(url, {
@@ -277,7 +287,7 @@ function createDefaultTransport(): EmbedSessionTransport {
   };
 }
 
-export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): EmbedSessionTracker {
+export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions): IEmbedSessionTracker {
   const now = options.now ?? (() => Date.now());
   const transport = options.transport ?? createDefaultTransport();
   const url = `${options.apiBaseUrl.replace(/\/+$/, '')}/embed/session?token=${encodeURIComponent(options.token)}`;
@@ -287,7 +297,7 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
   const sessionKey = `${SESSION_STORAGE_PREFIX}${tokenHash}`;
   const visitorKey = `${VISITOR_STORAGE_PREFIX}${tokenHash}`;
 
-  const loadStoredState = (): IEmbedSessionTrackerState | null => {
+  const loadStoredState = (): TrackerState | null => {
     const raw = readStorage(sessionStore, sessionKey);
     if (!raw) return null;
     try {
@@ -308,7 +318,7 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
   const storedState = loadStoredState();
   const visitorId = loadVisitorId(storedState?.visitorId);
 
-  const newState = (at: number, sessionId: string = randomId()): IEmbedSessionTrackerState => ({
+  const newState = (at: number, sessionId: string = randomId()): TrackerState => ({
     sessionId,
     visitorId,
     startedAt: at,
@@ -324,7 +334,7 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     !!storedState &&
     storedState.lastActivityAt <= initialAt &&
     initialAt - storedState.lastActivityAt < EMBED_SESSION_LIMITS.sessionTimeoutMs;
-  let state: IEmbedSessionTrackerState = resumable && storedState ? { ...storedState, visitorId } : newState(initialAt);
+  let state: TrackerState = resumable && storedState ? { ...storedState, visitorId } : newState(initialAt);
   let viewerId = validViewerId(options.viewerId);
   let viewerDirty = viewerId !== null;
   let started = false;
@@ -341,8 +351,8 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
   let ackedTiming = '';
   let ackedPageViews = -1;
   const ackedMedia = new Map<string, string>();
-  const runtimes = new Map<string, IEmbedSessionMediaRuntime>();
-  const handles = new Map<string, EmbedSessionMediaHandle>();
+  const runtimes = new Map<string, MediaRuntime>();
+  const handles = new Map<string, IEmbedSessionMediaHandle>();
   let lastInputAt = initialAt;
   let idleFrom = initialAt;
   let lastMouseMoveAt = 0;
@@ -399,7 +409,7 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     }
   };
 
-  const appendEvent = (type: EmbedSessionEventType, fields: EmbedSessionTrackFields = {}, at: number = clock()): void => {
+  const appendEvent = (type: EmbedSessionEventType, fields: IEmbedSessionTrackFields = {}, at: number = clock()): void => {
     state.eventIndex += 1;
     const event: IEmbedSessionClientEvent = {
       i: state.eventIndex,
@@ -418,7 +428,7 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
   const changedMedia = (): IEmbedSessionMediaTotals[] =>
     state.totals.media.filter((entry) => ackedMedia.get(entry.mediaId) !== JSON.stringify(entry));
 
-  const timingKey = (totals: IEmbedSessionTotals): string =>
+  const timingKey = (totals: IEmbedSessionSaveBody['totals']): string =>
     `${totals.timing.visibleMs}:${totals.timing.activeMs}`;
 
   const isDirty = (): boolean =>
@@ -871,7 +881,7 @@ export function createEmbedSessionTracker(options: EmbedSessionTrackerOptions): 
     queued = [];
   }
 
-  const tracker: EmbedSessionTracker = {
+  const tracker: IEmbedSessionTracker = {
     get sessionId() {
       return state.sessionId;
     },
