@@ -211,6 +211,7 @@ export interface IEmbedSessionCountriesResponse {
 
 export interface IEmbedSessionLiveResponse {
   liveNow: number;
+  idleOpen: number;
   lastActivityAt: string | null;
 }
 

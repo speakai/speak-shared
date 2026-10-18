@@ -37,6 +37,7 @@ const CLAIM_CHANNEL_NAME = 'speak-embed-session';
 const CLAIM_TIMEOUT_MS = 150;
 const TICK_INTERVAL_MS = 1_000;
 const PERSIST_INTERVAL_MS = 1_000;
+const IDLE_PING_INTERVAL_MS = 300_000;
 const MAX_TICK_DELTA_MS = 5_000;
 const MOUSEMOVE_THROTTLE_MS = 5_000;
 const FALLBACK_PATH = '/';
@@ -350,6 +351,8 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
   let retryBody: IEmbedSessionSaveBody | null = null;
   const finalBodies: IEmbedSessionSaveBody[] = [];
   let ackedTiming = '';
+  let ackedActiveMs = -1;
+  let lastSentAt = initialAt;
   let ackedPageViews = -1;
   const ackedMedia = new Map<string, string>();
   const runtimes = new Map<string, MediaRuntime>();
@@ -446,13 +449,16 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
   const timingKey = (totals: IEmbedSessionSaveBody['totals']): string =>
     `${totals.timing.visibleMs}:${totals.timing.activeMs}`;
 
-  const isDirty = (): boolean =>
+  const hasActivityToSend = (): boolean =>
     retryBody !== null ||
+    finalBodies.length > 0 ||
     viewerDirty ||
     state.pending.length > 0 ||
-    timingKey(state.totals) !== ackedTiming ||
+    state.totals.timing.activeMs !== ackedActiveMs ||
     state.totals.pageViews !== ackedPageViews ||
     changedMedia().length > 0;
+
+  const isDirty = (): boolean => hasActivityToSend() || timingKey(state.totals) !== ackedTiming;
 
   const settleTotals = (at: number): void => {
     if (tickTimer !== null) tick();
@@ -528,6 +534,7 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
     if (body.sessionId !== state.sessionId) return;
     removeSentEvents(body);
     ackedTiming = timingKey(body.totals);
+    ackedActiveMs = body.totals.timing.activeMs;
     ackedPageViews = body.totals.pageViews;
     for (const entry of body.totals.media) ackedMedia.set(entry.mediaId, JSON.stringify(entry));
     if (body.viewerId === viewerId) viewerDirty = false;
@@ -536,6 +543,7 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
 
   const resetAcks = (): void => {
     ackedTiming = '';
+    ackedActiveMs = -1;
     ackedPageViews = -1;
     ackedMedia.clear();
     viewerDirty = viewerId !== null;
@@ -606,6 +614,7 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
     let partial = false;
     if (!body && !ended && isDirty()) ({ body, partial } = buildNextBody());
     if (!body) return;
+    lastSentAt = now();
     inflight = deliver(body, isRetry).finally(() => {
       inflight = null;
     });
@@ -750,6 +759,13 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
         settlePlayback(at);
       } else if (idleExpired(at)) {
         endForIdle();
+        return;
+      } else if (
+        isVisible() &&
+        at - lastInputAt >= EMBED_SESSION_LIMITS.idleAfterMs &&
+        !hasActivityToSend() &&
+        at - lastSentAt < IDLE_PING_INTERVAL_MS
+      ) {
         return;
       }
     }

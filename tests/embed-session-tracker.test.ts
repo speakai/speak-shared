@@ -389,4 +389,58 @@ describe('createEmbedSessionTracker', () => {
     ]);
     tracker.stop();
   });
+
+  it('sends no timed saves while an open tab is idle, pings every 5 minutes, resumes on input, saves on hide and still ends after 30 idle minutes', async () => {
+    const startedAt = Date.UTC(2026, 9, 16, 10);
+    vi.useFakeTimers({ now: startedAt });
+    const fakeWindow = Object.assign(new EventTarget(), { location: { pathname: '/', search: '', hostname: 'example.com' } });
+    Object.assign(fakeWindow, { self: fakeWindow, top: fakeWindow });
+    const fakeDocument = Object.assign(new EventTarget(), { visibilityState: 'visible', referrer: '' });
+    vi.stubGlobal('window', fakeWindow);
+    vi.stubGlobal('document', fakeDocument);
+    const fake = fakeTransport();
+    const tracker = createEmbedSessionTracker({
+      token: TOKEN,
+      apiBaseUrl: 'https://api.example.com/v1',
+      transport: fake.transport,
+      sessionStorage: memoryStorage(),
+      localStorage: memoryStorage(),
+      now: () => Date.now(),
+    });
+    const sentAt = () => fake.sends.map((body) => body.totals.timing.wallClockMs);
+    tracker.start();
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(sentAt()).toEqual([0, 30_000, 60_000]);
+
+    await vi.advanceTimersByTimeAsync(240_000);
+    expect(fake.sends).toHaveLength(3);
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(sentAt()).toEqual([0, 30_000, 60_000, 360_000]);
+    expect(fake.sends[3]?.events).toEqual([]);
+    expect(fake.sends[3]?.totals.timing).toMatchObject({ visibleMs: 360_000, activeMs: fake.sends[2]?.totals.timing.activeMs });
+
+    await vi.advanceTimersByTimeAsync(140_000);
+    expect(fake.sends).toHaveLength(4);
+    fakeWindow.dispatchEvent(new Event('pointerdown'));
+    await vi.advanceTimersByTimeAsync(40_000);
+    expect(sentAt().slice(4)).toEqual([510_000, 540_000]);
+    expect(fake.sends[4]?.totals.timing.visibleMs).toBe(510_000);
+    expect(types(fake.sends[4])).toEqual([EmbedSessionEventType.IDLE]);
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(sentAt().slice(6)).toEqual([570_000]);
+    fakeDocument.visibilityState = 'hidden';
+    fakeDocument.dispatchEvent(new Event('visibilitychange'));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(sentAt().slice(7)).toEqual([600_000]);
+    expect(fake.sends[7]?.totals.timing.visibleMs).toBe(600_000);
+
+    fakeDocument.visibilityState = 'visible';
+    fakeDocument.dispatchEvent(new Event('visibilitychange'));
+    await vi.advanceTimersByTimeAsync(30 * 60_000);
+    const idleEnd = fake.sends.at(-1);
+    expect(idleEnd?.events.at(-1)).toMatchObject({ type: EmbedSessionEventType.SESSION_END, t: 500_000, data: { reason: 'idle_timeout' } });
+    expect(idleEnd?.totals.timing.wallClockMs).toBe(500_000);
+    tracker.stop();
+  });
 });
