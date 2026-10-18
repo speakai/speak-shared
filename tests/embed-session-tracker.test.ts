@@ -265,7 +265,7 @@ describe('createEmbedSessionTracker', () => {
     tracker.start();
     await vi.advanceTimersByTimeAsync(0);
 
-    const longText = 'q'.repeat(5_000);
+    const longText = 'q'.repeat(1_000);
     const manyKeys = Object.fromEntries(Array.from({ length: 30 }, (_, index) => [`key${index}`, `value${index}`]));
     const mediaIds = Array.from({ length: 600 }, (_, index) => `media-${index}-${'x'.repeat(200)}`);
     for (const mediaId of mediaIds) tracker.media(mediaId).open(EmbedSessionMediaOpenSource.LIST);

@@ -150,7 +150,6 @@ export interface IEmbedSessionListQuery extends IEmbedSessionQuery {
 }
 
 export interface IEmbedSessionSummaryQuery extends IEmbedSessionQuery {
-  tz?: string;
   mediaPage?: number;
   mediaPageSize?: number;
 }
