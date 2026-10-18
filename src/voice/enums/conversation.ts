@@ -53,6 +53,12 @@ export enum SentimentType {
   NEGATIVE = "negative",
 }
 
+export enum VoiceCallSource {
+  WIDGET = "widget",
+  DASHBOARD_TEST = "dashboard_test",
+  PHONE = "phone",
+}
+
 export enum CanonicalEndReason {
   USER_GOODBYE       = "user-goodbye",
   USER_MANUAL_END    = "user-manual-end",
