@@ -103,3 +103,19 @@ export enum DesktopConsentNotice {
   REMIND = 'remind',
   REQUIRE = 'require',
 }
+
+export enum DesktopSystemAudioStatus {
+  CAPTURED = 'captured',
+  UNAVAILABLE = 'unavailable',
+  SILENT = 'silent',
+}
+
+export enum DesktopClaimReason {
+  CLAIMED = 'claimed',
+  NOT_ENABLED = 'not-enabled',
+  NO_CALENDAR_EVENT = 'no-calendar-event',
+  OUTSIDE_WINDOW = 'outside-window',
+  OTHER_DEVICE = 'other-device',
+  BOT_RECORDING = 'bot-recording',
+  BOT_SENT = 'bot-sent',
+}
