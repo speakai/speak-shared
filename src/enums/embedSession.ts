@@ -46,6 +46,7 @@ export enum EmbedSessionEventSource {
 export enum EmbedSessionEndReason {
   PAGEHIDE = 'pagehide',
   IDLE_TIMEOUT = 'idle_timeout',
+  MAX_DURATION = 'max_duration',
 }
 
 export enum EmbedSessionMediaOpenSource {

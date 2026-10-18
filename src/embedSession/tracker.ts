@@ -45,6 +45,7 @@ const CREDENTIALED_HOST = 'speakai.co';
 const BEACON_CONTENT_TYPE = 'text/plain;charset=UTF-8';
 const KEEPALIVE_BODY_BYTES = 32_768;
 const EVENTS_PER_BATCH = 200;
+const RETRY_BACKOFF_MS = [30_000, 60_000, 120_000] as const;
 const STORAGE_KEY_HASH_OFFSET = 0xcbf29ce484222325n;
 const STORAGE_KEY_HASH_PRIME = 0x100000001b3n;
 const STORAGE_KEY_HASH_MASK = 0xffffffffffffffffn;
@@ -335,7 +336,8 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
   let resumable =
     !!storedState &&
     storedState.lastActivityAt <= initialAt &&
-    initialAt - storedState.lastActivityAt < EMBED_SESSION_LIMITS.sessionTimeoutMs;
+    initialAt - storedState.lastActivityAt < EMBED_SESSION_LIMITS.sessionTimeoutMs &&
+    initialAt - storedState.startedAt < EMBED_SESSION_LIMITS.maxSessionMs;
   let state: TrackerState = resumable && storedState ? { ...storedState, visitorId } : newState(initialAt);
   let viewerId = validViewerId(options.viewerId);
   let viewerDirty = viewerId !== null;
@@ -349,6 +351,8 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
   let queued: QueuedAction[] = [];
   let inflight: Promise<void> | null = null;
   let retryBody: IEmbedSessionSaveBody | null = null;
+  let failedSends = 0;
+  let retryAt = 0;
   const finalBodies: IEmbedSessionSaveBody[] = [];
   let ackedTiming = '';
   let ackedActiveMs = -1;
@@ -510,17 +514,19 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
     };
   };
 
-  const buildAllBodies = (at: number): IEmbedSessionSaveBody[] => {
+  const buildEndBodies = (at: number): IEmbedSessionSaveBody[] => {
     settleTotals(at);
-    const bodies: IEmbedSessionSaveBody[] = [];
-    let events = state.pending;
-    let media = changedMedia();
-    do {
+    const endEvents = state.pending.filter((event) => event.type === EmbedSessionEventType.SESSION_END);
+    const endBody = buildBody(endEvents, changedMedia());
+    const bodies: IEmbedSessionSaveBody[] = [endBody];
+    let events = state.pending.filter((event) => event.type !== EmbedSessionEventType.SESSION_END);
+    let media = changedMedia().slice(endBody.totals.media.length);
+    while (events.length > 0 || media.length > 0) {
       const body = buildBody(events, media);
       bodies.push(body);
       events = events.slice(body.events.length);
       media = media.slice(body.totals.media.length);
-    } while (events.length > 0 || media.length > 0);
+    }
     persistNow();
     return bodies;
   };
@@ -571,10 +577,18 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
     body.sessionId === state.sessionId &&
     (data.lastSeq === body.seq || data.lastSeq > state.seq);
 
+  const backOff = (body: IEmbedSessionSaveBody): void => {
+    retryBody = body;
+    failedSends += 1;
+    retryAt = now() + RETRY_BACKOFF_MS[Math.min(failedSends, RETRY_BACKOFF_MS.length) - 1]!;
+  };
+
   const deliver = async (body: IEmbedSessionSaveBody, isRetry: boolean): Promise<void> => {
     try {
       const response = await transport.send(url, body, options.token);
       if (response.status >= 200 && response.status < 300) {
+        failedSends = 0;
+        retryAt = 0;
         const data = response.data;
         if (data?.applied === false && !('lastSeq' in data)) {
           shutdown();
@@ -593,22 +607,26 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
         shutdown();
         return;
       }
-      const neverAccepted = response.status >= 400 && response.status < 500 && response.status !== 429;
+      if (response.status === 429 || response.status >= 500) {
+        backOff(body);
+        return;
+      }
+      const neverAccepted = response.status >= 400 && response.status < 500;
       retryBody = neverAccepted ? null : body;
-      if (response.status === 429 || response.status >= 500) return;
       reportError(new Error(`Embed session save rejected with status ${response.status}`));
       if (neverAccepted && body.sessionId === state.sessionId) {
         removeSentEvents(body);
         persistNow();
       }
     } catch {
-      retryBody = body;
+      backOff(body);
     }
   };
 
-  const flush = async (): Promise<void> => {
+  const flush = async (force = false): Promise<void> => {
     if (dead || !decided) return;
     if (inflight) return inflight;
+    if (retryBody !== null && !force && now() < retryAt) return;
     const isRetry = retryBody !== null;
     let body = retryBody ?? finalBodies.shift() ?? null;
     let partial = false;
@@ -651,6 +669,7 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
   };
 
   const beginNewSession = (at: number): void => {
+    for (const runtime of runtimes.values()) if (runtime.playingSince !== null) runtime.playingSince = at;
     state = newState(at);
     ended = false;
     resumable = true;
@@ -741,10 +760,18 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
     at - state.lastActivityAt >= EMBED_SESSION_LIMITS.sessionTimeoutMs &&
     at - lastInputAt >= EMBED_SESSION_LIMITS.sessionTimeoutMs;
 
-  const endForIdle = (): void => {
-    const endAt = Math.max(state.startedAt, state.lastActivityAt);
-    appendEvent(EmbedSessionEventType.SESSION_END, { data: { reason: EmbedSessionEndReason.IDLE_TIMEOUT } }, endAt);
-    finalBodies.push(...buildAllBodies(endAt));
+  const expiredReason = (at: number): EmbedSessionEndReason | null => {
+    if (at - state.startedAt >= EMBED_SESSION_LIMITS.maxSessionMs) return EmbedSessionEndReason.MAX_DURATION;
+    return idleExpired(at) ? EmbedSessionEndReason.IDLE_TIMEOUT : null;
+  };
+
+  const endExpired = (reason: EmbedSessionEndReason): void => {
+    const endAt = Math.min(
+      state.startedAt + EMBED_SESSION_LIMITS.maxSessionMs,
+      Math.max(state.startedAt, state.lastActivityAt),
+    );
+    appendEvent(EmbedSessionEventType.SESSION_END, { data: { reason } }, endAt);
+    finalBodies.push(...buildEndBodies(endAt));
     state.pending = [];
     ended = true;
     resumable = false;
@@ -754,12 +781,15 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
   const onFlushTimer = (): void => {
     if (decided && !ended && !dead) {
       const at = now();
-      if (anyPlaying()) {
-        state.lastActivityAt = at;
-        settlePlayback(at);
-      } else if (idleExpired(at)) {
-        endForIdle();
+      const playing = anyPlaying();
+      if (playing) state.lastActivityAt = at;
+      const reason = expiredReason(at);
+      if (reason) {
+        endExpired(reason);
         return;
+      }
+      if (playing) {
+        settlePlayback(at);
       } else if (
         isVisible() &&
         at - lastInputAt >= EMBED_SESSION_LIMITS.idleAfterMs &&
@@ -775,10 +805,11 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
   const onInput = (): void => {
     if (dead) return;
     const at = now();
+    const reason = decided && !ended ? expiredReason(at) : null;
     if (decided && ended) {
       beginNewSession(at);
-    } else if (decided && idleExpired(at)) {
-      endForIdle();
+    } else if (reason) {
+      endExpired(reason);
       beginNewSession(at);
     } else if (decided && isVisible() && !anyPlaying() && at - idleFrom > EMBED_SESSION_LIMITS.engagementGapMs) {
       appendEvent(EmbedSessionEventType.IDLE, { data: { durationMs: Math.round(at - idleFrom) } }, idleFrom);
@@ -805,8 +836,9 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
       void flush();
       return;
     }
-    if (decided && !ended && idleExpired(at)) {
-      endForIdle();
+    const reason = decided && !ended ? expiredReason(at) : null;
+    if (reason) {
+      endExpired(reason);
     } else if (hiddenAt !== null && decided && !ended && at - hiddenAt > EMBED_SESSION_LIMITS.engagementGapMs) {
       appendEvent(EmbedSessionEventType.HIDDEN, { data: { durationMs: Math.round(at - hiddenAt) } }, hiddenAt);
     }
@@ -826,7 +858,7 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
     }
     stopTicker();
     appendEvent(EmbedSessionEventType.SESSION_END, { data: { reason: EmbedSessionEndReason.PAGEHIDE } });
-    for (const body of buildAllBodies(clock())) beacon(body);
+    for (const body of buildEndBodies(clock())) beacon(body);
   };
 
   const onPageShow = (event: Event): void => {
@@ -834,7 +866,7 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
     pageHidden = false;
     if (!(event as PageTransitionEvent).persisted || !decided || ended) return;
     const at = now();
-    if (idleExpired(at)) {
+    if (expiredReason(at)) {
       beginNewSession(at);
     } else {
       appendEvent(EmbedSessionEventType.SESSION_RESUME, {
@@ -972,6 +1004,9 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
       const handle = createEmbedSessionMediaHandle(runtime, {
         clock,
         run: whenReady,
+        observe: (action) => {
+          if (!decided || !ended) whenReady(action);
+        },
         totals: mediaTotals,
         emit: (type, fields) => appendEvent(type, fields),
         onActivity: () => {
@@ -990,7 +1025,7 @@ export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions):
     },
     flush() {
       if (decided && !dead) persistNow();
-      return flush();
+      return flush(true);
     },
   };
 

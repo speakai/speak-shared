@@ -137,10 +137,12 @@ describe('createEmbedSessionTracker', () => {
     expect(inflight?.totals.media[0]).toMatchObject({ mediaId: 'm1', opens: 1, plays: 1, playedMs: 30_000, activeMs: 30_000 });
 
     fakeWindow.dispatchEvent(new Event('pagehide'));
-    expect(fake.beacons).toHaveLength(1);
-    expect(fake.beacons[0]?.seq).toBe(3);
-    expect(fake.beacons[0]?.events.map((event) => event.i)).toEqual([...inflight!.events.map((event) => event.i), 5]);
-    expect(fake.beacons[0]?.events.at(-1)).toMatchObject({ type: EmbedSessionEventType.SESSION_END, data: { reason: 'pagehide' } });
+    expect(fake.beacons.map((body) => body.seq)).toEqual([3, 4]);
+    expect(fake.beacons[0]?.events).toEqual([
+      expect.objectContaining({ i: 5, type: EmbedSessionEventType.SESSION_END, data: { reason: 'pagehide' } }),
+    ]);
+    expect(fake.beacons[0]?.totals.media[0]).toMatchObject({ mediaId: 'm1', opens: 1, plays: 1, playedMs: 30_000 });
+    expect(fake.beacons[1]?.events.map((event) => event.i)).toEqual(inflight!.events.map((event) => event.i));
     expect(storedIndexes(session, firstKey)).toEqual([2, 3, 4, 5]);
 
     const refreshedSession = memoryStorage(new Map(session.entries));
@@ -175,7 +177,7 @@ describe('createEmbedSessionTracker', () => {
     await vi.advanceTimersByTimeAsync(150);
 
     const resumed = fake.sends[sentBeforeRefresh];
-    expect(resumed?.seq).toBe(4);
+    expect(resumed?.seq).toBe(5);
     expect(resumed?.sessionId).toBe(first.sessionId);
     expect(resumed?.events.map((event) => event.i)).toEqual([2, 3, 4, 5, 6]);
     expect(resumed?.events.at(-1)?.type).toBe(EmbedSessionEventType.SESSION_RESUME);
@@ -383,10 +385,9 @@ describe('createEmbedSessionTracker', () => {
     const beaconed = await Promise.all(beaconBlobs.map(async (blob) => JSON.parse(await blob.text()) as IEmbedSessionSaveBody));
     const beaconedIndexes = beaconed.flatMap((body) => body.events.map((event) => event.i));
     expect(new Set(beaconedIndexes).size).toBe(beaconedIndexes.length);
-    expect(beaconed.flatMap((body) => types(body))).toEqual([
-      ...Array.from({ length: 300 }, () => EmbedSessionEventType.SEARCH),
-      EmbedSessionEventType.SESSION_END,
-    ]);
+    expect(types(beaconed[0])).toEqual([EmbedSessionEventType.SESSION_END]);
+    expect(beaconBlobs[0]!.size).toBeLessThan(2_000);
+    expect(beaconed.slice(1).flatMap((body) => types(body))).toEqual(Array.from({ length: 300 }, () => EmbedSessionEventType.SEARCH));
     tracker.stop();
   });
 
@@ -442,5 +443,111 @@ describe('createEmbedSessionTracker', () => {
     expect(idleEnd?.events.at(-1)).toMatchObject({ type: EmbedSessionEventType.SESSION_END, t: 500_000, data: { reason: 'idle_timeout' } });
     expect(idleEnd?.totals.timing.wallClockMs).toBe(500_000);
     tracker.stop();
+  });
+
+  it('backs off retries to 30 s, 60 s and 120 s after repeated 5xx and network errors, resets on success, keeps every event and sends the idle end and totals first', async () => {
+    const startedAt = Date.UTC(2026, 9, 16, 10);
+    vi.useFakeTimers({ now: startedAt });
+    const fake = fakeTransport();
+    let online = true;
+    const attempts: number[] = [];
+    const delivered: IEmbedSessionSaveBody[] = [];
+    fake.respondWith((body) => {
+      attempts.push((Date.now() - startedAt) / 1_000);
+      if (!online) {
+        if (attempts.length % 2 === 0) throw new TypeError('Failed to fetch');
+        return { status: 503 };
+      }
+      delivered.push(structuredClone(body));
+      return undefined;
+    });
+    const tracker = createEmbedSessionTracker({
+      token: TOKEN,
+      apiBaseUrl: 'https://api.example.com/v1',
+      transport: fake.transport,
+      sessionStorage: memoryStorage(),
+      localStorage: memoryStorage(),
+      now: () => Date.now(),
+    });
+    tracker.start();
+    await vi.advanceTimersByTimeAsync(0);
+    online = false;
+    tracker.track(EmbedSessionEventType.SEARCH, { data: { text: 'first' } });
+    await vi.advanceTimersByTimeAsync(400_000);
+    expect(attempts).toEqual([0, 30, 60, 120, 240, 360]);
+
+    online = true;
+    await vi.advanceTimersByTimeAsync(85_000);
+    expect(attempts.slice(6)).toEqual([480]);
+    online = false;
+    tracker.track(EmbedSessionEventType.SEARCH, { data: { text: 'second' } });
+    await vi.advanceTimersByTimeAsync(120_000);
+    expect(attempts.slice(7)).toEqual([510, 540, 600]);
+
+    await vi.advanceTimersByTimeAsync(1_800_000);
+    online = true;
+    await vi.advanceTimersByTimeAsync(120_000);
+    const endIndex = delivered.findIndex((body) => types(body)?.includes(EmbedSessionEventType.SESSION_END));
+    expect(delivered[endIndex]?.events).toEqual([
+      expect.objectContaining({ type: EmbedSessionEventType.SESSION_END, t: 485_000, data: { reason: 'idle_timeout' } }),
+    ]);
+    expect(delivered[endIndex]?.totals.timing.wallClockMs).toBe(485_000);
+    expect(types(delivered[endIndex + 1])).toEqual([EmbedSessionEventType.SEARCH]);
+    const searches = delivered.flatMap((body) => body.events).filter((event) => event.type === EmbedSessionEventType.SEARCH);
+    expect(new Set(searches.map((event) => event.data?.text))).toEqual(new Set(['first', 'second']));
+    tracker.stop();
+  });
+
+  it('ends a session at 24 hours while media keeps playing, ignores playback ticks after it, starts a new session on the next input and does not resume a capped session after a refresh', async () => {
+    const startedAt = Date.UTC(2026, 9, 16, 10);
+    vi.useFakeTimers({ now: startedAt });
+    const fakeWindow = Object.assign(new EventTarget(), { location: { pathname: '/', search: '', hostname: 'example.com' } });
+    Object.assign(fakeWindow, { self: fakeWindow, top: fakeWindow });
+    vi.stubGlobal('window', fakeWindow);
+    vi.stubGlobal('document', Object.assign(new EventTarget(), { visibilityState: 'hidden', referrer: '' }));
+    const fake = fakeTransport();
+    const session = memoryStorage();
+    const options = { token: TOKEN, apiBaseUrl: 'https://api.example.com/v1', transport: fake.transport, localStorage: memoryStorage(), now: () => Date.now() };
+    const tracker = createEmbedSessionTracker({ ...options, sessionStorage: session });
+    tracker.start();
+    await vi.advanceTimersByTimeAsync(0);
+    const cappedId = tracker.sessionId;
+    const media = tracker.media('m1');
+    media.open(EmbedSessionMediaOpenSource.LIST);
+    media.play(0);
+    await vi.advanceTimersByTimeAsync(86_400_000 - 30_000);
+    const beforeCap = memoryStorage(new Map(session.entries));
+    await vi.advanceTimersByTimeAsync(30_000);
+
+    const capEnd = fake.sends.at(-1);
+    expect(capEnd).toMatchObject({ sessionId: cappedId });
+    expect(capEnd?.events).toEqual([
+      expect.objectContaining({ type: EmbedSessionEventType.SESSION_END, t: 86_400_000, data: { reason: 'max_duration' } }),
+    ]);
+    expect(capEnd?.totals.timing.wallClockMs).toBe(86_400_000);
+    expect(capEnd?.totals.media[0]).toMatchObject({ mediaId: 'm1', playedMs: 86_400_000 });
+
+    const sentAtCap = fake.sends.length;
+    for (let second = 1; second <= 600; second += 1) {
+      await vi.advanceTimersByTimeAsync(1_000);
+      media.timeUpdate(86_400 + second, 200_000);
+    }
+    expect(fake.sends).toHaveLength(sentAtCap);
+    expect(tracker.sessionId).toBe(cappedId);
+
+    fakeWindow.dispatchEvent(new Event('pointerdown'));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(tracker.sessionId).not.toBe(cappedId);
+    expect(fake.sends.at(-1)).toMatchObject({ seq: 1, sessionId: tracker.sessionId });
+    expect(types(fake.sends.at(-1))).toEqual([EmbedSessionEventType.SESSION_START]);
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(fake.sends.at(-1)?.totals.media[0]).toMatchObject({ mediaId: 'm1', playedMs: 30_000 });
+    tracker.stop();
+
+    const refreshed = createEmbedSessionTracker({ ...options, sessionStorage: beforeCap });
+    refreshed.start();
+    await vi.advanceTimersByTimeAsync(150);
+    expect(refreshed.sessionId).not.toBe(cappedId);
+    refreshed.stop();
   });
 });

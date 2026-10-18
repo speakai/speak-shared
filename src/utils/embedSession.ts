@@ -11,6 +11,7 @@ export const EMBED_SESSION_LIMITS = {
   idleAfterMs: 60_000,
   engagementGapMs: 60_000,
   sessionTimeoutMs: 1_800_000,
+  maxSessionMs: 86_400_000,
   liveWindowMs: 60_000,
   maxEventsPerDocument: 10_000,
   completedPositionPct: 95,

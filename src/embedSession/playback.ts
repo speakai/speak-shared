@@ -23,6 +23,7 @@ export interface MediaRuntime {
 interface MediaHandleDeps {
   clock(): number;
   run(action: () => void): void;
+  observe(action: () => void): void;
   totals(mediaId: string): IEmbedSessionMediaTotals | null;
   emit(type: EmbedSessionEventType, fields: IEmbedSessionTrackFields): void;
   onActivity(): void;
@@ -83,8 +84,18 @@ export function createEmbedSessionMediaHandle(
     deps.onPlaybackStop();
   };
 
-  const withTotals = (action: (totals: IEmbedSessionMediaTotals) => void): void =>
-    deps.run(() => {
+  const inferredSeekFrom = (positionSec: number): number | null => {
+    const { lastPositionSec, lastPositionAt } = runtime;
+    if (!runtime.inferSeeks || lastPositionSec === null || lastPositionAt === null) return null;
+    const elapsedSec = runtime.playingSince === null ? 0 : ((deps.clock() - lastPositionAt) / 1000) * runtime.rate;
+    return Math.abs(positionSec - (lastPositionSec + elapsedSec)) > SEEK_INFERENCE_THRESHOLD_SEC ? lastPositionSec : null;
+  };
+
+  const withTotals = (
+    action: (totals: IEmbedSessionMediaTotals) => void,
+    run: (task: () => void) => void = deps.run,
+  ): void =>
+    run(() => {
       const totals = deps.totals(mediaId);
       if (totals) action(totals);
     });
@@ -157,19 +168,16 @@ export function createEmbedSessionMediaHandle(
     },
     timeUpdate(positionSec, durationSec) {
       if (!isFiniteNonNegative(positionSec)) return;
+      const seekFromSec = inferredSeekFrom(positionSec);
       withTotals((totals) => {
         if (isFiniteNonNegative(durationSec) && durationSec > 0) runtime.durationSec = durationSec;
-        const { lastPositionSec, lastPositionAt } = runtime;
-        if (runtime.inferSeeks && lastPositionSec !== null && lastPositionAt !== null) {
-          const elapsedSec = runtime.playingSince === null ? 0 : ((deps.clock() - lastPositionAt) / 1000) * runtime.rate;
-          if (Math.abs(positionSec - (lastPositionSec + elapsedSec)) > SEEK_INFERENCE_THRESHOLD_SEC) {
-            seekTo(totals, lastPositionSec, positionSec);
-            return;
-          }
+        if (seekFromSec !== null) {
+          seekTo(totals, seekFromSec, positionSec);
+          return;
         }
         markPosition(positionSec);
         recordPosition(totals, positionSec);
-      });
+      }, seekFromSec === null ? deps.observe : deps.run);
     },
   };
 }
