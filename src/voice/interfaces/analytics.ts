@@ -89,6 +89,7 @@ export interface IVoiceAnalyticsRecentConversation {
   callType: CallType;
   status: string;
   durationSeconds: number;
+  callerName: string | null;
   city: string | null;
   country: string | null;
   callerPhoneMasked: string | null;
@@ -137,10 +138,29 @@ export interface IVoiceAgentAnalytics {
   conversations: {
     recent: IVoiceAnalyticsRecentConversation[];
     callerQuestions: IVoiceAnalyticsCallerQuestion[];
-    callerQuestionsScan: { conversations: number; capped: boolean };
+    callerQuestionsScan: { conversations: number; capped: boolean; questions: number };
+  };
+  attention: {
+    notJoined: number;
+    maxDuration: number;
+    unanswered: number;
   };
   outcomes: {
-    leads: { count: number; rate: number; fields: { field: string; count: number }[] };
+    leads: {
+      count: number;
+      rate: number;
+      fields: { field: string; count: number }[];
+      latest: {
+        conversationId: string;
+        createdAt: string;
+        name: string | null;
+        email: string | null;
+        phone: string | null;
+        summary: string | null;
+        mediaId: string | null;
+        folderId: string | null;
+      }[];
+    };
     handoffs: { count: number; rate: number; reasons: { reason: string; count: number }[] };
     actionItems: {
       conversations: number;
