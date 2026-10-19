@@ -3,9 +3,6 @@
  * Dashboard and reporting aggregations
  */
 
-import type { CallType } from "../enums/billing.js";
-import type { SentimentType } from "../enums/conversation.js";
-
 export interface DailyCount {
   date: string; // YYYY-MM-DD
   count: number;
@@ -83,21 +80,6 @@ export interface IVoiceAnalyticsSource {
   count: number;
 }
 
-export interface IVoiceAnalyticsRecentConversation {
-  conversationId: string;
-  createdAt: string;
-  callType: CallType;
-  status: string;
-  durationSeconds: number;
-  callerName: string | null;
-  city: string | null;
-  country: string | null;
-  callerPhoneMasked: string | null;
-  sentiment: SentimentType | null;
-  mediaId: string | null;
-  folderId: string | null;
-}
-
 export interface IVoiceAnalyticsChannelStats {
   count: number;
   avgDurationSeconds: number;
@@ -128,12 +110,8 @@ export interface IVoiceAgentAnalytics {
     };
     sources: IVoiceAnalyticsSource[];
   };
-  conversations: {
-    recent: IVoiceAnalyticsRecentConversation[];
-  };
   attention: {
     notJoined: number;
-    maxDuration: number;
     unanswered: number;
   };
   outcomes: {
