@@ -305,6 +305,11 @@ export interface IEmbedSessionTrackFields<T extends EmbedSessionEventType = Embe
       : EmbedSessionEventData;
 }
 
+export interface IEmbedSessionChatContext {
+  embedSessionId: string;
+  viewerId?: string;
+}
+
 export interface IEmbedSessionTracker {
   readonly sessionId: string;
   readonly visitorId: string;
@@ -314,6 +319,6 @@ export interface IEmbedSessionTracker {
   pageView(path: string): void;
   setViewerId(viewerId: string | null): void;
   media(mediaId: string, options?: { inferSeeks?: boolean }): IEmbedSessionMediaHandle;
-  chatContext(): { embedSessionId: string; viewerId?: string };
+  chatContext(): IEmbedSessionChatContext;
   flush(): Promise<void>;
 }
