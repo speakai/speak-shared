@@ -150,11 +150,12 @@ export interface IEmbedSessionListQuery extends IEmbedSessionQuery {
 }
 
 export interface IEmbedSessionSummaryQuery extends IEmbedSessionQuery {
+  tz?: string;
   mediaPage?: number;
   mediaPageSize?: number;
 }
 
-export type IEmbedSessionCountriesQuery = Pick<IEmbedSessionListQuery, 'from' | 'to' | 'includeOwner' | 'includeLegacy'>;
+export type IEmbedSessionCountriesQuery = Pick<IEmbedSessionListQuery, 'from' | 'to' | 'includeOwner' | 'includeLegacy' | 'traffic'>;
 
 export type IEmbedSessionLiveQuery = Pick<IEmbedSessionQuery, 'traffic' | 'includeOwner'>;
 
@@ -230,6 +231,19 @@ export interface IEmbedSessionMediaRow {
 }
 
 export interface IEmbedSessionSummaryResponse {
+  kpis: {
+    sessions: number;
+    uniqueVisitors: number;
+    returningVisitors: number;
+    identifiedViewers: number;
+    avgActiveMs: number;
+    mediaOpens: number;
+    watchedMs: number;
+    questions: number;
+    sessionsWithQuestions: number;
+  };
+  overTime: { date: string; sessions: number; visitors: number }[];
+  sources: { source: string; sessions: number }[];
   media: IEmbedSessionMediaRow[];
   mediaPage: number;
   mediaPageSize: number;

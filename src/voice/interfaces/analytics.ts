@@ -3,9 +3,6 @@
  * Dashboard and reporting aggregations
  */
 
-import type { CallType } from "../enums/billing.js";
-import type { SentimentType } from "../enums/conversation.js";
-
 export interface DailyCount {
   date: string; // YYYY-MM-DD
   count: number;
@@ -83,27 +80,6 @@ export interface IVoiceAnalyticsSource {
   count: number;
 }
 
-export interface IVoiceAnalyticsRecentConversation {
-  conversationId: string;
-  createdAt: string;
-  callType: CallType;
-  status: string;
-  durationSeconds: number;
-  city: string | null;
-  country: string | null;
-  callerPhoneMasked: string | null;
-  sentiment: SentimentType | null;
-  mediaId: string | null;
-  folderId: string | null;
-}
-
-export interface IVoiceAnalyticsCallerQuestion {
-  question: string;
-  askedCount: number;
-  lastAskedAt: string;
-  lastConversationId: string;
-}
-
 export interface IVoiceAnalyticsChannelStats {
   count: number;
   avgDurationSeconds: number;
@@ -134,13 +110,26 @@ export interface IVoiceAgentAnalytics {
     };
     sources: IVoiceAnalyticsSource[];
   };
-  conversations: {
-    recent: IVoiceAnalyticsRecentConversation[];
-    callerQuestions: IVoiceAnalyticsCallerQuestion[];
-    callerQuestionsScan: { conversations: number; capped: boolean };
+  attention: {
+    notJoined: number;
+    unanswered: number;
   };
   outcomes: {
-    leads: { count: number; rate: number; fields: { field: string; count: number }[] };
+    leads: {
+      count: number;
+      rate: number;
+      fields: { field: string; count: number }[];
+      latest: {
+        conversationId: string;
+        createdAt: string;
+        name: string | null;
+        email: string | null;
+        phone: string | null;
+        summary: string | null;
+        mediaId: string | null;
+        folderId: string | null;
+      }[];
+    };
     handoffs: { count: number; rate: number; reasons: { reason: string; count: number }[] };
     actionItems: {
       conversations: number;

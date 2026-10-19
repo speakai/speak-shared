@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- `IEmbedSessionSummaryResponse` now carries the Overview fields: `kpis` (`sessions`, `uniqueVisitors`, `returningVisitors`, `identifiedViewers`, `avgActiveMs`, `mediaOpens`, `watchedMs`, `questions`, `sessionsWithQuestions`), `overTime` (one `{ date, sessions, visitors }` row per day) and `sources` (`{ source, sessions }` rows, top referrer hosts and UTM sources).
+- `IEmbedSessionSummaryQuery` takes an optional `tz` (an IANA time zone) that sets the day boundaries of `overTime`.
+- `IEmbedSessionCountriesQuery` takes an optional `traffic` filter (`EmbedSessionTrafficFilter`), the same one the list and summary queries take.
+- `IVoiceAgentAnalytics` carries the agent Analytics tab fields: `outcomes.leads.latest` (up to 10 rows of `{ conversationId, createdAt, name, email, phone, summary, mediaId, folderId }`, newest first, next to the existing `count`), a new `attention` block (`notJoined` for widget calls nobody joined, `maxDuration` for calls cut off at the time limit, `unanswered` for questions the agent could not answer; handoffs stay in `outcomes.handoffs`), and `callerName` on each `IVoiceAnalyticsRecentConversation`. `whenAndWho.languages` now lists the detected language of each call.
+- Removed `conversations.callerQuestions`, `conversations.callerQuestionsScan` and the `IVoiceAnalyticsCallerQuestion` type from `IVoiceAgentAnalytics`.
+- Removed `conversations` (the recent conversations list), the `IVoiceAnalyticsRecentConversation` type and `attention.maxDuration` from `IVoiceAgentAnalytics`.
+
 ## v2.2.0 (2026-10-16)
 
 - Added embed session wire types: `EmbedSessionEventType` (including `transcript_copy`), `EmbedSessionEventCategory` and the other embed session enums, the `EMBED_SESSION_EVENTS` map, and in `interfaces/embedSession` the save (`IEmbedSessionSaveBody`, `IEmbedSessionSaveResponse`), list (`IEmbedSessionListQuery`, `IEmbedSessionListResponse`), detail (`IEmbedSessionDetailQuery`, `IEmbedSessionDetailResponse` with paged events and `eventsTotal`), summary (`IEmbedSessionSummaryQuery`, `IEmbedSessionSummaryResponse` with paged `media` rows), live (`IEmbedSessionLiveQuery`, `IEmbedSessionLiveResponse`), countries (`IEmbedSessionCountriesQuery`, `IEmbedSessionCountriesResponse`) and viewer (`IEmbedViewerSummary`) shapes. The list, summary, live and countries queries share one base, `IEmbedSessionQuery`. Every interface in this file carries the `I` prefix, and single-use parts are written inline.
