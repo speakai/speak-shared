@@ -22,6 +22,7 @@ export const EMBED_SESSION_LIMITS = {
   mediaPageSize: 25,
   maxMediaPageSize: 100,
   maxSearchLength: 100,
+  searchDebounceMs: 1_000,
 } as const;
 
 export const isLegacyEmbedSessionId = (sessionId: string): boolean =>
