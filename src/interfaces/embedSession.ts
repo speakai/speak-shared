@@ -155,7 +155,7 @@ export interface IEmbedSessionSummaryQuery extends IEmbedSessionQuery {
   mediaPageSize?: number;
 }
 
-export type IEmbedSessionCountriesQuery = Pick<IEmbedSessionListQuery, 'from' | 'to' | 'includeOwner' | 'includeLegacy'>;
+export type IEmbedSessionCountriesQuery = Pick<IEmbedSessionListQuery, 'from' | 'to' | 'includeOwner' | 'includeLegacy' | 'traffic'>;
 
 export type IEmbedSessionLiveQuery = Pick<IEmbedSessionQuery, 'traffic' | 'includeOwner'>;
 

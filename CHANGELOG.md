@@ -4,6 +4,7 @@
 
 - `IEmbedSessionSummaryResponse` now carries the Overview fields: `kpis` (`sessions`, `uniqueVisitors`, `returningVisitors`, `identifiedViewers`, `avgActiveMs`, `mediaOpens`, `watchedMs`, `questions`, `sessionsWithQuestions`), `overTime` (one `{ date, sessions, visitors }` row per day) and `sources` (`{ source, sessions }` rows, top referrer hosts and UTM sources).
 - `IEmbedSessionSummaryQuery` takes an optional `tz` (an IANA time zone) that sets the day boundaries of `overTime`.
+- `IEmbedSessionCountriesQuery` takes an optional `traffic` filter (`EmbedSessionTrafficFilter`), the same one the list and summary queries take.
 
 ## v2.2.0 (2026-10-16)
 
