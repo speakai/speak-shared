@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- `IEmbedSessionSummaryResponse` now carries the Overview fields: `kpis` (`sessions`, `uniqueVisitors`, `returningVisitors`, `identifiedViewers`, `avgActiveMs`, `mediaOpens`, `watchedMs`, `questions`, `sessionsWithQuestions`), `overTime` (one `{ date, sessions, visitors }` row per day) and `sources` (`{ source, sessions }` rows, top referrer hosts and UTM sources).
+- `IEmbedSessionSummaryQuery` takes an optional `tz` (an IANA time zone) that sets the day boundaries of `overTime`.
+
 ## v2.2.0 (2026-10-16)
 
 - Added embed session wire types: `EmbedSessionEventType` (including `transcript_copy`), `EmbedSessionEventCategory` and the other embed session enums, the `EMBED_SESSION_EVENTS` map, and in `interfaces/embedSession` the save (`IEmbedSessionSaveBody`, `IEmbedSessionSaveResponse`), list (`IEmbedSessionListQuery`, `IEmbedSessionListResponse`), detail (`IEmbedSessionDetailQuery`, `IEmbedSessionDetailResponse` with paged events and `eventsTotal`), summary (`IEmbedSessionSummaryQuery`, `IEmbedSessionSummaryResponse` with paged `media` rows), live (`IEmbedSessionLiveQuery`, `IEmbedSessionLiveResponse`), countries (`IEmbedSessionCountriesQuery`, `IEmbedSessionCountriesResponse`) and viewer (`IEmbedViewerSummary`) shapes. The list, summary, live and countries queries share one base, `IEmbedSessionQuery`. Every interface in this file carries the `I` prefix, and single-use parts are written inline.
