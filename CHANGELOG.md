@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.59 (2026-10-19)
+
+- Maintenance release
+
 ## Unreleased
 
 - `IEmbedSessionSummaryResponse` now carries the Overview fields: `kpis` (`sessions`, `uniqueVisitors`, `returningVisitors`, `identifiedViewers`, `avgActiveMs`, `mediaOpens`, `watchedMs`, `questions`, `sessionsWithQuestions`), `overTime` (one `{ date, sessions, visitors }` row per day) and `sources` (`{ source, sessions }` rows, top referrer hosts and UTM sources).
