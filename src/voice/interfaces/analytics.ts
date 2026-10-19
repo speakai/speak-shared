@@ -98,13 +98,6 @@ export interface IVoiceAnalyticsRecentConversation {
   folderId: string | null;
 }
 
-export interface IVoiceAnalyticsCallerQuestion {
-  question: string;
-  askedCount: number;
-  lastAskedAt: string;
-  lastConversationId: string;
-}
-
 export interface IVoiceAnalyticsChannelStats {
   count: number;
   avgDurationSeconds: number;
@@ -137,8 +130,6 @@ export interface IVoiceAgentAnalytics {
   };
   conversations: {
     recent: IVoiceAnalyticsRecentConversation[];
-    callerQuestions: IVoiceAnalyticsCallerQuestion[];
-    callerQuestionsScan: { conversations: number; capped: boolean; questions: number };
   };
   attention: {
     notJoined: number;
