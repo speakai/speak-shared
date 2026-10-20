@@ -250,7 +250,7 @@ export interface IEmbedSessionSummaryResponse {
     countries: { country: string; sessions: number }[];
     regions: { region: string; sessions: number }[];
     cities: { city: string; sessions: number }[];
-    devices: { device: EmbedSessionDeviceFilter; sessions: number }[];
+    devices: { device: Exclude<EmbedSessionDeviceFilter, EmbedSessionDeviceFilter.ALL>; sessions: number }[];
     browsers: { browser: string; sessions: number }[];
     os: { os: string; sessions: number }[];
   };
