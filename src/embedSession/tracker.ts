@@ -94,6 +94,7 @@ type StorageLike = NonNullable<IEmbedSessionTrackerOptions['sessionStorage']>;
 type Transport = NonNullable<IEmbedSessionTrackerOptions['transport']>;
 
 const hasWindow = (): boolean => typeof window !== 'undefined' && typeof document !== 'undefined';
+const isAutomatedBrowser = (): boolean => typeof navigator !== 'undefined' && navigator.webdriver === true;
 
 function randomId(): string {
   const cryptoApi = globalThis.crypto;
@@ -290,7 +291,33 @@ function createDefaultTransport(): Transport {
   };
 }
 
+function createInactiveTracker(): IEmbedSessionTracker {
+  const mediaHandle: IEmbedSessionMediaHandle = {
+    open: () => undefined,
+    close: () => undefined,
+    play: () => undefined,
+    pause: () => undefined,
+    seek: () => undefined,
+    ended: () => undefined,
+    rateChange: () => undefined,
+    timeUpdate: () => undefined,
+  };
+  return {
+    sessionId: randomId(),
+    visitorId: randomId(),
+    start: () => undefined,
+    stop: () => undefined,
+    track: () => undefined,
+    pageView: () => undefined,
+    setViewerId: () => undefined,
+    media: () => mediaHandle,
+    chatContext: () => ({ embedSessionId: '' }),
+    flush: () => Promise.resolve(),
+  };
+}
+
 export function createEmbedSessionTracker(options: IEmbedSessionTrackerOptions): IEmbedSessionTracker {
+  if (isAutomatedBrowser()) return createInactiveTracker();
   const now = options.now ?? (() => Date.now());
   const transport = options.transport ?? createDefaultTransport();
   const url = `${options.apiBaseUrl.replace(/\/+$/, '')}/embed/session?token=${encodeURIComponent(options.token)}`;
