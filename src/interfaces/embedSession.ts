@@ -9,6 +9,7 @@ import type {
   EmbedSessionTrafficFilter,
   EmbedSessionViewerFilter,
 } from '../enums/embedSession.js';
+import type { EmbedType } from '../enums/embed.js';
 import type { ExportFormatType } from '../enums/export.js';
 
 export type EmbedSessionEventData = Record<string, string | number | boolean | null>;
@@ -244,6 +245,17 @@ export interface IEmbedSessionSummaryResponse {
   };
   overTime: { date: string; sessions: number; visitors: number }[];
   sources: { source: string; sessions: number }[];
+  audience: {
+    byWeekday: { weekday: number; sessions: number }[];
+    countries: { country: string; sessions: number }[];
+    regions: { region: string; sessions: number }[];
+    cities: { city: string; sessions: number }[];
+    devices: { device: Exclude<EmbedSessionDeviceFilter, EmbedSessionDeviceFilter.ALL>; sessions: number }[];
+    browsers: { browser: string; sessions: number }[];
+    os: { os: string; sessions: number }[];
+    bots: { name: string; kind: EmbedSessionBotKind; sessions: number }[];
+  };
+  embed: { name: string; embedType: EmbedType };
   media: IEmbedSessionMediaRow[];
   mediaPage: number;
   mediaPageSize: number;
