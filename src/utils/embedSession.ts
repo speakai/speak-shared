@@ -4,6 +4,7 @@ import type { EmbedSessionEventCategory, EmbedSessionEventType } from '../enums/
 export const EMBED_SESSION_PROTOCOL_VERSION = 1;
 export const EMBED_SESSION_LEGACY_PREFIX = 'legacy:';
 export const EMBED_SESSION_ID_PATTERN = /^[A-Za-z0-9-]{16,64}$/;
+export const EMBED_SESSION_UNKNOWN_VALUE = 'unknown';
 export const EMBED_VIEWER_ID_PATTERN = /^[a-f0-9]{32}$/;
 export const EMBED_SESSION_DATA_KEY_PATTERN = /^[A-Za-z][A-Za-z0-9_]*$/;
 export const EMBED_SESSION_LIMITS = {
