@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `createEmbedSessionTracker` returns an inactive tracker when `navigator.webdriver` is `true` (headless and automated browsers): it stores and sends nothing, its media handles do nothing, `flush()` resolves at once and `chatContext()` returns `{ embedSessionId: '' }`, which links no session.
 - Added `IEmbedSessionChatContext` (`{ embedSessionId, viewerId? }`), the return type of `IEmbedSessionTracker.chatContext()`, and `EMBED_SESSION_LIMITS.searchDebounceMs` (1000 ms), the wait before a typed embed search is recorded, so both embed apps share one value.
 - `IEmbedSessionSummaryResponse` now carries the Overview fields: `kpis` (`sessions`, `uniqueVisitors`, `returningVisitors`, `identifiedViewers`, `avgActiveMs`, `mediaOpens`, `watchedMs`, `questions`, `sessionsWithQuestions`), `overTime` (one `{ date, sessions, visitors }` row per day) and `sources` (`{ source, sessions }` rows, top referrer hosts and UTM sources).
 - `IEmbedSessionSummaryQuery` takes an optional `tz` (an IANA time zone) that sets the day boundaries of `overTime`.
