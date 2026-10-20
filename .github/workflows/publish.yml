@@ -58,12 +58,6 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
 
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
-
-      - name: Build
-        run: npm run build
-
       # A second merge while this run was queued leaves the triggering checkout behind
       # main. Bumping from it produced a version that was already tagged, and pushing it
       # was rejected as non-fast-forward. Start from what main actually is.
@@ -71,6 +65,12 @@ jobs:
         run: |
           git fetch origin main --tags --force
           git reset --hard origin/main
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build
+        run: npm run build
 
       - name: Get commits since last release
         id: commits
