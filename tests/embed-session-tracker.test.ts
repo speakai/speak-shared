@@ -80,6 +80,38 @@ afterEach(() => {
 });
 
 describe('createEmbedSessionTracker', () => {
+  it('records, stores and sends nothing in an automated browser while every method stays safe to call', async () => {
+    vi.stubGlobal('window', Object.assign(new EventTarget(), { location: { pathname: '/', search: '', hostname: 'example.com' } }));
+    vi.stubGlobal('document', Object.assign(new EventTarget(), { visibilityState: 'visible', referrer: '' }));
+    vi.stubGlobal('navigator', { webdriver: true });
+    const session = memoryStorage();
+    const local = memoryStorage();
+    const fake = fakeTransport();
+
+    const tracker = createEmbedSessionTracker({
+      token: TOKEN,
+      apiBaseUrl: 'https://api.example.com/v1',
+      transport: fake.transport,
+      sessionStorage: session,
+      localStorage: local,
+    });
+    tracker.start();
+    tracker.pageView('/library');
+    tracker.track(EmbedSessionEventType.CHAT_QUESTION);
+    tracker.setViewerId('9c0e1d2f3a4b5c6d7e8f9a0b1c2d3e4f');
+    const media = tracker.media('m1');
+    media.open(EmbedSessionMediaOpenSource.LIST);
+    media.play(0);
+    await tracker.flush();
+    tracker.stop();
+
+    expect(tracker.sessionId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(tracker.chatContext()).toEqual({ embedSessionId: '' });
+    expect(fake.sends).toEqual([]);
+    expect(fake.beacons).toEqual([]);
+    expect(session.writes + local.writes).toBe(0);
+  });
+
   it('starts, flushes, resumes after a refresh, beacons on pagehide and rolls over after the idle timeout', async () => {
     vi.useFakeTimers({ now: Date.UTC(2026, 9, 16, 10) });
     const fakeWindow = Object.assign(new EventTarget(), {

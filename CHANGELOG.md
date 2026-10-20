@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.1.60 (2026-10-19)
+
+- Maintenance release
+
+## v2.1.59 (2026-10-19)
+
+- Maintenance release
+
 ## Unreleased
 
 - `IEmbedSessionSummaryResponse` now carries `embed` (`{ name, embedType }`, the embed's display name and `EmbedType`) and `audience`, session counts over the same visits as `kpis`: `byWeekday` (`{ weekday, sessions }`, `weekday` 0 for Sunday to 6 for Saturday, in the query `tz`), `countries`, `regions`, `cities`, `browsers` and `os` (`{ <key>, sessions }` rows, most sessions first, missing values as the new `EMBED_SESSION_UNKNOWN_VALUE`, `'unknown'`) `devices` (`{ device, sessions }` with `device` an `EmbedSessionDeviceFilter` value other than `all`) and `bots` (`{ name, kind, sessions }` rows for bot sessions in the same date range and owner filter, whatever the query `traffic`, with `kind` an `EmbedSessionBotKind` and a missing name as `'unknown'`).
