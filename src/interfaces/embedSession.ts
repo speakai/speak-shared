@@ -253,6 +253,7 @@ export interface IEmbedSessionSummaryResponse {
     devices: { device: Exclude<EmbedSessionDeviceFilter, EmbedSessionDeviceFilter.ALL>; sessions: number }[];
     browsers: { browser: string; sessions: number }[];
     os: { os: string; sessions: number }[];
+    bots: { name: string; kind: EmbedSessionBotKind; sessions: number }[];
   };
   embed: { name: string; embedType: EmbedType };
   media: IEmbedSessionMediaRow[];
