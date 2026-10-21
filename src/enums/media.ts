@@ -79,3 +79,25 @@ export enum ThumbnailOrigin {
   AUTO = 'auto',
   CUSTOM = 'custom',
 }
+
+export enum MediaUploadType {
+  WEB = 'web',
+  ANDROID = 'android',
+  IOS = 'ios',
+  TEXT = 'text',
+  ZAPIER = 'zapier',
+  API = 'api',
+  RECORDER = 'recorder',
+  CSV = 'csv',
+  ZOOM = 'zoom',
+  WEB_SCRAPER = 'web-scraper',
+  APP_RECORDER = 'app-recorder',
+  MEETING_ASSISTANT = 'meeting-assistant',
+  CHROME_EXTENSION = 'chrome-extension',
+  TOOLS = 'tools',
+  RETRANSCRIBE = 'retranscribe',
+  SAMPLE = 'sample',
+  TRANSLATION = 'translation',
+  VOICE_AGENT = 'voice-agent',
+  DESKTOP = 'desktop',
+}
