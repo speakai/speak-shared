@@ -4,6 +4,10 @@ export const MEETING_LINK_HOST_DOMAINS = ['zoom.us', 'zoomgov.com', 'webex.com',
 
 export const MEETING_LINK_EXACT_HOSTS = ['meet.google.com', 'teams.microsoft.com', 'teams.live.com'] as const;
 
+export const RECORDING_CONSENT_VALUES = ['Yes', 'No', 'N/A'] as const;
+
+export type RecordingConsentValue = (typeof RECORDING_CONSENT_VALUES)[number];
+
 export enum MeetingPlatform {
   GOOGLE_MEET = 'googleMeet',
   ZOOM = 'zoom',
