@@ -1,4 +1,3 @@
-import { MediaUiState } from '../enums/design.js';
 import { MediaState } from '../enums/media.js';
 import type {
   AccentPreset,
@@ -11,7 +10,6 @@ import type {
   TypeScale,
 } from '../interfaces/design.js';
 
-const UPLOADING_STATUS: Readonly<MediaStatusDesign> = Object.freeze({ labelKey: 'MEDIA_STATUS.UPLOADING', color: 'textSecondary', fill: 'surface', icon: 'cloud-upload' });
 const WAITING_STATUS: Readonly<MediaStatusDesign> = Object.freeze({ labelKey: 'MEDIA_STATUS.WAITING', color: 'textSecondary', fill: 'surface', icon: 'clock' });
 const PROCESSING_STATUS: Readonly<MediaStatusDesign> = Object.freeze({ labelKey: 'MEDIA_STATUS.PROCESSING', color: 'textSecondary', fill: 'surface', icon: 'loader-circle' });
 const READY_STATUS: Readonly<MediaStatusDesign> = Object.freeze({ labelKey: 'MEDIA_STATUS.READY', color: 'success', fill: 'successSoft', icon: 'circle-check' });
@@ -224,10 +222,9 @@ export const SPEAKER_PALETTE: Readonly<SpeakerPalette> = Object.freeze({
   lightness: Object.freeze({ light: 0.52, dark: 0.72 }),
 });
 
-/** How every server media state and app-only state looks; states that read the same to a user share one design. */
-export const MEDIA_STATUS_DESIGN: Readonly<Record<MediaState | MediaUiState, Readonly<MediaStatusDesign>>> = Object.freeze({
-  [MediaUiState.UPLOADING]: UPLOADING_STATUS,
-  [MediaState.NOT_UPLOADED]: UPLOADING_STATUS,
+/** How every media state looks, plus `local` for a recording that is only on the device (`isLocal`); states that read the same to a user share one design. */
+export const MEDIA_STATUS_DESIGN: Readonly<Record<MediaState | 'local', Readonly<MediaStatusDesign>>> = Object.freeze({
+  [MediaState.NOT_UPLOADED]: Object.freeze({ labelKey: 'MEDIA_STATUS.UPLOADING', color: 'textSecondary', fill: 'surface', icon: 'cloud-upload' }),
   [MediaState.UPLOADED]: WAITING_STATUS,
   [MediaState.QUEUED]: WAITING_STATUS,
   [MediaState.PREPARING]: PROCESSING_STATUS,
@@ -236,11 +233,10 @@ export const MEDIA_STATUS_DESIGN: Readonly<Record<MediaState | MediaUiState, Rea
   [MediaState.TRANSLATION]: PROCESSING_STATUS,
   [MediaState.PREPARING_ANALYSIS]: PROCESSING_STATUS,
   [MediaState.DUBBING]: PROCESSING_STATUS,
-  [MediaUiState.TAKING_LONGER]: Object.freeze({ labelKey: 'MEDIA_STATUS.TAKING_LONGER', color: 'warning', fill: 'warningSoft', icon: 'triangle-alert' }),
   [MediaState.PROCESSED]: READY_STATUS,
   [MediaState.COMPLETE]: READY_STATUS,
   [MediaState.FAILED]: Object.freeze({ labelKey: 'MEDIA_STATUS.FAILED', color: 'critical', fill: 'criticalSoft', icon: 'circle-alert' }),
   [MediaState.PENDING_PAYMENT]: Object.freeze({ labelKey: 'MEDIA_STATUS.PAYMENT_NEEDED', color: 'critical', fill: 'criticalSoft', icon: 'credit-card' }),
-  [MediaUiState.LOCAL_ONLY]: Object.freeze({ labelKey: 'MEDIA_STATUS.LOCAL_ONLY', color: 'textSecondary', fill: 'surface', icon: 'cloud-off' }),
   [MediaState.LIVE_TRANSCRIPT]: Object.freeze({ labelKey: 'MEDIA_STATUS.LIVE', color: 'textSecondary', fill: 'surface', icon: 'radio' }),
-} satisfies Record<MediaState | MediaUiState, MediaStatusDesign>);
+  local: Object.freeze({ labelKey: 'MEDIA_STATUS.LOCAL', color: 'textSecondary', fill: 'surface', icon: 'cloud-off' }),
+} satisfies Record<MediaState | 'local', MediaStatusDesign>);

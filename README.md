@@ -27,7 +27,7 @@ the `./schemas` entry uses.
   is derived from it (`src/llm/`, `src/pricing/`).
 - **Design tokens**: colours for light and dark, accent presets, type scale, spacing, radius,
   elevation, motion, the speaker palette and the media status design (label key, colour and
-  Lucide icon name for every media state),
+  Lucide icon name for every `MediaState`, plus `local` for on-device recordings),
   as plain data with no UI dependency (`src/design/`).
 - **Helpers**: transcript, dashboard-spec and colour contrast utilities (`src/utils/`).
 - **Schemas**: zod schemas for the dashboard spec (`src/schemas/`).
