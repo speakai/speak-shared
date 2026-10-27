@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.67 (2026-10-27)
+
+- Maintenance release
+
 ## v2.1.66 (2026-10-27)
 
 - Maintenance release
