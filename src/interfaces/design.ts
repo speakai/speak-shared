@@ -1,5 +1,5 @@
 import type { IconMeaning, TypeRole } from '../enums/design.js';
-import type { ICON_NAMES } from '../design/tokens.js';
+import type { ANDROID_ICON_NAMES, ICON_NAMES } from '../design/tokens.js';
 
 /** One value per colour scheme. */
 export interface ModeValues<T> {
@@ -94,4 +94,6 @@ export interface MediaStatusDesign {
   icon: IconMeaning;
 }
 
-export type LucideIconName = (typeof ICON_NAMES)[IconMeaning];
+export type LucideIconName =
+  | (typeof ICON_NAMES)[IconMeaning]
+  | (typeof ANDROID_ICON_NAMES)[keyof typeof ANDROID_ICON_NAMES];
