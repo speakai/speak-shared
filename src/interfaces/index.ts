@@ -22,3 +22,4 @@ export * from './dashboard.js';
 export * from './pushNotification.js';
 export * from './notificationEvent.js';
 export * from './embedSession.js';
+export * from './design.js';

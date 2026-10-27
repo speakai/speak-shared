@@ -25,7 +25,11 @@ the `./schemas` entry uses.
   (`src/voice/`).
 - **LLM model registry**: `MODEL_REGISTRY`, with one entry per model, and `MODEL_PRICING`, which
   is derived from it (`src/llm/`, `src/pricing/`).
-- **Helpers**: transcript and dashboard-spec utilities (`src/utils/`).
+- **Design tokens**: colours for light and dark, accent presets, type scale, spacing, radius,
+  elevation, motion, the speaker palette and the media status design (label key, colour and
+  Lucide icon name for every `MediaState`, plus `local` for on-device recordings),
+  as plain data with no UI dependency (`src/design/`).
+- **Helpers**: transcript, dashboard-spec and colour contrast utilities (`src/utils/`).
 - **Schemas**: zod schemas for the dashboard spec (`src/schemas/`).
 
 Full types are available via your IDE's autocomplete after installing.
@@ -34,7 +38,7 @@ Full types are available via your IDE's autocomplete after installing.
 
 | Import | Contents |
 |---|---|
-| `@speakai/shared` | Everything except the zod schemas: enums, interfaces, the voice domain, the LLM registry, pricing and helpers |
+| `@speakai/shared` | Everything except the zod schemas: enums, interfaces, the voice domain, the LLM registry, pricing, design tokens and helpers |
 | `@speakai/shared/enums` | Platform enums only |
 | `@speakai/shared/interfaces` | Platform interfaces only |
 | `@speakai/shared/schemas` | The zod schemas for the dashboard spec |
