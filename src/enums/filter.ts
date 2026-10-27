@@ -9,6 +9,7 @@ export enum FilterFieldName {
   TAGS = 'tags',
   RECORDER_ID = 'recorderId',
   FIELDS = 'fields',
+  STATE = 'state',
 }
 
 export enum FilterOperator {
