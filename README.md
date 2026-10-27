@@ -26,7 +26,8 @@ the `./schemas` entry uses.
 - **LLM model registry**: `MODEL_REGISTRY`, with one entry per model, and `MODEL_PRICING`, which
   is derived from it (`src/llm/`, `src/pricing/`).
 - **Design tokens**: colours for light and dark, accent presets, type scale, spacing, radius,
-  elevation, motion, the speaker palette, media status design and the semantic Lucide icon map,
+  elevation, motion, the speaker palette and the media status design (label key, colour and
+  Lucide icon name for every media state),
   as plain data with no UI dependency (`src/design/`).
 - **Helpers**: transcript, dashboard-spec and colour contrast utilities (`src/utils/`).
 - **Schemas**: zod schemas for the dashboard spec (`src/schemas/`).
