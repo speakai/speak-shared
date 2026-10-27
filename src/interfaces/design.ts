@@ -1,5 +1,3 @@
-import type { IconMeaning, TypeRole } from '../enums/design.js';
-import type { ANDROID_ICON_NAMES, ICON_NAMES } from '../design/tokens.js';
 
 /** One value per colour scheme. */
 export interface ModeValues<T> {
@@ -64,6 +62,8 @@ export interface TypeStyle {
   maxScale: number;
 }
 
+export type TypeRole = 'title' | 'heading' | 'headline' | 'body' | 'callout' | 'footnote' | 'caption' | 'timer' | 'tab';
+
 export type TypeScale = Record<TypeRole, TypeStyle>;
 
 export interface ElevationLevel {
@@ -91,9 +91,6 @@ export interface MediaStatusDesign {
   labelKey: string;
   color: ColorToken;
   fill: ColorToken;
-  icon: IconMeaning;
+  /** Lucide icon name (lucide.dev, kebab-case). */
+  icon: string;
 }
-
-export type LucideIconName =
-  | (typeof ICON_NAMES)[IconMeaning]
-  | (typeof ANDROID_ICON_NAMES)[keyof typeof ANDROID_ICON_NAMES];

@@ -1,4 +1,5 @@
-import { IconMeaning, MediaStatusKind, TypeRole } from '../enums/design.js';
+import { MediaUiState } from '../enums/design.js';
+import { MediaState } from '../enums/media.js';
 import type {
   AccentPreset,
   ColorTokens,
@@ -9,6 +10,11 @@ import type {
   SpeakerPalette,
   TypeScale,
 } from '../interfaces/design.js';
+
+const UPLOADING_STATUS: Readonly<MediaStatusDesign> = Object.freeze({ labelKey: 'MEDIA_STATUS.UPLOADING', color: 'textSecondary', fill: 'surface', icon: 'cloud-upload' });
+const WAITING_STATUS: Readonly<MediaStatusDesign> = Object.freeze({ labelKey: 'MEDIA_STATUS.WAITING', color: 'textSecondary', fill: 'surface', icon: 'clock' });
+const PROCESSING_STATUS: Readonly<MediaStatusDesign> = Object.freeze({ labelKey: 'MEDIA_STATUS.PROCESSING', color: 'textSecondary', fill: 'surface', icon: 'loader-circle' });
+const READY_STATUS: Readonly<MediaStatusDesign> = Object.freeze({ labelKey: 'MEDIA_STATUS.READY', color: 'success', fill: 'successSoft', icon: 'circle-check' });
 
 export const COLOR_TOKENS: Readonly<ModeValues<Readonly<ColorTokens>>> = Object.freeze({
   light: Object.freeze({
@@ -99,7 +105,7 @@ export const ACCENT_PRESETS: readonly AccentPreset[] = Object.freeze([
 ]);
 
 export const TYPE_SCALE: Readonly<TypeScale> = Object.freeze({
-  [TypeRole.TITLE]: {
+  title: {
     fontSize: 28,
     lineHeight: 36,
     fontWeight: 600,
@@ -108,7 +114,7 @@ export const TYPE_SCALE: Readonly<TypeScale> = Object.freeze({
     android: { role: 'headlineMedium', fontSize: 28, lineHeight: 36 },
     maxScale: 1.4,
   },
-  [TypeRole.HEADING]: {
+  heading: {
     fontSize: 20,
     lineHeight: 26,
     fontWeight: 600,
@@ -117,7 +123,7 @@ export const TYPE_SCALE: Readonly<TypeScale> = Object.freeze({
     android: { role: 'titleLarge', fontSize: 22, lineHeight: 28 },
     maxScale: 1.4,
   },
-  [TypeRole.HEADLINE]: {
+  headline: {
     fontSize: 17,
     lineHeight: 24,
     fontWeight: 600,
@@ -126,7 +132,7 @@ export const TYPE_SCALE: Readonly<TypeScale> = Object.freeze({
     android: { role: 'titleMedium', fontSize: 16, lineHeight: 24 },
     maxScale: 2,
   },
-  [TypeRole.BODY]: {
+  body: {
     fontSize: 17,
     lineHeight: 24,
     fontWeight: 400,
@@ -135,7 +141,7 @@ export const TYPE_SCALE: Readonly<TypeScale> = Object.freeze({
     android: { role: 'bodyLarge', fontSize: 16, lineHeight: 24 },
     maxScale: 2,
   },
-  [TypeRole.CALLOUT]: {
+  callout: {
     fontSize: 15,
     lineHeight: 21,
     fontWeight: 400,
@@ -144,7 +150,7 @@ export const TYPE_SCALE: Readonly<TypeScale> = Object.freeze({
     android: { role: 'bodyMedium', fontSize: 14, lineHeight: 20 },
     maxScale: 2,
   },
-  [TypeRole.FOOTNOTE]: {
+  footnote: {
     fontSize: 13,
     lineHeight: 18,
     fontWeight: 400,
@@ -153,7 +159,7 @@ export const TYPE_SCALE: Readonly<TypeScale> = Object.freeze({
     android: { role: 'bodySmall', fontSize: 12, lineHeight: 16 },
     maxScale: 2,
   },
-  [TypeRole.CAPTION]: {
+  caption: {
     fontSize: 12,
     lineHeight: 17,
     fontWeight: 600,
@@ -162,7 +168,7 @@ export const TYPE_SCALE: Readonly<TypeScale> = Object.freeze({
     android: { role: 'labelSmall', fontSize: 11, lineHeight: 16 },
     maxScale: 2,
   },
-  [TypeRole.TIMER]: {
+  timer: {
     fontSize: 64,
     lineHeight: 64,
     fontWeight: 500,
@@ -171,7 +177,7 @@ export const TYPE_SCALE: Readonly<TypeScale> = Object.freeze({
     android: null,
     maxScale: 1,
   },
-  [TypeRole.TAB]: {
+  tab: {
     fontSize: 10,
     lineHeight: 16,
     fontWeight: 600,
@@ -218,58 +224,23 @@ export const SPEAKER_PALETTE: Readonly<SpeakerPalette> = Object.freeze({
   lightness: Object.freeze({ light: 0.52, dark: 0.72 }),
 });
 
-/** Lucide icon names (lucide.dev, kebab-case) per meaning, so every app shows the same glyph for the same thing. */
-export const ICON_NAMES = Object.freeze({
-  [IconMeaning.RECORD]: 'mic',
-  [IconMeaning.STOP]: 'square',
-  [IconMeaning.PAUSE]: 'pause',
-  [IconMeaning.PLAY]: 'play',
-  [IconMeaning.UPLOAD]: 'cloud-upload',
-  [IconMeaning.DOWNLOAD]: 'download',
-  [IconMeaning.FOLDER]: 'folder',
-  [IconMeaning.FOLDERS]: 'folders',
-  [IconMeaning.MEDIA_LIBRARY]: 'square-play',
-  [IconMeaning.AUDIO]: 'audio-lines',
-  [IconMeaning.VIDEO]: 'video',
-  [IconMeaning.DOCUMENT]: 'file-text',
-  [IconMeaning.TRANSCRIPT]: 'file-text',
-  [IconMeaning.MEETING]: 'calendar-clock',
-  [IconMeaning.RECORDER]: 'radio',
-  [IconMeaning.PROFILE]: 'circle-user-round',
-  [IconMeaning.SETTINGS]: 'settings',
-  [IconMeaning.AI]: 'sparkles',
-  [IconMeaning.BACK]: 'chevron-left',
-  [IconMeaning.MORE]: 'ellipsis',
-  [IconMeaning.DELETE]: 'trash',
-  [IconMeaning.EDIT]: 'pencil',
-  [IconMeaning.UNDO]: 'undo-2',
-  [IconMeaning.REDO]: 'redo-2',
-  [IconMeaning.SKIP_BACK]: 'rotate-ccw',
-  [IconMeaning.SKIP_FORWARD]: 'rotate-cw',
-  [IconMeaning.READY]: 'circle-check',
-  [IconMeaning.PROCESSING]: 'loader-circle',
-  [IconMeaning.FAILED]: 'circle-alert',
-  [IconMeaning.NEEDS_ATTENTION]: 'triangle-alert',
-  [IconMeaning.PAYMENT_NEEDED]: 'credit-card',
-  [IconMeaning.LOCAL_ONLY]: 'cloud-off',
-  [IconMeaning.UPLOADED]: 'cloud-check',
-  [IconMeaning.WAITING]: 'clock',
-  [IconMeaning.LIVE]: 'radio',
-} as const satisfies Record<IconMeaning, string>);
-
-/** Android uses an arrow for Back; every other platform uses the map. */
-export const ANDROID_ICON_NAMES = Object.freeze({
-  [IconMeaning.BACK]: 'arrow-left',
-} as const satisfies Partial<Record<IconMeaning, string>>);
-
-export const MEDIA_STATUS_DESIGN: Readonly<Record<MediaStatusKind, Readonly<MediaStatusDesign>>> = Object.freeze({
-  [MediaStatusKind.UPLOADING]: { labelKey: 'MEDIA_STATUS.UPLOADING', color: 'textSecondary', fill: 'surface', icon: IconMeaning.UPLOAD },
-  [MediaStatusKind.WAITING]: { labelKey: 'MEDIA_STATUS.WAITING', color: 'textSecondary', fill: 'surface', icon: IconMeaning.WAITING },
-  [MediaStatusKind.PROCESSING]: { labelKey: 'MEDIA_STATUS.PROCESSING', color: 'textSecondary', fill: 'surface', icon: IconMeaning.PROCESSING },
-  [MediaStatusKind.TAKING_LONGER]: { labelKey: 'MEDIA_STATUS.TAKING_LONGER', color: 'warning', fill: 'warningSoft', icon: IconMeaning.NEEDS_ATTENTION },
-  [MediaStatusKind.READY]: { labelKey: 'MEDIA_STATUS.READY', color: 'success', fill: 'successSoft', icon: IconMeaning.READY },
-  [MediaStatusKind.FAILED]: { labelKey: 'MEDIA_STATUS.FAILED', color: 'critical', fill: 'criticalSoft', icon: IconMeaning.FAILED },
-  [MediaStatusKind.PAYMENT_NEEDED]: { labelKey: 'MEDIA_STATUS.PAYMENT_NEEDED', color: 'critical', fill: 'criticalSoft', icon: IconMeaning.PAYMENT_NEEDED },
-  [MediaStatusKind.LOCAL_ONLY]: { labelKey: 'MEDIA_STATUS.LOCAL_ONLY', color: 'textSecondary', fill: 'surface', icon: IconMeaning.LOCAL_ONLY },
-  [MediaStatusKind.LIVE]: { labelKey: 'MEDIA_STATUS.LIVE', color: 'textSecondary', fill: 'surface', icon: IconMeaning.LIVE },
-});
+/** How every server media state and app-only state looks; states that read the same to a user share one design. */
+export const MEDIA_STATUS_DESIGN: Readonly<Record<MediaState | MediaUiState, Readonly<MediaStatusDesign>>> = Object.freeze({
+  [MediaUiState.UPLOADING]: UPLOADING_STATUS,
+  [MediaState.NOT_UPLOADED]: UPLOADING_STATUS,
+  [MediaState.UPLOADED]: WAITING_STATUS,
+  [MediaState.QUEUED]: WAITING_STATUS,
+  [MediaState.PREPARING]: PROCESSING_STATUS,
+  [MediaState.PREPARING_TRANSCRIPTION]: PROCESSING_STATUS,
+  [MediaState.PROCESSING]: PROCESSING_STATUS,
+  [MediaState.TRANSLATION]: PROCESSING_STATUS,
+  [MediaState.PREPARING_ANALYSIS]: PROCESSING_STATUS,
+  [MediaState.DUBBING]: PROCESSING_STATUS,
+  [MediaUiState.TAKING_LONGER]: Object.freeze({ labelKey: 'MEDIA_STATUS.TAKING_LONGER', color: 'warning', fill: 'warningSoft', icon: 'triangle-alert' }),
+  [MediaState.PROCESSED]: READY_STATUS,
+  [MediaState.COMPLETE]: READY_STATUS,
+  [MediaState.FAILED]: Object.freeze({ labelKey: 'MEDIA_STATUS.FAILED', color: 'critical', fill: 'criticalSoft', icon: 'circle-alert' }),
+  [MediaState.PENDING_PAYMENT]: Object.freeze({ labelKey: 'MEDIA_STATUS.PAYMENT_NEEDED', color: 'critical', fill: 'criticalSoft', icon: 'credit-card' }),
+  [MediaUiState.LOCAL_ONLY]: Object.freeze({ labelKey: 'MEDIA_STATUS.LOCAL_ONLY', color: 'textSecondary', fill: 'surface', icon: 'cloud-off' }),
+  [MediaState.LIVE_TRANSCRIPT]: Object.freeze({ labelKey: 'MEDIA_STATUS.LIVE', color: 'textSecondary', fill: 'surface', icon: 'radio' }),
+} satisfies Record<MediaState | MediaUiState, MediaStatusDesign>);
