@@ -3,6 +3,7 @@ export * from './auth.js';
 export * from './automation.js';
 export * from './calendar.js';
 export * from './clip.js';
+export * from './design.js';
 export * from './domain.js';
 export * from './embed.js';
 export * from './export.js';
