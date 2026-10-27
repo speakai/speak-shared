@@ -9,6 +9,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  DASHBOARD_ICON_ALIASES,
+  DASHBOARD_ICON_NAMES,
   MAX_FILTER_DEPTH,
   MAX_JSON_DEPTH,
   SECTION_OVERVIEW_ID,
@@ -16,6 +18,7 @@ import {
   isHexColor,
   isSafeFontFamily,
   rectsOverlap,
+  resolveDashboardIcon,
   resolveSectionGroups,
 } from '../src/utils/dashboard-spec.js';
 import {
@@ -30,6 +33,7 @@ import {
   fieldReferenceSchema,
   filterSchema,
   metricSchema,
+  sectionSchema,
   widgetSchema,
   widgetTypeSchema,
 } from '../src/schemas/dashboard-spec.schema.js';
@@ -1816,5 +1820,23 @@ describe('branding value guards', () => {
   it('accepts only plain font family names of letters, digits and spaces', () => {
     expect(['Inter', 'Open Sans 2'].every(isSafeFontFamily)).toBe(true);
     expect([' Inter', 'Inter;color:red', "Inter'", 'a'.repeat(61), '', null].some(isSafeFontFamily)).toBe(false);
+  });
+});
+
+describe('dashboard icon names', () => {
+  it('resolves list names and old aliases, and rejects anything else', () => {
+    expect(new Set(DASHBOARD_ICON_NAMES).size).toBe(DASHBOARD_ICON_NAMES.length);
+    for (const name of [...DASHBOARD_ICON_NAMES, ...Object.keys(DASHBOARD_ICON_ALIASES)]) {
+      expect(sectionSchema.shape.icon.safeParse(name).success).toBe(true);
+    }
+    for (const name of DASHBOARD_ICON_NAMES) expect(resolveDashboardIcon(name)).toBe(name);
+    for (const [alias, target] of Object.entries(DASHBOARD_ICON_ALIASES)) {
+      expect(DASHBOARD_ICON_NAMES).not.toContain(alias);
+      expect(resolveDashboardIcon(alias)).toBe(target);
+    }
+    expect(resolveDashboardIcon('bar-chart-3')).toBe('chart-column');
+    for (const bad of ['', null, undefined, 'not-an-icon', 'constructor', 'toString', 'Target']) {
+      expect(resolveDashboardIcon(bad)).toBeNull();
+    }
   });
 });
