@@ -10,6 +10,7 @@
 
 ## Unreleased
 
+- Added `DASHBOARD_ICON_NAMES` (the Lucide icon names a dashboard or section may use, current Lucide spelling), the `DashboardIconName` type, `DEFAULT_DASHBOARD_ICON` (`layout-dashboard`), `DASHBOARD_ICON_ALIASES` (older Lucide names such as `bar-chart-3` mapped to their current name) and `resolveDashboardIcon(name)`, which returns the list name for a name or alias and `null` for anything else. The spec schema still accepts any kebab-case icon string, so stored dashboards are unaffected.
 - Added `MediaUploadType` in `enums/media` with the same values as the server's upload types, plus `DESKTOP` (`desktop`) for recordings made in the Speak desktop app.
 - Added `RECORDING_CONSENT_VALUES` (`Yes`, `No`, `N/A`) and the `RecordingConsentValue` type in `enums/meeting`.
 - `IEmbedSessionSummaryResponse` now carries `embed` (`{ name, embedType }`, the embed's display name and `EmbedType`) and `audience`, session counts over the same visits as `kpis`: `byWeekday` (`{ weekday, sessions }`, `weekday` 0 for Sunday to 6 for Saturday, in the query `tz`), `countries`, `regions`, `cities`, `browsers` and `os` (`{ <key>, sessions }` rows, most sessions first, missing values as the new `EMBED_SESSION_UNKNOWN_VALUE`, `'unknown'`) `devices` (`{ device, sessions }` with `device` an `EmbedSessionDeviceFilter` value other than `all`) and `bots` (`{ name, kind, sessions }` rows for bot sessions in the same date range and owner filter, whatever the query `traffic`, with `kind` an `EmbedSessionBotKind` and a missing name as `'unknown'`).
