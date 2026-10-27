@@ -18,6 +18,37 @@ export const DASHBOARD_GRID_COLS = 12;
 /** Id of the implicit section that holds widgets no explicit section claims. */
 export const SECTION_OVERVIEW_ID = 'overview';
 
+export const DASHBOARD_ICON_NAMES = [
+  'layout-dashboard', 'layout-grid', 'chart-column', 'chart-column-increasing', 'chart-no-axes-column',
+  'chart-no-axes-combined', 'chart-line', 'chart-pie', 'chart-area', 'gauge', 'activity', 'trending-up',
+  'trending-down', 'target', 'trophy', 'award', 'star', 'flag',
+  'user', 'user-round', 'user-check', 'users',
+  'phone', 'phone-call', 'phone-incoming', 'phone-missed', 'headphones', 'mic', 'audio-lines', 'audio-waveform',
+  'message-circle', 'message-square', 'messages-square', 'megaphone', 'send', 'quote',
+  'video', 'film', 'play', 'circle-play', 'list-video',
+  'calendar', 'calendar-days', 'calendar-clock', 'clock', 'sun', 'sunrise',
+  'list', 'list-checks', 'clipboard-check', 'square-check-big', 'table', 'table-2', 'layers', 'tags', 'bookmark',
+  'file-text', 'folder-open', 'search', 'git-compare',
+  'shield-check', 'circle-alert', 'triangle-alert', 'info', 'siren', 'heart', 'heart-pulse', 'thumbs-up',
+  'lightbulb', 'sparkles', 'zap', 'bot',
+  'briefcase', 'store', 'handshake', 'dollar-sign', 'scale', 'map-pin', 'globe', 'route', 'server', 'trash',
+] as const;
+export type DashboardIconName = (typeof DASHBOARD_ICON_NAMES)[number];
+
+export const DEFAULT_DASHBOARD_ICON: DashboardIconName = 'layout-dashboard';
+
+/** Older Lucide names still stored on existing dashboards, mapped to their current name. */
+export const DASHBOARD_ICON_ALIASES: Readonly<Record<string, DashboardIconName>> = {
+  'bar-chart-3': 'chart-column',
+  'bar-chart-4': 'chart-column-increasing',
+  'check-square': 'square-check-big',
+  'alert-triangle': 'triangle-alert',
+  'trash-2': 'trash',
+  waveform: 'audio-waveform',
+};
+
+const DASHBOARD_ICON_NAME_SET: ReadonlySet<string> = new Set(DASHBOARD_ICON_NAMES);
+
 export const TABLE_CARD_LAYOUTS = ['grid', 'rows'] as const;
 export type TableCardLayout = (typeof TABLE_CARD_LAYOUTS)[number];
 
@@ -121,7 +152,7 @@ export function resolveSectionGroups(
   }
 
   return [
-    { id: SECTION_OVERVIEW_ID, title: 'Overview', icon: 'layout-dashboard', widgetIds: orphans, isImplicit: true },
+    { id: SECTION_OVERVIEW_ID, title: 'Overview', icon: DEFAULT_DASHBOARD_ICON, widgetIds: orphans, isImplicit: true },
     ...groups,
   ];
 }
@@ -132,4 +163,10 @@ export function isHexColor(value: unknown): value is string {
 
 export function isSafeFontFamily(value: unknown): value is string {
   return typeof value === 'string' && FONT_FAMILY_PATTERN.test(value);
+}
+
+export function resolveDashboardIcon(name: string | null | undefined): DashboardIconName | null {
+  if (!name) return null;
+  if (DASHBOARD_ICON_NAME_SET.has(name)) return name as DashboardIconName;
+  return Object.hasOwn(DASHBOARD_ICON_ALIASES, name) ? DASHBOARD_ICON_ALIASES[name] : null;
 }
