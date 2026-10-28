@@ -169,7 +169,7 @@ export const TYPE_SCALE: Readonly<TypeScale> = Object.freeze({
   },
   timer: {
     fontSize: 64,
-    lineHeight: 64,
+    lineHeight: 80,
     fontWeight: 500,
     heading: true,
     ios: null,
