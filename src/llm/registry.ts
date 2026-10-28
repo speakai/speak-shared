@@ -446,8 +446,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     provider: LLMProvider.OPENAI,
     family: "gpt",
     status: "live",
-    offeredInChat: true,
-    chatOrder: 7,
+    offeredInChat: false,
     offeredInVoice: true,
     voiceReasoning: "none",
     premium: true,
@@ -469,8 +468,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     provider: LLMProvider.OPENAI,
     family: "gpt",
     status: "live",
-    offeredInChat: true,
-    chatOrder: 6,
+    offeredInChat: false,
     offeredInVoice: true,
     voiceReasoning: "none",
     premium: true,
@@ -524,7 +522,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     family: "gpt",
     status: "live",
     offeredInChat: true,
-    chatOrder: 4,
+    chatOrder: 6,
     offeredInVoice: true,
     voiceReasoning: "none",
     premium: true,
@@ -651,8 +649,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     provider: LLMProvider.ANTHROPIC,
     family: "claude",
     status: "live",
-    offeredInChat: true,
-    chatOrder: 10,
+    offeredInChat: false,
     offeredInVoice: false,
     premium: true,
     pricing: {
@@ -673,8 +670,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     provider: LLMProvider.ANTHROPIC,
     family: "claude",
     status: "live",
-    offeredInChat: true,
-    chatOrder: 8,
+    offeredInChat: false,
     offeredInVoice: false,
     premium: true,
     pricing: {
@@ -695,8 +691,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     provider: LLMProvider.ANTHROPIC,
     family: "claude",
     status: "live",
-    offeredInChat: true,
-    chatOrder: 9,
+    offeredInChat: false,
     offeredInVoice: false,
     premium: true,
     pricing: {
@@ -717,7 +712,8 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     provider: LLMProvider.ANTHROPIC,
     family: "claude",
     status: "live",
-    offeredInChat: false,
+    offeredInChat: true,
+    chatOrder: 2,
     offeredInVoice: false,
     premium: true,
     pricing: {
@@ -738,7 +734,8 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     provider: LLMProvider.ANTHROPIC,
     family: "claude",
     status: "live",
-    offeredInChat: false,
+    offeredInChat: true,
+    chatOrder: 3,
     offeredInVoice: false,
     premium: true,
     pricing: {
@@ -759,7 +756,8 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     provider: LLMProvider.ANTHROPIC,
     family: "claude",
     status: "live",
-    offeredInChat: false,
+    offeredInChat: true,
+    chatOrder: 4,
     offeredInVoice: false,
     premium: true,
     pricing: {
@@ -972,8 +970,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     provider: LLMProvider.GOOGLE,
     family: "gemini",
     status: "live",
-    offeredInChat: true,
-    chatOrder: 1,
+    offeredInChat: false,
     offeredInVoice: false,
     premium: true,
     pricing: {
@@ -994,8 +991,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     provider: LLMProvider.GOOGLE,
     family: "gemini",
     status: "live",
-    offeredInChat: true,
-    chatOrder: 2,
+    offeredInChat: false,
     offeredInVoice: true,
     voiceReasoning: "minimal",
     premium: true,
@@ -1017,8 +1013,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     provider: LLMProvider.GOOGLE,
     family: "gemini",
     status: "live",
-    offeredInChat: true,
-    chatOrder: 0,
+    offeredInChat: false,
     offeredInVoice: false,
     premium: false,
     pricing: {
@@ -1040,9 +1035,9 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     family: "gemini",
     status: "live",
     offeredInChat: true,
-    chatOrder: 3,
+    chatOrder: 0,
     offeredInVoice: false,
-    premium: true,
+    premium: false,
     pricing: {
       inputPerMillion: 0.75,
       outputPerMillion: 3.75,
@@ -1062,7 +1057,8 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     provider: LLMProvider.GOOGLE,
     family: "gemini",
     status: "live",
-    offeredInChat: false,
+    offeredInChat: true,
+    chatOrder: 1,
     offeredInVoice: false,
     premium: true,
     // Google's rate from 2026-12-01 ($2 / $10 until then), billed from day one so a turn is never under-charged.
@@ -1078,6 +1074,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     // Input and output share Gemini 4's 1,048,576-token window; this leaves room for a full 65,536-token reply.
     contextWindow: 983_040,
     capabilities: GEMINI_THINKING,
+    openRouterSlug: "google/gemini-4-argon",
   },
 
   {
@@ -1087,7 +1084,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     family: "grok",
     status: "live",
     offeredInChat: true,
-    chatOrder: 11,
+    chatOrder: 7,
     offeredInVoice: false,
     premium: true,
     pricing: {
@@ -1111,8 +1108,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     provider: LLMProvider.OPENROUTER,
     family: "glm",
     status: "live",
-    offeredInChat: true,
-    chatOrder: 12,
+    offeredInChat: false,
     offeredInVoice: false,
     premium: true,
     pricing: {
@@ -1128,14 +1124,14 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
   },
 ] as const;
 
-export const OPENAI_DEFAULT_MODEL = LLMModels.GPT_5_5;
-export const CLAUDE_DEFAULT_MODEL = LLMModels.CLAUDE_SONNET_5;
-export const GEMINI_DEFAULT_MODEL = LLMModels.GEMINI_3_7_FLASH;
+export const OPENAI_DEFAULT_MODEL = LLMModels.GPT_5_6_SOL;
+export const CLAUDE_DEFAULT_MODEL = LLMModels.CLAUDE_SONNET_5_5;
+export const GEMINI_DEFAULT_MODEL = LLMModels.GEMINI_3_8_FLASH;
 export const OPENROUTER_DEFAULT_MODEL = LLMModels.GROK_4_5;
 
 export const MEDIA_ROUTED_MODEL = GEMINI_DEFAULT_MODEL;
 
-export const FREE_TIER_MODEL = LLMModels.GEMINI_3_7_FLASH;
+export const FREE_TIER_MODEL = LLMModels.GEMINI_3_8_FLASH;
 
 export const DEFAULT_MODELS = {
   OPENAI_DEFAULT_MODEL,
