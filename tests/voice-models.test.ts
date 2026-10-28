@@ -4,7 +4,7 @@ import {
   AvatarProvider,
   LLMModels,
   MODEL_REGISTRY,
-  OPENAI_DEFAULT_MODEL,
+  LLMProvider,
   TTSProvider,
   VOICE_AGENT_LLM_CHOICES,
   VOICE_AGENT_LLM_MODELS,
@@ -44,13 +44,13 @@ describe("voice pipeline models", () => {
     }
   });
 
-  it("gives every voice provider an offered default and keeps the OpenAI default in the picker", () => {
+  it("gives every voice provider an offered default and keeps the OpenAI voice default in the picker", () => {
     for (const provider of VOICE_AGENT_LLM_PROVIDERS) {
       const model = getModel(VOICE_DEFAULT_MODELS[provider]);
       expect(model?.offeredInVoice).toBe(true);
       expect(model?.provider).toBe(provider);
     }
-    expect(VOICE_AGENT_LLM_CHOICES.map((m) => m.id)).toContain(OPENAI_DEFAULT_MODEL);
+    expect(VOICE_AGENT_LLM_CHOICES.map((m) => m.id)).toContain(VOICE_DEFAULT_MODELS[LLMProvider.OPENAI]);
   });
 });
 
@@ -82,10 +82,10 @@ describe("voice Live models", () => {
 });
 
 describe("voice pricing", () => {
-  it("prices a known model from the registry and anything else at the OpenAI default", () => {
+  it("prices a known model from the registry and anything else at the OpenAI voice default", () => {
     expect(getVoiceLlmTokenRate(LLMModels.GPT_5_4_MINI)).toEqual(tokenRateOf(LLMModels.GPT_5_4_MINI));
-    expect(getVoiceLlmTokenRate("not-a-model", "openai")).toEqual(tokenRateOf(OPENAI_DEFAULT_MODEL));
-    expect(getVoiceLlmTokenRate(undefined, "openai")).toEqual(tokenRateOf(OPENAI_DEFAULT_MODEL));
+    expect(getVoiceLlmTokenRate("not-a-model", "openai")).toEqual(tokenRateOf(VOICE_DEFAULT_MODELS[LLMProvider.OPENAI]));
+    expect(getVoiceLlmTokenRate(undefined, "openai")).toEqual(tokenRateOf(VOICE_DEFAULT_MODELS[LLMProvider.OPENAI]));
   });
 
   it("matches per-minute providers in any case and prices the avatar providers the worker runs", () => {

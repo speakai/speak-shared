@@ -4,7 +4,7 @@
  */
 
 import { LLMModels, LLMProvider } from "../enums/llm.js";
-import { MODEL_REGISTRY, OPENAI_DEFAULT_MODEL } from "../llm/registry.js";
+import { MODEL_REGISTRY } from "../llm/registry.js";
 import type { ModelDefinition } from "../llm/registry.js";
 import { VOICE_LIVE_MODELS } from "./liveModels.js";
 
@@ -33,7 +33,7 @@ export const VOICE_AGENT_LLM_CHOICES: readonly ModelDefinition[] = MODEL_REGISTR
  * registry replacement is not offered in voice. Each is the fastest-starting choice for its provider.
  */
 export const VOICE_DEFAULT_MODELS: Readonly<Record<string, LLMModels>> = {
-  [LLMProvider.OPENAI]: OPENAI_DEFAULT_MODEL,
+  [LLMProvider.OPENAI]: LLMModels.GPT_5_6_SOL,
   [LLMProvider.GOOGLE]: LLMModels.GEMINI_3_5_FLASH,
 };
 
