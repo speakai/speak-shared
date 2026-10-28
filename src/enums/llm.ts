@@ -39,6 +39,10 @@ export enum LLMModels {
   GPT_5_6_SOL = 'gpt-5.6-sol',
   GPT_5_6_TERRA = 'gpt-5.6-terra',
   GPT_5_6_LUNA = 'gpt-5.6-luna',
+  GPT_6_ASTRA = 'gpt-6-astra',
+  GPT_6_1_SOL = 'gpt-6.1-sol',
+  GPT_6_1_TERRA = 'gpt-6.1-terra',
+  GPT_6_LUNA = 'gpt-6-luna',
 
   // ═══════════════ Anthropic ═══════════════
   // Deprecated
@@ -74,5 +78,7 @@ export enum LLMModels {
   GEMINI_4_ARGON = 'gemini-4-argon',
 
   GROK_4_5 = 'x-ai/grok-4.5',
-  GLM_5_2 = 'z-ai/glm-5.2'
+  GROK_4_7 = 'x-ai/grok-4.7',
+  GLM_5_2 = 'z-ai/glm-5.2',
+  GLM_5_3 = 'z-ai/glm-5.3'
 }
