@@ -16,6 +16,8 @@ export interface ModelCapabilities {
   vision: boolean;
   customTemperature: boolean;
   nativeAudioVideo: boolean;
+  /** Accepts tool_choice that forces a named tool; when false, ask for the tool with tool_choice auto instead. */
+  forcedToolChoice: boolean;
 }
 
 export interface ModelDefinition {
@@ -54,12 +56,14 @@ const NO_CAPS: ModelCapabilities = {
   vision: false,
   customTemperature: true,
   nativeAudioVideo: false,
+  forcedToolChoice: true,
 };
 const GPT_LEGACY: ModelCapabilities = { ...NO_CAPS };
 const GPT_5: ModelCapabilities = { ...NO_CAPS, thinking: true, customTemperature: false };
 const CLAUDE_LEGACY: ModelCapabilities = { ...NO_CAPS };
 const CLAUDE_4: ModelCapabilities = { ...NO_CAPS, thinking: true };
 const CLAUDE_ADAPTIVE: ModelCapabilities = { ...NO_CAPS, thinking: true, adaptiveThinking: true, customTemperature: false };
+const CLAUDE_ADAPTIVE_NO_FORCED_TOOL: ModelCapabilities = { ...CLAUDE_ADAPTIVE, forcedToolChoice: false };
 const GEMINI_LEGACY: ModelCapabilities = { ...NO_CAPS, nativeAudioVideo: true };
 const GEMINI_THINKING: ModelCapabilities = { ...NO_CAPS, thinking: true, nativeAudioVideo: true };
 
@@ -824,7 +828,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     },
     maxOutputTokens: MAX_OUTPUT_TOKENS,
     contextWindow: 1_000_000,
-    capabilities: CLAUDE_ADAPTIVE,
+    capabilities: CLAUDE_ADAPTIVE_NO_FORCED_TOOL,
     byokProvider: "anthropic",
     openRouterSlug: "anthropic/claude-sonnet-5.5",
   },
@@ -846,7 +850,7 @@ export const MODEL_REGISTRY: readonly ModelDefinition[] = [
     },
     maxOutputTokens: MAX_OUTPUT_TOKENS,
     contextWindow: 1_000_000,
-    capabilities: CLAUDE_ADAPTIVE,
+    capabilities: CLAUDE_ADAPTIVE_NO_FORCED_TOOL,
     byokProvider: "anthropic",
     openRouterSlug: "anthropic/claude-opus-5.5",
   },
