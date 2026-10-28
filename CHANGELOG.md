@@ -10,6 +10,8 @@
 
 ## Unreleased
 
+- `MEDIA_STATUS_DESIGN`: `UPLOADED` now uses a ready-to-analyze design (`MEDIA_STATUS.READY_TO_ANALYZE`, `textSecondary` on `surface`, icon `cloud-check`) and `QUEUED` uses the processing design. The `MEDIA_STATUS.WAITING` design is removed.
+- Added `onRecord` to `ColorTokens` (`#ffffff` in light and dark), the colour for text or an icon on `record`.
 - Added `DASHBOARD_ICON_NAMES` (the Lucide icon names a dashboard or section may use, current Lucide spelling), the `DashboardIconName` type, `DEFAULT_DASHBOARD_ICON` (`layout-dashboard`), `DASHBOARD_ICON_ALIASES` (older Lucide names such as `bar-chart-3` mapped to their current name) and `resolveDashboardIcon(name)`, which returns the list name for a name or alias and `null` for anything else. The spec schema still accepts any kebab-case icon string, so stored dashboards are unaffected.
 - Added `MediaUploadType` in `enums/media` with the same values as the server's upload types, plus `DESKTOP` (`desktop`) for recordings made in the Speak desktop app.
 - Added `RECORDING_CONSENT_VALUES` (`Yes`, `No`, `N/A`) and the `RecordingConsentValue` type in `enums/meeting`.

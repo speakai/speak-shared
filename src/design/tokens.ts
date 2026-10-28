@@ -10,7 +10,6 @@ import type {
   TypeScale,
 } from '../interfaces/design.js';
 
-const WAITING_STATUS: Readonly<MediaStatusDesign> = Object.freeze({ labelKey: 'MEDIA_STATUS.WAITING', color: 'textSecondary', fill: 'surface', icon: 'clock' });
 const PROCESSING_STATUS: Readonly<MediaStatusDesign> = Object.freeze({ labelKey: 'MEDIA_STATUS.PROCESSING', color: 'textSecondary', fill: 'surface', icon: 'loader-circle' });
 const READY_STATUS: Readonly<MediaStatusDesign> = Object.freeze({ labelKey: 'MEDIA_STATUS.READY', color: 'success', fill: 'successSoft', icon: 'circle-check' });
 
@@ -25,6 +24,7 @@ export const COLOR_TOKENS: Readonly<ModeValues<Readonly<ColorTokens>>> = Object.
     textSecondary: '#52525b',
     textTertiary: '#6b6b76',
     record: '#dc2626',
+    onRecord: '#ffffff',
     success: '#15803d',
     successSoft: '#ecfdf3',
     warning: '#a15c07',
@@ -43,6 +43,7 @@ export const COLOR_TOKENS: Readonly<ModeValues<Readonly<ColorTokens>>> = Object.
     textSecondary: '#a1a1aa',
     textTertiary: '#8b8b94',
     record: '#ef4444',
+    onRecord: '#ffffff',
     success: '#4ade80',
     successSoft: '#0f2a1a',
     warning: '#fbbf24',
@@ -222,11 +223,11 @@ export const SPEAKER_PALETTE: Readonly<SpeakerPalette> = Object.freeze({
   lightness: Object.freeze({ light: 0.52, dark: 0.72 }),
 });
 
-/** How every media state looks, plus `local` for a recording that is only on the device (`isLocal`); states that read the same to a user share one design. */
+/** How every media state looks, plus `local` for a recording that is only on the device (`isLocal`); states that read the same to a user share one design. An uploaded item waits for someone to start its analysis; a queued one reads as processing. */
 export const MEDIA_STATUS_DESIGN: Readonly<Record<MediaState | 'local', Readonly<MediaStatusDesign>>> = Object.freeze({
   [MediaState.NOT_UPLOADED]: Object.freeze({ labelKey: 'MEDIA_STATUS.UPLOADING', color: 'textSecondary', fill: 'surface', icon: 'cloud-upload' }),
-  [MediaState.UPLOADED]: WAITING_STATUS,
-  [MediaState.QUEUED]: WAITING_STATUS,
+  [MediaState.UPLOADED]: Object.freeze({ labelKey: 'MEDIA_STATUS.READY_TO_ANALYZE', color: 'textSecondary', fill: 'surface', icon: 'cloud-check' }),
+  [MediaState.QUEUED]: PROCESSING_STATUS,
   [MediaState.PREPARING]: PROCESSING_STATUS,
   [MediaState.PREPARING_TRANSCRIPTION]: PROCESSING_STATUS,
   [MediaState.PROCESSING]: PROCESSING_STATUS,
