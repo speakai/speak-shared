@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ACCENT_PRESETS, COLOR_TOKENS, MEDIA_STATUS_DESIGN, contrastRatio } from '../src/index.js';
+import { ACCENT_PRESETS, COLOR_TOKENS, MEDIA_STATUS_DESIGN, MediaState, contrastRatio } from '../src/index.js';
 
 const AA_TEXT = 4.5;
 const AA_NON_TEXT = 3;
@@ -31,6 +31,7 @@ describe('design tokens', () => {
       expect(contrastRatio(c[status.color], c[status.fill])).toBeGreaterThanOrEqual(AA_TEXT);
     }
     expect(contrastRatio(c.record, c.background)).toBeGreaterThanOrEqual(AA_NON_TEXT);
+    expect(contrastRatio(c.onRecord, c.record)).toBeGreaterThanOrEqual(AA_NON_TEXT);
   });
 
   it.each(ACCENT_PRESETS.map((preset) => [preset.id, preset] as const))(
@@ -41,4 +42,11 @@ describe('design tokens', () => {
       }
     },
   );
+});
+
+describe('MEDIA_STATUS_DESIGN', () => {
+  it('shows an uploaded item as ready to analyze and a queued one as processing', () => {
+    expect(MEDIA_STATUS_DESIGN[MediaState.UPLOADED]).toMatchObject({ labelKey: 'MEDIA_STATUS.READY_TO_ANALYZE', icon: 'cloud-check' });
+    expect(MEDIA_STATUS_DESIGN[MediaState.QUEUED]).toBe(MEDIA_STATUS_DESIGN[MediaState.PROCESSING]);
+  });
 });

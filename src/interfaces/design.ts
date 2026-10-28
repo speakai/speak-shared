@@ -16,6 +16,8 @@ export interface ColorTokens {
   textSecondary: string;
   textTertiary: string;
   record: string;
+  /** Text or icon colour on `record`. */
+  onRecord: string;
   success: string;
   successSoft: string;
   warning: string;
