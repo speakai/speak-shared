@@ -4,7 +4,8 @@
  */
 
 import { getModelPricing } from "../pricing/modelPricing.js";
-import { OPENAI_DEFAULT_MODEL } from "../llm/registry.js";
+import { LLMProvider } from "../enums/llm.js";
+import { VOICE_DEFAULT_MODELS } from "./llm.js";
 import { AvatarProvider, STTProvider, TTSProvider } from "./enums/providers.js";
 
 export interface VoicePerMinuteRate {
@@ -55,14 +56,14 @@ export const VOICE_PLATFORM_RATE: VoicePerMinuteRate = { perMinute: 0.05 };
 export const VOICE_LLM_PER_MINUTE_RATE: VoicePerMinuteRate = { perMinute: 0.04 };
 
 /**
- * Token rate for a model: the model's own rate, else its provider's, else the OpenAI default,
+ * Token rate for a model: the model's own rate, else its provider's, else the OpenAI voice default,
  * which is the model the voice worker runs in place of an unknown one.
  */
 export function getVoiceLlmTokenRate(model?: string, provider?: string): VoiceLlmTokenRate {
   const pricing =
     getModelPricing(model ?? "") ??
     getModelPricing(provider ?? "") ??
-    getModelPricing(OPENAI_DEFAULT_MODEL)!;
+    getModelPricing(VOICE_DEFAULT_MODELS[LLMProvider.OPENAI])!;
   return { input1M: pricing.inputPerMillion, output1M: pricing.outputPerMillion };
 }
 
