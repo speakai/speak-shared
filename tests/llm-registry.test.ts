@@ -72,6 +72,10 @@ describe("every live model is fully specified", () => {
     expect(model.maxOutputTokens).toBeGreaterThan(0);
   });
 
+  it.each(live.map((m) => [m.id, m] as const))("%s has a context window larger than its output cap", (_, model) => {
+    expect(model.contextWindow).toBeGreaterThan(model.maxOutputTokens);
+  });
+
   it.each(live.filter((m) => m.capabilities.nativeAudioVideo).map((m) => [m.id, m] as const))(
     "%s accepts audio/video and so declares modality rates",
     (_, model) => {
