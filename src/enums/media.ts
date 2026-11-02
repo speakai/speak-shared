@@ -86,6 +86,8 @@ export enum MediaUploadType {
   IOS = 'ios',
   TEXT = 'text',
   ZAPIER = 'zapier',
+  MAKE = 'make',
+  N8N = 'n8n',
   API = 'api',
   RECORDER = 'recorder',
   CSV = 'csv',
