@@ -6,6 +6,7 @@ export * from './clip.js';
 export * from './domain.js';
 export * from './embed.js';
 export * from './export.js';
+export * from './feedback.js';
 export * from './fields.js';
 export * from './filter.js';
 export * from './genesys.js';
