@@ -30,10 +30,10 @@ export const VOICE_AGENT_LLM_CHOICES: readonly ModelDefinition[] = MODEL_REGISTR
 
 /**
  * The model a voice agent runs when it names only a provider, or when its model is retired and the
- * registry replacement is not offered in voice. Each is the fastest-starting choice for its provider.
+ * registry replacement is not offered in voice.
  */
 export const VOICE_DEFAULT_MODELS: Readonly<Record<string, LLMModels>> = {
-  [LLMProvider.OPENAI]: LLMModels.GPT_5_6_SOL,
+  [LLMProvider.OPENAI]: LLMModels.GPT_5_6_TERRA,
   [LLMProvider.GOOGLE]: LLMModels.GEMINI_3_5_FLASH,
 };
 
