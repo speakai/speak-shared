@@ -1,6 +1,6 @@
 /**
  * Canonical LLM model + provider enums — single source of truth shared by
- * speak-server and the voice-agent backend/worker.
+ * the API server and the voice agent services.
  *
  * Values are the REAL provider API model-id strings. Within each provider,
  * DEPRECATED models are grouped first, then LIVE/current models.

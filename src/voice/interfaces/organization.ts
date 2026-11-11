@@ -3,7 +3,7 @@
  *
  * The nested billing block (`OrgBilling`) and Stripe identifiers (`OrgStripe`)
  * are intentionally NOT part of this public package — they remain private to
- * speak-server. `Workspace.billing` is therefore omitted here.
+ * the API server. `Workspace.billing` is therefore omitted here.
  */
 
 import { OrgRole } from "../enums/organization.js";

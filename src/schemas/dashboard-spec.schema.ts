@@ -2,7 +2,7 @@
  * Dashboard spec v2 — the validated dashboard contract.
  *
  * The single source of truth for what a dashboard IS, shared by the manual
- * editor (speak-client), the chat generation LLM's structured output, the MCP
+ * editor (the web app), the chat generation LLM's structured output, the MCP
  * tool surface, and the public viewer. Every write path parses against this.
  *
  * Import via the `@speakai/shared/schemas` subpath ONLY. This module has a
