@@ -2,7 +2,7 @@
  * Voice Agent Interfaces Index
  * Client-facing Voice Agent domain interfaces. The prospect/demo domain and
  * supervision types are intentionally NOT re-exported here — they remain
- * private to speak-server.
+ * private to the API server.
  */
 
 export * from "./agent.js";

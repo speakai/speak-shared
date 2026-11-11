@@ -143,3 +143,10 @@ vite.config.ts.timestamp-*
 
 # Guards against a symlinked node_modules slipping past the trailing-slash rule above.
 node_modules
+
+# Local agent tooling
+.claude/
+.codex/
+.agents/
+AGENTS.md
+plans/

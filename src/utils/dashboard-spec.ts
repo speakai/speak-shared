@@ -2,7 +2,7 @@
  * Zod-free helpers for dashboard spec v2.
  *
  * Deliberately free of any zod import: the schema module consumes these, and so
- * does the renderer in speak-media-library — which pins zod v3 and must never
+ * does the renderer in the media library — which pins zod v3 and must never
  * pull v4 through the root barrel. Keep this module dependency-free.
  */
 

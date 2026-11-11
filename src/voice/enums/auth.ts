@@ -3,7 +3,7 @@
  *
  * Eligibility enums (EligibilityStatus/EligibilityReason) and the
  * SignupEligibility contract are intentionally NOT part of this public package —
- * they remain private to speak-server.
+ * they remain private to the API server.
  */
 
 export enum AuthProvider {

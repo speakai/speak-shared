@@ -40,7 +40,7 @@ export function tokenizeWords(
 /**
  * Flatten a transcript into one array of words, in transcript order.
  *
- * This is the single word count used by speak-ui and speak-server, so anchor
+ * This is the single word count used by @speakai/ui and the API server, so anchor
  * word positions mean the same thing on both sides.
  *
  * - Segments with entities use entity word timings; an entity holding several

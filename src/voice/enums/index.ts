@@ -3,7 +3,7 @@
  * Client-facing Voice Agent domain enums. Internal-only worker/server enums
  * (CriticalErrorType, LogService/LogLevel, SystemAlertType, the prospect/demo
  * domain, and auth eligibility) are intentionally NOT re-exported here — they
- * remain private to speak-server.
+ * remain private to the API server.
  */
 
 export * from "./agent.js";
