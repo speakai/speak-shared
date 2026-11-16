@@ -94,3 +94,12 @@ describe("isAgentTemplateId", () => {
     expect(isAgentTemplateId(42)).toBe(false);
   });
 });
+
+describe("template voices", () => {
+  // OpenAI retires its speech endpoint models (tts-1, gpt-4o-mini-tts) on 2027-01-06.
+  it("never start an agent on an OpenAI voice", () => {
+    for (const tpl of ALL_AGENT_TEMPLATES) {
+      expect(tpl.voice.provider, tpl.id).not.toBe("openai");
+    }
+  });
+});
