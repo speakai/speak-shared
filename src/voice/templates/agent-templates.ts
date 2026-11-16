@@ -123,9 +123,8 @@ export const BLANK_TEMPLATE: AgentTemplate = {
   gradient: "bg-gradient-to-br from-foreground/80 to-foreground",
   icon: "PlusIcon",
   voice: {
-    provider: "openai",
-    voiceId: "alloy",
-    model: "gpt-4o-mini-tts",
+    provider: "elevenlabs",
+    voiceId: "SAz9YHcvj6GT2YYXdXww",
   },
   llm: TEMPLATE_LLM,
   personality: "You are a helpful and professional AI assistant.",
@@ -150,9 +149,8 @@ export const AGENT_TEMPLATES: AgentTemplate[] = [
     gradient: "bg-gradient-to-br from-blue-500 to-indigo-600",
     icon: "ChatBubbleLeftRightIcon",
     voice: {
-      provider: "openai",
-      voiceId: "ash",
-      model: "gpt-4o-mini-tts",
+      provider: "elevenlabs",
+      voiceId: "SAz9YHcvj6GT2YYXdXww",
     },
     llm: TEMPLATE_LLM,
     personality:
@@ -224,9 +222,8 @@ Before ending the call, always ask "Is there anything else I can help with today
     gradient: "bg-gradient-to-br from-orange-500 to-red-600",
     icon: "SparklesIcon",
     voice: {
-      provider: "openai",
-      voiceId: "echo",
-      model: "gpt-4o-mini-tts",
+      provider: "elevenlabs",
+      voiceId: "cjVigY5qzO86Huf0OWal",
     },
     llm: TEMPLATE_LLM,
     personality:
@@ -299,7 +296,7 @@ Keep every response to two or three sentences. Speak naturally and conversationa
     icon: "BoltIcon",
     voice: {
       provider: "elevenlabs",
-      voiceId: "EXAVITQu4vr4ARZoOn7q",
+      voiceId: "EXAVITQu4vr4xnSDxMaL",
     },
     personality:
       "You are Sarah, a calm and incisive Executive Coach with over a decade of experience working with senior leaders navigating high-stakes decisions. You believe that the best answers already live inside the person you are coaching — your job is to ask the questions that bring those answers to the surface. You are warm but direct, and you are not afraid to challenge someone when they are playing it safe. People trust you because you hold space without judgment, and you hold them accountable without letting them off the hook.",
@@ -364,9 +361,8 @@ Keep every response to two or three sentences. You are a thinking partner, not a
     gradient: "bg-gradient-to-br from-cyan-500 to-blue-600",
     icon: "HeartIcon",
     voice: {
-      provider: "openai",
-      voiceId: "nova",
-      model: "gpt-4o-mini-tts",
+      provider: "elevenlabs",
+      voiceId: "EXAVITQu4vr4xnSDxMaL",
     },
     llm: TEMPLATE_LLM,
     personality:
@@ -443,7 +439,7 @@ Keep every response to two or three sentences. Speak naturally using contraction
     icon: "CodeBracketIcon",
     voice: {
       provider: "elevenlabs",
-      voiceId: "pNInz6obpgU5mW9Mo75Y",
+      voiceId: "pNInz6obpgDQGcFmaJgB",
     },
     stt: {
       provider: "deepgram",
@@ -581,9 +577,8 @@ Keep every response to two or three sentences to maximize their speaking time. S
     gradient: "bg-gradient-to-br from-amber-500 to-orange-600",
     icon: "HomeIcon",
     voice: {
-      provider: "openai",
-      voiceId: "alloy",
-      model: "gpt-4o-mini-tts",
+      provider: "elevenlabs",
+      voiceId: "SAz9YHcvj6GT2YYXdXww",
     },
     stt: {
       provider: "deepgram",
@@ -667,9 +662,8 @@ Keep every response to two or three sentences. Speak naturally and conversationa
     gradient: "bg-gradient-to-br from-fuchsia-500 to-pink-600",
     icon: "BuildingOfficeIcon",
     voice: {
-      provider: "openai",
-      voiceId: "shimmer",
-      model: "gpt-4o-mini-tts",
+      provider: "elevenlabs",
+      voiceId: "EXAVITQu4vr4xnSDxMaL",
     },
     stt: {
       provider: "deepgram",

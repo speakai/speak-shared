@@ -64,7 +64,7 @@ export const VOICE_LIVE_MODELS: readonly VoiceLiveModel[] = [
     /** Upper bound with audio both ways ($0.005 in + $0.018 out); thinking and tool tokens are billed separately. */
     perMinute: 0.023,
     offeredInVoice: true,
-    textModel: LLMModels.GEMINI_3_5_FLASH,
+    textModel: LLMModels.GEMINI_3_8_FLASH,
   },
 ];
 

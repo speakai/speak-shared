@@ -10,6 +10,9 @@
 
 ## Unreleased
 
+- `GEMINI_3_5_FLASH` is now `deprecated` (`replacedBy` `GEMINI_3_8_FLASH`) and left out of voice pickers. Google routes it to `gemini-3.6-flash`, so it is priced at 3.6 rates: $0.75 input, $3.75 output, $0.075 cached input, $0.75 audio and video per million tokens.
+- `GEMINI_3_8_FLASH` is offered in voice pickers with `voiceReasoning` `minimal`. It is now the Google voice default (`VOICE_DEFAULT_MODELS`) and the text model of the Gemini Live voice model.
+- Agent templates no longer use OpenAI voices, which OpenAI retires on 2027-01-06. Templates that used one now use an ElevenLabs voice of the same gender. The Sarah and Marcus templates now point at voice ids that exist.
 - `MEDIA_STATUS_DESIGN`: `UPLOADED` now uses a ready-to-analyze design (`MEDIA_STATUS.READY_TO_ANALYZE`, `textSecondary` on `surface`, icon `cloud-check`) and `QUEUED` uses the processing design. The `MEDIA_STATUS.WAITING` design is removed.
 - Added `onRecord` to `ColorTokens` (`#ffffff` in light and dark), the colour for text or an icon on `record`.
 - Added `DASHBOARD_ICON_NAMES` (the Lucide icon names a dashboard or section may use, current Lucide spelling), the `DashboardIconName` type, `DEFAULT_DASHBOARD_ICON` (`layout-dashboard`), `DASHBOARD_ICON_ALIASES` (older Lucide names such as `bar-chart-3` mapped to their current name) and `resolveDashboardIcon(name)`, which returns the list name for a name or alias and `null` for anything else. The spec schema still accepts any kebab-case icon string, so stored dashboards are unaffected.

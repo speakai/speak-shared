@@ -34,7 +34,7 @@ export const VOICE_AGENT_LLM_CHOICES: readonly ModelDefinition[] = MODEL_REGISTR
  */
 export const VOICE_DEFAULT_MODELS: Readonly<Record<string, LLMModels>> = {
   [LLMProvider.OPENAI]: LLMModels.GPT_5_6_TERRA,
-  [LLMProvider.GOOGLE]: LLMModels.GEMINI_3_5_FLASH,
+  [LLMProvider.GOOGLE]: LLMModels.GEMINI_3_8_FLASH,
 };
 
 /** Every model id a voice agent may be saved with: pipeline models and Live models. */
