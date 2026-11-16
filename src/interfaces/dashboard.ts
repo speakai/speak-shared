@@ -1,8 +1,8 @@
 /**
  * Dashboard feature — shared wire contract.
  *
- * Single source of truth for the Dashboards API shape, consumed by speak-client
- * (builder + queries) and speak-server (@speak-dashboards). The server's Mongoose
+ * Single source of truth for the Dashboards API shape, consumed by the web app
+ * (builder + queries) and the API server (dashboards module). The server's Mongoose
  * document type may extend these; the client imports them directly.
  */
 

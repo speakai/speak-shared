@@ -22,7 +22,7 @@ export enum TTSProvider {
 }
 
 // NOTE: The LLM provider + model enum + pricing are the canonical ones in
-// `@speakai/shared` (single source of truth across speak-server + voice-agent).
+// `@speakai/shared` (single source of truth across the API server and the voice agent services).
 // Import `LLMProvider`, `LLMModels`, and `getModelPricing` / `MODEL_PRICING`
 // from "@speakai/shared" — do not redefine them here.
 

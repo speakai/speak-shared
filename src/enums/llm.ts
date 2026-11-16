@@ -1,6 +1,6 @@
 /**
  * Canonical LLM model + provider enums — single source of truth shared by
- * speak-server and the voice-agent backend/worker.
+ * the API server and the voice agent services.
  *
  * Values are the REAL provider API model-id strings. Within each provider,
  * DEPRECATED models are grouped first, then LIVE/current models.
@@ -59,6 +59,7 @@ export enum LLMModels {
   CLAUDE_OPUS_5_5 = 'claude-opus-5-5',
   CLAUDE_HAIKU_5_5 = 'claude-haiku-5-5',
   CLAUDE_FABLE_5_1 = 'claude-fable-5-1',
+  CLAUDE_FABLE_5_2 = 'claude-fable-5-2',
 
   // ═══════════════ Google Gemini ═══════════════
   // Deprecated

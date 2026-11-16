@@ -24,7 +24,7 @@ export const IPA_CHAR_REGEX = /[æɐ-ʯʰ-˿̀-ͯ]/u;
 
 /** Message shown when `pronounceAs` contains an IPA character */
 export const IPA_ERROR_MESSAGE =
-  "Pronunciation must use plain English respelling, not IPA. Remove IPA characters (ɪ, ɛ, ə, æ, etc.) and use capital letters, dashes, or apostrophes to force pronunciation. Example: 'Mitrex' → 'mih-TREKS'.";
+  "Pronunciation must use plain English respelling, not IPA. Remove IPA characters (ɪ, ɛ, ə, æ, etc.) and use capital letters, dashes, or apostrophes to force pronunciation. Example: 'Quillotrax' → 'KWIL-oh-traks'.";
 
 /**
  * Matches a whole CMU Arpabet phoneme string: space-separated tokens of one to
@@ -34,4 +34,4 @@ export const CMU_PHONEME_REGEX = /^[A-Z]{1,3}\d?(?:\s+[A-Z]{1,3}\d?)*$/;
 
 /** Message shown when a phoneme rule's `pronounceAs` is not valid CMU Arpabet */
 export const CMU_ERROR_MESSAGE =
-  "CMU phoneme must be space-separated tokens of uppercase letters with optional stress digit (0, 1, or 2). Example: 'M IH1 T R EH0 K S'";
+  "CMU phoneme must be space-separated tokens of uppercase letters with optional stress digit (0, 1, or 2). Example: 'K W IH1 L OW0 T R AE2 K S'";

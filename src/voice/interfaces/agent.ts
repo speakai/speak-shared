@@ -5,7 +5,7 @@
  * The proprietary agent-generation pipeline types (GenerationMeta/Step/Event,
  * ExtractedInput, InstructionGapSuggestion, GENERATION_STEP_ORDER/_LABELS,
  * PromptQuality, …) and the runtime AgentConfig/WorkerConfig live privately in
- * speak-server (`@speak-voice-generation-internal`) and are intentionally NOT
+ * the API server and are intentionally NOT
  * part of this public package.
  */
 
