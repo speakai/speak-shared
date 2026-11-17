@@ -112,3 +112,21 @@ describe("API error codes", () => {
     expect(AuthErrorCode.OTP_RESEND_LIMIT).toBe("OTP_RESEND_LIMIT");
   });
 });
+
+describe("OFFER_PAGE_VERSION_PATTERN", () => {
+  it("accepts lowercase letters, digits and hyphens up to 40 characters", async () => {
+    const { OFFER_PAGE_VERSION_PATTERN } = await import("../src/index.js");
+
+    for (const name of ["control", "v2", "year-end-2026", "a", "-", "a".repeat(40)]) {
+      expect(OFFER_PAGE_VERSION_PATTERN.test(name)).toBe(true);
+    }
+  });
+
+  it("rejects empty, long, uppercase and other characters", async () => {
+    const { OFFER_PAGE_VERSION_PATTERN } = await import("../src/index.js");
+
+    for (const name of ["", "a".repeat(41), "Control", "v_2", "v 2", "v.2", "v2\n", "../x"]) {
+      expect(OFFER_PAGE_VERSION_PATTERN.test(name)).toBe(false);
+    }
+  });
+});
