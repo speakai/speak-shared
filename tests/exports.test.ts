@@ -110,6 +110,7 @@ describe("API error codes", () => {
 
     expect(Object.values(OfferErrorCode)).toEqual(["OFFER_ENDED", "OFFER_NOT_AVAILABLE", "BILLING_PERMISSION_REQUIRED"]);
     expect(AuthErrorCode.OTP_RESEND_LIMIT).toBe("OTP_RESEND_LIMIT");
+    expect(AuthErrorCode.INVALID_OFFER_LINK).toBe("INVALID_OFFER_LINK");
   });
 });
 
