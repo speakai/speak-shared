@@ -21,3 +21,10 @@ export enum TrialTier {
   T1 = 'T1',
   T2 = 'T2',
 }
+
+/** Error codes the API returns when an offer cannot be claimed or bought. */
+export enum OfferErrorCode {
+  OfferEnded = 'OFFER_ENDED',
+  OfferNotAvailable = 'OFFER_NOT_AVAILABLE',
+  BillingPermissionRequired = 'BILLING_PERMISSION_REQUIRED',
+}
