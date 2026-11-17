@@ -17,4 +17,5 @@ export enum DevicePlatform {
 export enum AuthErrorCode {
   INVALID_REFRESH_TOKEN = 'INVALID_REFRESH_TOKEN',
   OTP_RESEND_LIMIT = 'OTP_RESEND_LIMIT',
+  INVALID_OFFER_LINK = 'INVALID_OFFER_LINK',
 }
