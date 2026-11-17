@@ -28,3 +28,6 @@ export enum OfferErrorCode {
   OfferNotAvailable = 'OFFER_NOT_AVAILABLE',
   BillingPermissionRequired = 'BILLING_PERMISSION_REQUIRED',
 }
+
+/** The rule for an offer page version name: lowercase letters, digits and hyphens, 1 to 40 characters. */
+export const OFFER_PAGE_VERSION_PATTERN = /^[a-z0-9-]{1,40}$/;
