@@ -103,3 +103,12 @@ describe("Embed session exports", () => {
     expect(tracker.chatContext()).toEqual({ embedSessionId: tracker.sessionId });
   });
 });
+
+describe("API error codes", () => {
+  it("keep the exact strings the API returns", async () => {
+    const { AuthErrorCode, OfferErrorCode } = await import("../src/index.js");
+
+    expect(Object.values(OfferErrorCode)).toEqual(["OFFER_ENDED", "OFFER_NOT_AVAILABLE", "BILLING_PERMISSION_REQUIRED"]);
+    expect(AuthErrorCode.OTP_RESEND_LIMIT).toBe("OTP_RESEND_LIMIT");
+  });
+});
