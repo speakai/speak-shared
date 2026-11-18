@@ -10,6 +10,7 @@
 
 ## Unreleased
 
+- Added optional `logoDark` to `IRecorderMeta` and `IEmbedSettings`, the logo shown on dark backgrounds, next to `logo`.
 - Added `ImageSelectionType.LOGO_DARK` (`logoDark`), the logo shown on dark backgrounds. `LOGO` stays the logo for light backgrounds.
 - Added `companyLogoDarkUrl` to `WidgetConfig`, the voice widget logo shown when the widget is dark, next to `companyLogoUrl`.
 - Added `OFFER_PAGE_VERSION_PATTERN` (`/^[a-z0-9-]{1,40}$/`), the rule for an offer page version name, in `enums/subscription`.

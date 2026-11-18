@@ -19,6 +19,8 @@ export interface IRecorderQuestion {
 export interface IRecorderMeta {
   backgroundImg: string;
   logo: string;
+  /** Logo shown on dark backgrounds. `logo` is the logo for light backgrounds. */
+  logoDark?: string;
   primaryColor: string;
   fontColor?: string;
   fontFamily?: string;
