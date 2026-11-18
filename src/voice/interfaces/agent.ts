@@ -81,6 +81,8 @@ export interface WidgetConfig {
   chatOpenByDefault?: boolean;
   language?: string;
   companyLogoUrl?: string;
+  /** Logo shown when the widget is dark. `companyLogoUrl` is the logo for light backgrounds. */
+  companyLogoDarkUrl?: string;
 
   // Launcher greeting (shown beside the floating bubble; floating mode only)
   /** Launcher greeting title beside the bubble. Default: "👋 Hi! Want to chat?" */
