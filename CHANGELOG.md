@@ -90,6 +90,8 @@
 
 ## Unreleased
 
+- Added `ImageSelectionType.LOGO_DARK` (`logoDark`), the logo shown on dark backgrounds. `LOGO` stays the logo for light backgrounds.
+- Added `companyLogoDarkUrl` to `WidgetConfig`, the voice widget logo shown when the widget is dark, next to `companyLogoUrl`.
 - Added `OFFER_PAGE_VERSION_PATTERN` (`/^[a-z0-9-]{1,40}$/`), the rule for an offer page version name, in `enums/subscription`.
 - `GEMINI_3_5_FLASH` is now `deprecated` (`replacedBy` `GEMINI_3_8_FLASH`) and left out of voice pickers. Google routes it to `gemini-3.6-flash`, so it is priced at 3.6 rates: $0.75 input, $3.75 output, $0.075 cached input, $0.75 audio and video per million tokens.
 - `GEMINI_3_8_FLASH` is offered in voice pickers with `voiceReasoning` `minimal`. It is now the Google voice default (`VOICE_DEFAULT_MODELS`) and the text model of the Gemini Live voice model.

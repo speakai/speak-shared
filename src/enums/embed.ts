@@ -6,6 +6,7 @@ export enum EmbedType {
 
 export enum ImageSelectionType {
   LOGO = 'logo',
+  LOGO_DARK = 'logoDark',
   BACKGROUND_IMG = 'backgroundImg',
   MEETING_ASSISTANT = 'meetingAssistant',
 }
