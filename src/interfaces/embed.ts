@@ -4,6 +4,8 @@ import { LeadCapture } from './dashboard.js';
 export interface IEmbedSettings {
   backgroundImg: string;
   logo: string;
+  /** Logo shown on dark backgrounds. `logo` is the logo for light backgrounds. */
+  logoDark?: string;
   primaryColor: string;
   titleColor: string;
   callToActionButtons: { url: string; label: string }[];
