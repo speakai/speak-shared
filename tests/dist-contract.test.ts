@@ -64,12 +64,16 @@ function reachableBareSpecifiers(entry: string): Set<string> {
 
 const isZod = (spec: string) => spec === 'zod' || spec.startsWith('zod/');
 
+// A fresh clone or any src edit leaves dist stale, and `tsc` then takes 10-40 s,
+// well past Vitest's 10 s default hook timeout.
+const BUILD_TIMEOUT_MS = 120_000;
+
 beforeAll(() => {
   const indexJs = resolve(DIST, 'index.js');
   if (!existsSync(indexJs) || statSync(indexJs).mtimeMs < newestSrcMtimeMs()) {
     execSync('npm run build', { cwd: resolve(DIST, '..'), stdio: 'inherit' });
   }
-});
+}, BUILD_TIMEOUT_MS);
 
 describe('root barrel is zod-free', () => {
   it('dist is not stale relative to src — the walk ran against current output', () => {

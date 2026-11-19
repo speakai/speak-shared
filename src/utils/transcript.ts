@@ -129,3 +129,10 @@ export function confidenceBand(confidence: unknown): ConfidenceBand {
   if (confidence < LOW_CONFIDENCE) return 'low';
   return 'ok';
 }
+
+/** Provisional text from a live `transcript-interim` payload: '' clears it, null means the payload is malformed. */
+export function parseLiveInterimText(payload: unknown): string | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const { text } = payload as { text?: unknown };
+  return typeof text === 'string' ? text.trim() : null;
+}

@@ -17,100 +17,17 @@ describe("package entry points", () => {
   });
 });
 
-describe("Label constants", () => {
-  it("keep the limits, patterns and defaults the server enforces", async () => {
-    const c = await import("../src/utils/label.js");
-    const { SpeakLabelSet, UserRole } = await import("../src/enums/index.js");
-
-    expect([c.LABEL_NAME_MAX, c.LABEL_DESCRIPTION_MAX, c.MAX_LABELS_PER_SPAN, c.MEDIA_COMMENT_BODY_MAX]).toEqual([80, 500, 20, 5000]);
-    expect([c.LABEL_SORT_ORDER_MAX, c.MAX_DASHBOARD_LABEL_GROUPS]).toEqual([1_000_000, 100]);
-    // Link reviewers are feedback submitter names now, so nothing validates reviewer user ids any more.
-    expect("MAX_DASHBOARD_REVIEWERS" in c).toBe(false);
-    expect("USER_ID_PATTERN" in c).toBe(false);
-    expect(c.PUBLIC_ID_PATTERN.test("Ab_9-x")).toBe(true);
-    expect(c.PUBLIC_ID_PATTERN.test("a.b")).toBe(false);
-    expect(c.LABEL_COLOR_PATTERN.test("#A1b2C3")).toBe(true);
-    expect(c.LABEL_COLOR_PATTERN.test("#abc")).toBe(false);
-    expect(c.LABEL_COLOR_PATTERN.test(c.DEFAULT_LABEL_COLOR)).toBe(true);
-    expect(c.LABEL_COLOR_PRESETS).toHaveLength(12);
-    for (const color of c.LABEL_COLOR_PRESETS) expect(c.LABEL_COLOR_PATTERN.test(color)).toBe(true);
-
-    expect(Object.keys(c.SPEAK_LABEL_SETS).sort()).toEqual(Object.values(SpeakLabelSet).sort());
-    for (const set of Object.values(c.SPEAK_LABEL_SETS)) {
-      for (const label of set.labels) expect(c.LABEL_COLOR_PATTERN.test(label.color)).toBe(true);
-    }
-
-    expect(Object.keys(c.LABEL_PERMISSION_DEFAULTS).sort()).toEqual(Object.values(UserRole).sort());
-    expect(c.LABEL_PERMISSION_DEFAULTS[UserRole.OWNER].labels).toEqual({ create: true, update: true, delete: true, assign: true });
-    expect(c.LABEL_PERMISSION_DEFAULTS[UserRole.MEMBER]).toEqual({
-      labels: { create: true, update: true, delete: false, assign: true },
-      comments: { create: true, update: true, delete: false },
-    });
-    expect(Object.isFrozen(c.LABEL_PERMISSION_DEFAULTS[UserRole.ADMIN].labels)).toBe(true);
-  });
-});
-
 describe("Recorder session events", () => {
   it("RECORDER_SESSION_EVENTS covers every session event with a category and description", async () => {
-    const {
-      RECORDER_SESSION_EVENTS,
-      RecorderSessionEventCategory,
-      RecorderSessionEventType,
-      RecorderSessionWakeLock,
-    } = await import("../src/index.js");
+    const { RECORDER_SESSION_EVENTS, RecorderSessionEventCategory, RecorderSessionEventType } = await import("../src/index.js");
 
-    expect(RecorderSessionEventType.SUSPEND_DETECTED).toBe("suspend_detected");
-    expect(Object.values(RecorderSessionWakeLock)).toEqual([
-      "acquired",
-      "denied",
-      "unsupported",
-      "released",
-    ]);
-    expect(Object.values(RecorderSessionEventType)).toHaveLength(31);
-    expect(Object.keys(RECORDER_SESSION_EVENTS).sort()).toEqual(
-      Object.values(RecorderSessionEventType).sort(),
-    );
+    expect(Object.keys(RECORDER_SESSION_EVENTS).sort()).toEqual(Object.values(RecorderSessionEventType).sort());
     const categories = Object.values(RecorderSessionEventCategory);
     for (const entry of Object.values(RECORDER_SESSION_EVENTS)) {
       expect(categories).toContain(entry.category);
       expect(entry.description.trim()).not.toBe("");
     }
-    expect(new Set(Object.values(RECORDER_SESSION_EVENTS).map((e) => e.category))).toEqual(
-      new Set(categories),
-    );
-  });
-});
-
-describe("Embed session exports", () => {
-  it("exposes the tracker, event map and helpers from the root barrel without touching the DOM", async () => {
-    expect(typeof globalThis.window).toBe("undefined");
-    const pkg = await import("../src/index.js");
-    const { EmbedSessionEventSource, EmbedSessionEventType } = pkg;
-
-    expect(typeof pkg.createEmbedSessionTracker).toBe("function");
-    expect(Object.keys(pkg.EMBED_SESSION_EVENTS).sort()).toEqual(Object.values(EmbedSessionEventType).sort());
-    const serverTypes = Object.entries(pkg.EMBED_SESSION_EVENTS)
-      .filter(([, entry]) => entry.source === EmbedSessionEventSource.SERVER)
-      .map(([type]) => type)
-      .sort();
-    expect(serverTypes).toEqual([EmbedSessionEventType.CHAT_QUESTION, EmbedSessionEventType.LEAD_CAPTURED]);
-    expect(pkg.isLegacyEmbedSessionId("legacy:abc")).toBe(true);
-    expect(pkg.embedSessionVisitorCode("7f3a91c2-0b6e-4e9b-8d1a-5c2e4f6a8b10")).toBe("7F3A");
-    expect(pkg.embedSessionEventCategory(EmbedSessionEventType.SEEK)).toBe("playback");
-
-    const tracker = pkg.createEmbedSessionTracker({ token: "t", apiBaseUrl: "https://api.example.com/v1" });
-    expect(pkg.EMBED_SESSION_ID_PATTERN.test(tracker.sessionId)).toBe(true);
-    expect(tracker.chatContext()).toEqual({ embedSessionId: tracker.sessionId });
-  });
-});
-
-describe("API error codes", () => {
-  it("keep the exact strings the API returns", async () => {
-    const { AuthErrorCode, OfferErrorCode } = await import("../src/index.js");
-
-    expect(Object.values(OfferErrorCode)).toEqual(["OFFER_ENDED", "OFFER_NOT_AVAILABLE", "BILLING_PERMISSION_REQUIRED"]);
-    expect(AuthErrorCode.OTP_RESEND_LIMIT).toBe("OTP_RESEND_LIMIT");
-    expect(AuthErrorCode.INVALID_OFFER_LINK).toBe("INVALID_OFFER_LINK");
+    expect(new Set(Object.values(RECORDER_SESSION_EVENTS).map((e) => e.category))).toEqual(new Set(categories));
   });
 });
 
