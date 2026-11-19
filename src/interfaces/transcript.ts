@@ -49,6 +49,16 @@ export interface IWordEntity {
   };
 }
 
+export interface ILiveInterimPayload {
+  type: 'transcript-interim';
+  mediaId: string | null;
+  timestamp: string;
+  isFinal: false;
+  // The provisional words joined; '' clears them
+  text: string;
+  words: IWordEntity[];
+}
+
 export interface ISpeaker {
   id: number;
   name: string;

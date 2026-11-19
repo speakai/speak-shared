@@ -98,6 +98,7 @@
 
 ## Unreleased
 
+- Added `LiveTranscriptSocketEvent` (`transcript`, `transcript-interim`), the socket events a live transcription stream sends, `ILiveInterimPayload` for provisional words still being spoken, and `parseLiveInterimText`, which reads that payload (`''` clears the provisional text, `null` means malformed).
 - Added optional `logoDark` to `IRecorderMeta` and `IEmbedSettings`, the logo shown on dark backgrounds, next to `logo`.
 - Added `ImageSelectionType.LOGO_DARK` (`logoDark`), the logo shown on dark backgrounds. `LOGO` stays the logo for light backgrounds.
 - Added `companyLogoDarkUrl` to `WidgetConfig`, the voice widget logo shown when the widget is dark, next to `companyLogoUrl`.
