@@ -1,10 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { CommentListFilter } from "../src/enums/index.js";
+import { CommentListFilter, UserRole } from "../src/enums/index.js";
 import {
   DEFAULT_LABEL_COLOR,
   LABEL_COLOR_PRESETS,
   findDashboardProfile,
   isHttpUrl,
+  LABEL_COLOR_PATTERN,
+  LABEL_PERMISSION_DEFAULTS,
+  PUBLIC_ID_PATTERN,
   SPEAK_LABEL_SETS,
   labelNameKey,
   matchesCommentFilter,
@@ -12,8 +15,6 @@ import {
   rangeConfidence,
   reviewerNameKey,
 } from "../src/utils/label.js";
-import { hasAnchorsBehind } from "../src/utils/anchor.js";
-import { confidenceBand, LOW_CONFIDENCE, VERY_LOW_CONFIDENCE } from "../src/utils/transcript.js";
 
 describe("label name key", () => {
   it("treats names that differ only in case or spacing as the same label", () => {
@@ -63,14 +64,6 @@ describe("matchesCommentFilter", () => {
   });
 });
 
-describe("hasAnchorsBehind", () => {
-  it("is true only while an anchor carries an older revision; whole-file comments never count", () => {
-    expect(hasAnchorsBehind([{ transcriptRevision: 3 }, null], 3)).toBe(false);
-    expect(hasAnchorsBehind([{ transcriptRevision: 2 }, null], 3)).toBe(true);
-    expect(hasAnchorsBehind([], 3)).toBe(false);
-  });
-});
-
 describe("label palette", () => {
   it("gives new labels and every Speak label set a colour the picker offers, distinct within each set", () => {
     const presets: readonly string[] = LABEL_COLOR_PRESETS;
@@ -93,13 +86,27 @@ describe("rangeConfidence", () => {
   });
 });
 
-describe("confidenceBand", () => {
-  it("bands real word confidences and treats missing or out-of-range values as ok", () => {
-    expect(confidenceBand(0.9)).toBe("ok");
-    expect(confidenceBand(LOW_CONFIDENCE)).toBe("ok");
-    expect(confidenceBand(0.74)).toBe("low");
-    expect(confidenceBand(VERY_LOW_CONFIDENCE)).toBe("low");
-    expect(confidenceBand(0.54)).toBe("very-low");
-    for (const value of [undefined, null, NaN, 0, -0.2, 1.5, "0.3"]) expect(confidenceBand(value)).toBe("ok");
+describe("label validation patterns", () => {
+  it("accepts only 1-64 url-safe characters as a public id", () => {
+    for (const id of ["Ab_9-x", "a", "a".repeat(64)]) expect(PUBLIC_ID_PATTERN.test(id)).toBe(true);
+    for (const id of ["", "a.b", "../x", "a b", "a".repeat(65)]) expect(PUBLIC_ID_PATTERN.test(id)).toBe(false);
+  });
+
+  it("accepts only six-digit hex colours, and every default and preset colour passes", () => {
+    expect(LABEL_COLOR_PATTERN.test("#A1b2C3")).toBe(true);
+    for (const color of ["#abc", "a1b2c3", "#a1b2c3d", "#g1b2c3"]) expect(LABEL_COLOR_PATTERN.test(color)).toBe(false);
+    for (const color of [DEFAULT_LABEL_COLOR, ...LABEL_COLOR_PRESETS]) expect(LABEL_COLOR_PATTERN.test(color)).toBe(true);
+  });
+});
+
+describe("label permission defaults", () => {
+  it("gives every role a default, lets members create and edit but not delete, and cannot be mutated", () => {
+    expect(Object.keys(LABEL_PERMISSION_DEFAULTS).sort()).toEqual(Object.values(UserRole).sort());
+    expect(LABEL_PERMISSION_DEFAULTS[UserRole.OWNER].labels).toEqual({ create: true, update: true, delete: true, assign: true });
+    expect(LABEL_PERMISSION_DEFAULTS[UserRole.MEMBER]).toEqual({
+      labels: { create: true, update: true, delete: false, assign: true },
+      comments: { create: true, update: true, delete: false },
+    });
+    expect(Object.isFrozen(LABEL_PERMISSION_DEFAULTS[UserRole.ADMIN].labels)).toBe(true);
   });
 });

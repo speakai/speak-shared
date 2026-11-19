@@ -6,6 +6,7 @@ import {
   normalizeWord,
   tokenizeWords,
   isAnchorOnRevision,
+  hasAnchorsBehind,
 } from "../src/utils/anchor.js";
 import type { ITranscriptSegment, IWordEntity } from "../src/interfaces/transcript.js";
 
@@ -181,5 +182,13 @@ describe("isAnchorOnRevision", () => {
     expect(isAnchorOnRevision(anchor, 3, 13)).toBe(true);
     expect(isAnchorOnRevision(anchor, 3, 4)).toBe(false);
     expect(isAnchorOnRevision({ transcriptRevision: 3 }, 3, 13)).toBe(false);
+  });
+});
+
+describe("hasAnchorsBehind", () => {
+  it("is true only while an anchor carries an older revision; whole-file comments never count", () => {
+    expect(hasAnchorsBehind([{ transcriptRevision: 3 }, null], 3)).toBe(false);
+    expect(hasAnchorsBehind([{ transcriptRevision: 2 }, null], 3)).toBe(true);
+    expect(hasAnchorsBehind([], 3)).toBe(false);
   });
 });
