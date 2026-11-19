@@ -86,7 +86,7 @@ export function groupSegmentsByParagraph(
  */
 export function formatTranscriptTime(seconds: number | string): string {
   const totalSeconds = typeof seconds === 'string' ? parseFloat(seconds) : seconds;
-  if (isNaN(totalSeconds) || totalSeconds < 0) return '0:00:00';
+  if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return '0:00:00';
 
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -105,17 +105,21 @@ export function parseTranscriptTime(timeStr: string): number {
   if (!timeStr) return 0;
 
   // Handle numeric input
-  const numeric = parseFloat(timeStr);
-  if (!isNaN(numeric) && !timeStr.includes(':')) return numeric;
+  if (!timeStr.includes(':')) {
+    const numeric = parseFloat(timeStr);
+    return Number.isFinite(numeric) ? numeric : 0;
+  }
 
-  const parts = timeStr.split(':').map(Number);
+  // H:MM:SS or MM:SS; any other shape, an empty part or a non-number part is malformed
+  const parts = timeStr.split(':').map((part) => (part.trim() === '' ? NaN : Number(part)));
+  if (!parts.every(Number.isFinite)) return 0;
   if (parts.length === 3) {
     return parts[0] * 3600 + parts[1] * 60 + parts[2];
   }
   if (parts.length === 2) {
     return parts[0] * 60 + parts[1];
   }
-  return numeric || 0;
+  return 0;
 }
 
 export function confidenceBand(confidence: unknown): ConfidenceBand {

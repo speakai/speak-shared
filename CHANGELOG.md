@@ -10,6 +10,7 @@
 
 ## Unreleased
 
+- `formatTranscriptTime` returns `0:00:00` for `Infinity` (the duration browsers report for a MediaRecorder WebM file) instead of `Infinity:NaN:NaN`. `parseTranscriptTime` returns `0` for a malformed time such as `1:xx:00`, `1::00` or `1:2:3:4`, and for `Infinity`, the same as for `abc`.
 - Added optional `logoDark` to `IRecorderMeta` and `IEmbedSettings`, the logo shown on dark backgrounds, next to `logo`.
 - Added `ImageSelectionType.LOGO_DARK` (`logoDark`), the logo shown on dark backgrounds. `LOGO` stays the logo for light backgrounds.
 - Added `companyLogoDarkUrl` to `WidgetConfig`, the voice widget logo shown when the widget is dark, next to `companyLogoUrl`.
