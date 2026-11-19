@@ -87,7 +87,7 @@ describe("formatTranscriptTime", () => {
     expect(formatTranscriptTime(input)).toBe(expected);
   });
 
-  it.each([NaN, -1, "", "abc"])("shows 0:00:00 instead of NaN or a negative time for %j", (input) => {
+  it.each([Infinity, -Infinity, "Infinity", NaN, -1, "", "abc"])("shows 0:00:00 instead of an invalid time for %j", (input) => {
     expect(formatTranscriptTime(input)).toBe("0:00:00");
   });
 });
@@ -104,6 +104,10 @@ describe("parseTranscriptTime", () => {
     ["abc", 0],
   ])("parses %j as %d seconds", (input, expected) => {
     expect(parseTranscriptTime(input)).toBe(expected);
+  });
+
+  it.each(["1:xx:00", "1:2:3:4", "1::00", ":", "Infinity"])("returns 0 for malformed %j", (input) => {
+    expect(parseTranscriptTime(input)).toBe(0);
   });
 
   it("round-trips every displayed time across the hour boundaries", () => {
