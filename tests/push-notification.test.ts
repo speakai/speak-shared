@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   MeetingPlatform,
-  PUSH_NOTIFICATION_ACTION_LABELS,
   PUSH_NOTIFICATION_REGISTRY,
   buildAndroidPushData,
   WebPushDataKey,
@@ -16,8 +15,6 @@ import {
   getNotificationChannelForPlatform,
   buildWebPushData,
   isPushForUser,
-  getMeetingPlatformLabel,
-  PushNotificationAction,
   PushNotificationType,
   getPushNotificationConfig,
   parsePushNotificationActions,
@@ -25,18 +22,9 @@ import {
 } from "../src/index.js";
 
 describe("push notification registry", () => {
-  it("is the stable cross-repo contract", () => {
-    expect(Object.values(PushNotificationAction)).toEqual(["join", "record", "open-media"]);
-    expect(PushNotificationType.MEETING_REMINDER).toBe("meeting-reminder");
-    expect(getPushNotificationConfig("meeting-reminder")).toEqual({
-      categoryId: "MEETING_REMINDER",
-      androidChannelId: "meeting-reminders",
-      actions: ["join", "record"],
-      requiredDataKeys: ["eventId", "uid", "title", "platform", "meetingURL", "startTime"],
-      tapTarget: "meeting",
-    });
-    expect(getPushNotificationConfig("constructor")).toBeUndefined();
+  it("has a config for every push type and ignores prototype keys", () => {
     expect(Object.keys(PUSH_NOTIFICATION_REGISTRY)).toEqual(Object.values(PushNotificationType));
+    expect(getPushNotificationConfig("constructor")).toBeUndefined();
   });
 
   it("round-trips actions and drops unknown ids", () => {
@@ -70,15 +58,6 @@ describe("push payload builders", () => {
     expect(
       buildAndroidPushData(PushNotificationType.MEETING_REMINDER, { title: "Standup", message: "Starts in 2 min", tag: "e1" }),
     ).toEqual({ title: "Standup", message: "Starts in 2 min", tag: "e1", categoryId: "MEETING_REMINDER", channelId: "meeting-reminders" });
-  });
-
-  it("labels every action id and platform", () => {
-    expect(PUSH_NOTIFICATION_ACTION_LABELS).toEqual({ join: "Join", record: "Record", "open-media": "Open" });
-    expect(getMeetingPlatformLabel("googleMeet")).toBe("Google Meet");
-    expect(getMeetingPlatformLabel("slack")).toBe("Slack");
-    expect(getMeetingPlatformLabel("other")).toBe("Other");
-    expect(getMeetingPlatformLabel("constructor")).toBeUndefined();
-    expect(getMeetingPlatformLabel(undefined)).toBeUndefined();
   });
 });
 

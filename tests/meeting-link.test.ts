@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizeMeetingLink } from "../src/index.js";
+import { getMeetingPlatformLabel, normalizeMeetingLink } from "../src/index.js";
 
 describe("normalizeMeetingLink", () => {
   it("accepts allowlisted https links and lowercases the host", () => {
@@ -37,5 +37,14 @@ describe("normalizeMeetingLink", () => {
       undefined,
     ];
     for (const link of rejected) expect(normalizeMeetingLink(link as string)).toBeNull();
+  });
+});
+
+describe("getMeetingPlatformLabel", () => {
+  it("labels known platforms and returns undefined for unknown, prototype or missing keys", () => {
+    expect(getMeetingPlatformLabel("googleMeet")).toBe("Google Meet");
+    expect(getMeetingPlatformLabel("constructor")).toBeUndefined();
+    expect(getMeetingPlatformLabel("bogus")).toBeUndefined();
+    expect(getMeetingPlatformLabel(undefined)).toBeUndefined();
   });
 });

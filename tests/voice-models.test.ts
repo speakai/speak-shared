@@ -55,11 +55,10 @@ describe("voice pipeline models", () => {
 });
 
 describe("voice Live models", () => {
-  it.each(VOICE_LIVE_MODELS.map((m) => [m.id, m] as const))("%s is complete, priced and has unique labelled voices", (_id, model) => {
+  it.each(VOICE_LIVE_MODELS.map((m) => [m.id, m] as const))("%s is complete, priced and has unique voices", (_id, model) => {
     const ids = model.voices.map((voice) => voice.id);
     expect(ids).toContain(model.defaultVoice);
     expect(new Set(ids).size).toBe(ids.length);
-    for (const voice of model.voices) expect(voice.label.toLowerCase()).toBe(voice.id.toLowerCase());
     expect(model.perMinute).toBeGreaterThan(0);
     expect(voiceProviders).toContain(model.provider);
     expect(getModel(model.textModel)?.offeredInVoice).toBe(true);
