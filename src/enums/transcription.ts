@@ -1,6 +1,14 @@
 /** Whether transcript data is pre-recorded or streaming live */
 export type TranscriptMode = 'static' | 'live';
 
+// Socket.io events a live transcription stream emits to the recorder and to viewers of the media
+export enum LiveTranscriptSocketEvent {
+  // One final word: { word: IWordEntity }
+  TRANSCRIPT = 'transcript',
+  // Provisional words for speech still in progress (ILiveInterimPayload); each replaces the last, an empty one clears it
+  TRANSCRIPT_INTERIM = 'transcript-interim',
+}
+
 export enum TranscriptionEngine {
   AZURE = 'azure',
   ASSEMBLY = 'assembly',
