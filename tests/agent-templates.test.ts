@@ -13,9 +13,9 @@ import {
 
 describe("agent template ids", () => {
   // Deep-linked as ?templateId=… from the agents site into the Speak builder.
-  // Renaming one silently breaks every live link, so pin the exact set.
-  it("are the stable cross-repo contract", () => {
-    expect([...AGENT_TEMPLATE_IDS]).toEqual([
+  // Renaming or removing one silently breaks every live link; adding one needs no edit here.
+  it("still include every id that has shipped", () => {
+    expect([...AGENT_TEMPLATE_IDS]).toEqual(expect.arrayContaining([
       "blank-agent",
       "customer-support-alex",
       "sales-rep-jordan",
@@ -25,7 +25,7 @@ describe("agent template ids", () => {
       "language-tutor-luna",
       "real-estate-agent-sam",
       "concierge-ava",
-    ]);
+    ]));
   });
 
   it("cover every catalog entry exactly once", () => {
