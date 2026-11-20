@@ -12,6 +12,7 @@ export enum MenuItemId {
   Clips = 'clips',
   Automations = 'automations',
   Integrations = 'integrations',
+  ConnectAi = 'connect-ai',
   Team = 'team-manage',
   Developers = 'developers-manage',
   AiAssistant = 'ai-assistant',
