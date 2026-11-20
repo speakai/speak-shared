@@ -24,6 +24,7 @@ describe("API error codes the apps match on", () => {
       "GUEST_CHECKOUT_EXPIRED",
       "OFFER_ALREADY_CLAIMED",
       "OFFER_PAGE_SIGN_IN_ONLY",
+      "GUEST_CHECKOUT_OPEN",
     ]);
   });
 

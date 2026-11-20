@@ -31,6 +31,7 @@ export enum OfferErrorCode {
   GuestCheckoutExpired = 'GUEST_CHECKOUT_EXPIRED',
   OfferAlreadyClaimed = 'OFFER_ALREADY_CLAIMED',
   PageSignInOnly = 'OFFER_PAGE_SIGN_IN_ONLY',
+  GuestCheckoutOpen = 'GUEST_CHECKOUT_OPEN',
 }
 
 /** The two ways a new visitor can claim an offer: make the account first, or pay first. */
