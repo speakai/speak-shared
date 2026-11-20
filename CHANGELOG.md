@@ -10,6 +10,7 @@
 
 ## Unreleased
 
+- Added `OfferErrorCode` values `BOT_CHECK_FAILED`, `GUEST_CHECKOUT_EXPIRED`, `OFFER_ALREADY_CLAIMED` and `OFFER_PAGE_SIGN_IN_ONLY` for paying for an offer before signing in. Added `OfferFlowArm` (`account_first`, `pay_first`), `OFFER_PAGE_SLUG_PATTERN` (`/^[a-z0-9-]{3,40}$/`) and `OFFER_PAGE_TEXT_LIMITS`, the longest each offer audience page text field may be, in `enums/subscription`.
 - `formatTranscriptTime` returns `0:00:00` for `Infinity` (the duration browsers report for a MediaRecorder WebM file) instead of `Infinity:NaN:NaN`. `parseTranscriptTime` returns `0` for a malformed time such as `1:xx:00`, `1::00` or `1:2:3:4`, and for `Infinity`, the same as for `abc`.
 - Added `LiveTranscriptSocketEvent` (`transcript`, `transcript-interim`), the socket events a live transcription stream sends, `ILiveInterimPayload` for provisional words still being spoken, and `parseLiveInterimText`, which reads that payload (`''` clears the provisional text, `null` means malformed).
 - Added optional `logoDark` to `IRecorderMeta` and `IEmbedSettings`, the logo shown on dark backgrounds, next to `logo`.

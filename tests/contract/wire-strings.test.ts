@@ -8,6 +8,7 @@ import {
   AuthErrorCode,
   ImageSelectionType,
   OfferErrorCode,
+  OfferFlowArm,
   PushNotificationAction,
   PushNotificationType,
   getPushNotificationConfig,
@@ -15,7 +16,19 @@ import {
 
 describe("API error codes the apps match on", () => {
   it("keeps every offer error code", () => {
-    expect(Object.values(OfferErrorCode)).toEqual(["OFFER_ENDED", "OFFER_NOT_AVAILABLE", "BILLING_PERMISSION_REQUIRED"]);
+    expect(Object.values(OfferErrorCode)).toEqual([
+      "OFFER_ENDED",
+      "OFFER_NOT_AVAILABLE",
+      "BILLING_PERMISSION_REQUIRED",
+      "BOT_CHECK_FAILED",
+      "GUEST_CHECKOUT_EXPIRED",
+      "OFFER_ALREADY_CLAIMED",
+      "OFFER_PAGE_SIGN_IN_ONLY",
+    ]);
+  });
+
+  it("keeps every offer flow arm", () => {
+    expect(Object.values(OfferFlowArm)).toEqual(["account_first", "pay_first"]);
   });
 
   it.each([
