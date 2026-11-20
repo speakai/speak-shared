@@ -48,3 +48,36 @@ describe("OFFER_PAGE_VERSION_PATTERN", () => {
     }
   });
 });
+
+describe("OFFER_PAGE_SLUG_PATTERN", () => {
+  it("accepts lowercase letters, digits and hyphens from 3 to 40 characters", async () => {
+    const { OFFER_PAGE_SLUG_PATTERN } = await import("../src/index.js");
+
+    for (const slug of ["abc", "legal-teams", "year-end-2026", "a".repeat(40)]) {
+      expect(OFFER_PAGE_SLUG_PATTERN.test(slug)).toBe(true);
+    }
+  });
+
+  it("rejects short, long, uppercase and other characters", async () => {
+    const { OFFER_PAGE_SLUG_PATTERN } = await import("../src/index.js");
+
+    for (const slug of ["", "ab", "a".repeat(41), "Legal", "legal_teams", "legal teams", "legal.teams", "x\n", "../x"]) {
+      expect(OFFER_PAGE_SLUG_PATTERN.test(slug)).toBe(false);
+    }
+  });
+});
+
+describe("OFFER_PAGE_TEXT_LIMITS", () => {
+  it("keeps the limit for every audience page text field", async () => {
+    const { OFFER_PAGE_TEXT_LIMITS } = await import("../src/index.js");
+
+    expect(OFFER_PAGE_TEXT_LIMITS).toEqual({
+      dialogTitle: 40,
+      description: 120,
+      cta: 32,
+      continueLabel: 30,
+      cardLabel: 30,
+      paypalLabel: 30,
+    });
+  });
+});
